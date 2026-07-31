@@ -27,11 +27,4 @@ func init() {
 	// 镜像管理
 	rootCmd.AddCommand(newStubCmd("commit", "从 PMSystem 导出新镜像"))
 	rootCmd.AddCommand(newStubCmd("export", "导出 PMSystem 为 .pmi 文件"))
-	rootCmd.AddCommand(newStubCmd("images", "列出本地镜像"))
-	rootCmd.AddCommand(newStubCmd("inspect", "查看镜像或实例详情"))
-	rootCmd.AddCommand(newStubCmd("rmi", "删除本地镜像"))
-
-	// 升级
-	rootCmd.AddCommand(newStubCmd("diff", "对比两个 .pmi 镜像差异"))
-	rootCmd.AddCommand(newStubCmd("upgrade", "升级 PMSystem 到新镜像版本"))
 }
