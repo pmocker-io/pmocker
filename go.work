@@ -2,5 +2,6 @@ go 1.24.3
 
 use (
 	./cli
+	./gva/server
 	./pkg
 )
