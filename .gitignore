@@ -31,3 +31,20 @@ Thumbs.db
 
 # 日志
 *.log
+
+# gva 构建产物
+gva/server/gva-server
+gva/server/gva-server.exe
+gva/web/dist/
+
+# SQLite 数据库文件
+*.db
+*.sqlite
+*.sqlite3
+
+# PMocker 运行时
+.pmock/
+*.pmi
+
+# 临时文件
+/tmp/
