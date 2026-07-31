@@ -1,0 +1,6 @@
+apis:
+  - {path: /pmocker/scope/createItem, description: 创建范围项, api_group: 范围管理, method: POST}
+  - {path: /pmocker/scope/listItems, description: 范围项列表, api_group: 范围管理, method: GET}
+  - {path: /pmocker/scope/buildWBS, description: 构建WBS, api_group: 范围管理, method: POST}
+  - {path: /pmocker/scope/getWBS, description: 查询WBS树, api_group: 范围管理, method: GET}
+  - {path: /pmocker/scope/baseline, description: 设置基线, api_group: 范围管理, method: POST}

@@ -1,0 +1,13 @@
+dictionaries:
+  - type: pm_budget_type
+    name: 预算类型
+    details:
+      - {label: 人工, value: labor}
+      - {label: 材料, value: material}
+      - {label: 费用, value: expense}
+      - {label: 设备, value: equipment}
+  - type: pm_currency
+    name: 币种
+    details:
+      - {label: 人民币, value: CNY}
+      - {label: 美元, value: USD}

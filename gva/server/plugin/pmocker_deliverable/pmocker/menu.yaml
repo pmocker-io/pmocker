@@ -1,0 +1,28 @@
+menus:
+  - path: /pmocker/deliverable
+    name: pmockerDeliverable
+    component: view/routerHolder
+    sort: 80
+    title: 交付物管理
+    icon: folder
+  - path: list
+    name: pmockerDeliverableList
+    parent_name: pmockerDeliverable
+    component: plugin/pmocker_deliverable/view/list
+    sort: 1
+    title: 交付物列表
+    icon: list
+  - path: versions
+    name: pmockerDeliverableVersions
+    parent_name: pmockerDeliverable
+    component: plugin/pmocker_deliverable/view/versions
+    sort: 2
+    title: 版本追踪
+    icon: history
+  - path: trace
+    name: pmockerDeliverableTrace
+    parent_name: pmockerDeliverable
+    component: plugin/pmocker_deliverable/view/trace
+    sort: 3
+    title: 追溯视图
+    icon: link

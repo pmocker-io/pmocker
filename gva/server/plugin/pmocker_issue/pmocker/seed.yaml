@@ -1,0 +1,23 @@
+dictionaries:
+  - type: pm_issue_priority
+    name: 问题优先级
+    details:
+      - {label: 紧急, value: 紧急}
+      - {label: 高, value: 高}
+      - {label: 中, value: 中}
+      - {label: 低, value: 低}
+  - type: pm_issue_severity
+    name: 问题严重程度
+    details:
+      - {label: 致命, value: fatal}
+      - {label: 严重, value: critical}
+      - {label: 主要, value: major}
+      - {label: 次要, value: minor}
+      - {label: 轻微, value: trivial}
+  - type: pm_issue_category
+    name: 问题分类
+    details:
+      - {label: 缺陷, value: bug}
+      - {label: 性能, value: performance}
+      - {label: 易用性, value: usability}
+      - {label: 其他, value: other}

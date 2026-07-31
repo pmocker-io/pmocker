@@ -1,0 +1,5 @@
+apis:
+  - {path: /pmocker/cost/createItem, description: 创建成本项, api_group: 成本管理, method: POST}
+  - {path: /pmocker/cost/listItems, description: 成本项列表, api_group: 成本管理, method: GET}
+  - {path: /pmocker/cost/evm, description: 挣值分析, api_group: 成本管理, method: POST}
+  - {path: /pmocker/cost/baseline, description: 成本基线, api_group: 成本管理, method: POST}

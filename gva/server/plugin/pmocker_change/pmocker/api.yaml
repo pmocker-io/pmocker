@@ -1,0 +1,16 @@
+apis:
+  - {path: /pmocker/change/create, description: 创建变更请求, api_group: 变更管理, method: POST}
+  - {path: /pmocker/change/update, description: 更新变更请求, api_group: 变更管理, method: PUT}
+  - {path: /pmocker/change/delete, description: 删除变更请求, api_group: 变更管理, method: DELETE}
+  - {path: /pmocker/change/find, description: 查询变更请求, api_group: 变更管理, method: GET}
+  - {path: /pmocker/change/list, description: 变更请求列表, api_group: 变更管理, method: GET}
+  - {path: /pmocker/change/analyze, description: 执行影响分析, api_group: 变更管理, method: POST}
+  - {path: /pmocker/change/ccbReview, description: 提交CCB审批, api_group: 变更管理, method: POST}
+  - {path: /pmocker/change/approve, description: CCB批准变更, api_group: 变更管理, method: POST}
+  - {path: /pmocker/change/reject, description: CCB拒绝变更, api_group: 变更管理, method: POST}
+  - {path: /pmocker/change/implement, description: 开始实施变更, api_group: 变更管理, method: POST}
+  - {path: /pmocker/change/verify, description: 验证变更, api_group: 变更管理, method: POST}
+  - {path: /pmocker/change/close, description: 关闭变更, api_group: 变更管理, method: POST}
+  - {path: /pmocker/change/listLogs, description: 变更日志列表, api_group: 变更管理, method: GET}
+  - {path: /pmocker/change/impactReport, description: 影响分析报告, api_group: 变更管理, method: GET}
+  - {path: /pmocker/change/ccbStats, description: CCB统计, api_group: 变更管理, method: GET}

@@ -1,0 +1,6 @@
+code: pmocker_deliverable
+name: 交付物管理
+version: 1.0.0
+description: 项目交付物管理，支持登记、审批、验收、版本追踪、需求追溯
+dependencies:
+  - pmocker_core

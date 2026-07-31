@@ -1,0 +1,19 @@
+code: issue_resolve
+name: 问题解决流
+entity_type: issue
+trigger: on_create
+nodes:
+  - {code: start, type: start}
+  - {code: triage, type: approval, approvers: "pm", sla_hours: 24, quorum: 1}
+  - {code: develop, type: task}
+  - {code: verify, type: approval}
+  - {code: end, type: end}
+transitions:
+  - {from: start, to: triage, on: submit}
+  - {from: triage, to: develop, on: approve_assign, status: assigned}
+  - {from: triage, to: end, on: reject, status: open}
+  - {from: develop, to: verify, on: start_dev, status: in_progress}
+  - {from: verify, to: end, on: verify_pass, status: verified}
+  - {from: verify, to: develop, on: verify_fail, status: in_progress}
+  - {from: verify, to: end, on: close, status: closed}
+  - {from: develop, to: verify, on: submit_verify, status: resolved}

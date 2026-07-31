@@ -1,0 +1,25 @@
+dictionaries:
+  - type: pm_change_type
+    name: 变更类型
+    details:
+      - {label: 范围, value: scope}
+      - {label: 进度, value: schedule}
+      - {label: 成本, value: cost}
+      - {label: 质量, value: quality}
+      - {label: 资源, value: resource}
+      - {label: 风险, value: risk}
+      - {label: 其他, value: other}
+  - type: pm_change_priority
+    name: 变更优先级
+    details:
+      - {label: 紧急, value: critical}
+      - {label: 高, value: high}
+      - {label: 中, value: medium}
+      - {label: 低, value: low}
+  - type: pm_ccb_role
+    name: CCB角色
+    details:
+      - {label: CCB主席, value: ccb_chair}
+      - {label: CCB成员, value: ccb_member}
+      - {label: 技术专家, value: tech_expert}
+      - {label: 业务代表, value: biz_rep}

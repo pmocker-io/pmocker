@@ -1,0 +1,41 @@
+entity_types:
+  - entity_type: change_request
+    module: change
+    name: 变更请求
+    icon: swap_horiz
+    icon_color: "#F56C6C"
+    fields:
+      - {field_key: code, field_label: 变更编号, data_type: string}
+      - {field_key: title, field_label: 标题, data_type: string}
+      - {field_key: type, field_label: 类型, data_type: enum, options_json: '["scope","schedule","cost","quality","resource","risk","other"]'}
+      - {field_key: priority, field_label: 优先级, data_type: enum, options_json: '["critical","high","medium","low"]'}
+      - {field_key: description, field_label: 变更描述, data_type: text}
+      - {field_key: reason, field_label: 变更原因, data_type: text}
+      - {field_key: requested_by, field_label: 申请人, data_type: ref}
+      - {field_key: requested_date, field_label: 申请日期, data_type: date}
+      - {field_key: impact_scope, field_label: 影响范围, data_type: text}
+      - {field_key: impact_schedule, field_label: 进度影响(天), data_type: int}
+      - {field_key: impact_cost, field_label: 成本影响, data_type: decimal}
+      - {field_key: impact_quality, field_label: 质量影响, data_type: text}
+      - {field_key: ccb_decision, field_label: CCB决议, data_type: text}
+      - {field_key: implemented_by, field_label: 实施人, data_type: ref}
+      - {field_key: implemented_date, field_label: 实施日期, data_type: date}
+      - {field_key: validation_result, field_label: 验证结果, data_type: text}
+    states: [draft, submitted, analyzing, ccb_review, approved, rejected, implementing, verified, closed, cancelled]
+    workflows: [change_request]
+
+  - entity_type: change_log
+    module: change
+    name: 变更日志
+    icon: notes
+    icon_color: "#909399"
+    fields:
+      - {field_key: change_request_id, field_label: 变更请求ID, data_type: ref}
+      - {field_key: entity_type, field_label: 受影响实体类型, data_type: string}
+      - {field_key: entity_id, field_label: 受影响实体ID, data_type: ref}
+      - {field_key: field_name, field_label: 变更字段, data_type: string}
+      - {field_key: old_value, field_label: 旧值, data_type: text}
+      - {field_key: new_value, field_label: 新值, data_type: text}
+      - {field_key: changed_by, field_label: 变更人, data_type: ref}
+      - {field_key: change_reason, field_label: 变更原因, data_type: text}
+    states: [recorded, applied, rolled_back]

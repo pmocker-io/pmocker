@@ -1,0 +1,12 @@
+code: risk_review
+name: 风险评审流
+entity_type: risk
+trigger: on_identify
+nodes:
+  - {code: start, type: start}
+  - {code: rm_review, type: approval, approvers: "rm,pm", sla_hours: 24, quorum: 1}
+  - {code: end, type: end}
+transitions:
+  - {from: start, to: rm_review, on: submit}
+  - {from: rm_review, to: end, on: approve, status: assessed}
+  - {from: rm_review, to: end, on: reject, status: identified}

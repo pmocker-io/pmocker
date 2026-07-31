@@ -1,0 +1,35 @@
+entity_types:
+  - entity_type: deliverable
+    module: deliverable
+    name: 交付物
+    icon: folder
+    icon_color: "#67C23A"
+    fields:
+      - {field_key: code, field_label: 交付物编号, data_type: string}
+      - {field_key: name, field_label: 名称, data_type: string}
+      - {field_key: category, field_label: 分类, data_type: enum, options_json: '["document","software","hardware","service","training"]'}
+      - {field_key: description, field_label: 描述, data_type: text}
+      - {field_key: version, field_label: 版本, data_type: string, default_value: "1.0"}
+      - {field_key: format, field_label: 格式, data_type: string}
+      - {field_key: owner_id, field_label: 负责人, data_type: ref}
+      - {field_key: planned_date, field_label: 计划提交日期, data_type: date}
+      - {field_key: actual_date, field_label: 实际提交日期, data_type: date}
+      - {field_key: reviewer_id, field_label: 验收人, data_type: ref}
+      - {field_key: acceptance_criteria, field_label: 验收标准, data_type: text}
+      - {field_key: file_ref, field_label: 附件引用, data_type: string}
+      - {field_key: related_requirements, field_label: 关联需求ID列表, data_type: string}
+    states: [draft, submitted, reviewing, accepted, rejected, baselined, obsolete]
+    workflows: [deliverable_accept]
+  - entity_type: deliverable_version
+    module: deliverable
+    name: 交付物版本
+    icon: history
+    icon_color: "#909399"
+    fields:
+      - {field_key: deliverable_id, field_label: 交付物ID, data_type: ref}
+      - {field_key: version, field_label: 版本号, data_type: string}
+      - {field_key: change_log, field_label: 变更说明, data_type: text}
+      - {field_key: created_by, field_label: 创建人, data_type: ref}
+      - {field_key: file_ref, field_label: 附件引用, data_type: string}
+      - {field_key: is_current, field_label: 是否当前版本, data_type: bool}
+    states: [active, archived]

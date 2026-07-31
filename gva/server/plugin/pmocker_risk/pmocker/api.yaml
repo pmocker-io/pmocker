@@ -1,0 +1,8 @@
+apis:
+  - {path: /pmocker/risk/create, description: 识别风险, api_group: 风险管理, method: POST}
+  - {path: /pmocker/risk/delete, description: 删除风险, api_group: 风险管理, method: DELETE}
+  - {path: /pmocker/risk/update, description: 更新风险, api_group: 风险管理, method: PUT}
+  - {path: /pmocker/risk/find, description: 查询风险, api_group: 风险管理, method: GET}
+  - {path: /pmocker/risk/list, description: 风险列表, api_group: 风险管理, method: GET}
+  - {path: /pmocker/risk/matrix, description: 风险矩阵, api_group: 风险管理, method: GET}
+  - {path: /pmocker/risk/assess, description: 评估风险, api_group: 风险管理, method: POST}

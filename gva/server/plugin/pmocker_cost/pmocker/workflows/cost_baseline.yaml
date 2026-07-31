@@ -1,0 +1,12 @@
+code: cost_baseline
+name: 成本基线审批流
+entity_type: cost_item
+trigger: on_baseline
+nodes:
+  - {code: start, type: start}
+  - {code: fm_approval, type: approval, approvers: "fm,pm", sla_hours: 24, quorum: 2}
+  - {code: end, type: end}
+transitions:
+  - {from: start, to: fm_approval, on: submit}
+  - {from: fm_approval, to: end, on: approve, status: planned}
+  - {from: fm_approval, to: end, on: reject, status: draft}

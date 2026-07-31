@@ -1,0 +1,6 @@
+code: pmocker_risk
+name: 风险管理
+version: 1.0.0
+description: 项目风险管理，含识别、评估、应对、监控
+dependencies:
+  - pmocker_core

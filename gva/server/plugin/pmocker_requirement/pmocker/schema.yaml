@@ -1,0 +1,39 @@
+entity_type: requirement
+module: requirement
+name: 需求
+icon: document
+icon_color: "#409EFF"
+fields:
+  - field_key: code
+    field_label: 需求编号
+    data_type: string
+  - field_key: priority
+    field_label: 优先级
+    data_type: enum
+    options_json: '["高","中","低"]'
+    default_value: 中
+  - field_key: source
+    field_label: 来源
+    data_type: enum
+    options_json: '["客户","市场","内部","合规"]'
+  - field_key: category
+    field_label: 分类
+    data_type: enum
+    options_json: '["功能","非功能","约束"]'
+  - field_key: description
+    field_label: 详细描述
+    data_type: text
+  - field_key: acceptance_criteria
+    field_label: 验收标准
+    data_type: text
+  - field_key: estimated_effort
+    field_label: 预估工时(人日)
+    data_type: decimal
+  - field_key: assigned_to
+    field_label: 责任人
+    data_type: ref
+  - field_key: planned_release
+    field_label: 计划发布版本
+    data_type: string
+states: [draft, reviewing, approved, rejected, fulfilled]
+workflows: [requirement_review]

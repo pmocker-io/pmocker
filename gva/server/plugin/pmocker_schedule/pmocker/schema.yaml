@@ -1,0 +1,32 @@
+entity_types:
+  - entity_type: task
+    module: schedule
+    name: 任务
+    icon: calendar
+    icon_color: "#E6A23C"
+    fields:
+      - {field_key: code, field_label: 任务编号, data_type: string}
+      - {field_key: wbs_node_id, field_label: WBS节点, data_type: ref}
+      - {field_key: start_date, field_label: 开始日期, data_type: date}
+      - {field_key: end_date, field_label: 结束日期, data_type: date}
+      - {field_key: duration, field_label: 工期(天), data_type: int}
+      - {field_key: progress, field_label: 完成度%, data_type: decimal, default_value: "0"}
+      - {field_key: assignee_id, field_label: 负责人, data_type: ref}
+      - {field_key: predecessors, field_label: 前置任务, data_type: json}
+      - {field_key: successors, field_label: 后置任务, data_type: json}
+      - {field_key: constraint_type, field_label: 约束类型, data_type: enum, options_json: '["ASAP","ALAP","SNET","FNLT"]'}
+      - {field_key: constraint_date, field_label: 约束日期, data_type: date}
+    states: [planned, in_progress, completed, overdue]
+    workflows: [schedule_baseline]
+
+  - entity_type: milestone
+    module: schedule
+    name: 里程碑
+    icon: flag
+    icon_color: "#F56C6C"
+    fields:
+      - {field_key: code, field_label: 里程碑编号, data_type: string}
+      - {field_key: due_date, field_label: 截止日期, data_type: date}
+      - {field_key: is_critical, field_label: 是否关键, data_type: bool, default_value: "false"}
+      - {field_key: deliverable_id, field_label: 关联交付物, data_type: ref}
+    states: [planned, achieved, missed]

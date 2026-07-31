@@ -1,0 +1,7 @@
+code: pmocker_cost
+name: 成本管理
+version: 1.0.0
+description: 项目成本管理，包含预算、实际成本和挣值分析
+dependencies:
+  - pmocker_core
+  - pmocker_schedule

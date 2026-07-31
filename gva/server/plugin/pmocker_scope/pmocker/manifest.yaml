@@ -1,0 +1,6 @@
+code: pmocker_scope
+name: 范围管理
+version: 1.0.0
+description: 项目范围管理，包含 WBS 分解和基线管理
+dependencies:
+  - pmocker_core

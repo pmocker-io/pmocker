@@ -33,24 +33,38 @@ func NewFromGva(
 	return &Loader{EAV: eav, Workflow: wf, MenuReg: menuReg, APIReg: apiReg, DictReg: dictReg}
 }
 
-// LoadSchema 灌入 schema.yaml 到 EAV 元表
+// LoadSchema 灌入 schema.yaml 到 EAV 元表。
+// 当 entity_types 数组非空时按多实体模式注册，否则走单实体模式（向后兼容）。
 func (l *Loader) LoadSchema(ctx context.Context, yamlBytes []byte) error {
 	var s SchemaYaml
 	if err := yaml.Unmarshal(yamlBytes, &s); err != nil {
 		return fmt.Errorf("parse schema.yaml: %w", err)
 	}
-	if err := l.EAV.RegisterEntityType(ctx, eavtypes.EntityType{
-		TypeCode:   s.EntityType,
-		ModuleCode: s.Module,
-		Name:       s.Name,
-		Icon:       s.Icon,
-		IconColor:  s.IconColor,
-	}); err != nil {
-		return fmt.Errorf("register entity type %s: %w", s.EntityType, err)
+	if len(s.EntityTypes) > 0 {
+		for _, et := range s.EntityTypes {
+			if err := l.loadSingleSchema(ctx, et.EntityType, et.Module, et.Name, et.Icon, et.IconColor, et.Fields); err != nil {
+				return err
+			}
+		}
+		return nil
 	}
-	for _, f := range s.Fields {
+	return l.loadSingleSchema(ctx, s.EntityType, s.Module, s.Name, s.Icon, s.IconColor, s.Fields)
+}
+
+// loadSingleSchema 注册单个实体类型及其字段定义
+func (l *Loader) loadSingleSchema(ctx context.Context, typeCode, module, name, icon, iconColor string, fields []FieldYaml) error {
+	if err := l.EAV.RegisterEntityType(ctx, eavtypes.EntityType{
+		TypeCode:   typeCode,
+		ModuleCode: module,
+		Name:       name,
+		Icon:       icon,
+		IconColor:  iconColor,
+	}); err != nil {
+		return fmt.Errorf("register entity type %s: %w", typeCode, err)
+	}
+	for _, f := range fields {
 		if err := l.EAV.RegisterFieldDef(ctx, eavtypes.FieldDef{
-			EntityType:   s.EntityType,
+			EntityType:   typeCode,
 			FieldKey:     f.FieldKey,
 			FieldLabel:   f.FieldLabel,
 			DataType:     eavtypes.DataType(f.DataType),
@@ -58,7 +72,7 @@ func (l *Loader) LoadSchema(ctx context.Context, yamlBytes []byte) error {
 			DefaultValue: f.DefaultValue,
 			Validators:   f.Validators,
 		}); err != nil {
-			return fmt.Errorf("register field %s.%s: %w", s.EntityType, f.FieldKey, err)
+			return fmt.Errorf("register field %s.%s: %w", typeCode, f.FieldKey, err)
 		}
 	}
 	return nil

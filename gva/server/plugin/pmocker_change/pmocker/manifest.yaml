@@ -1,0 +1,6 @@
+code: pmocker_change
+name: 变更管理
+version: 1.0.0
+description: 项目变更管理，支持变更请求登记、影响分析、CCB审批、实施、关闭
+dependencies:
+  - pmocker_core

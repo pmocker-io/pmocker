@@ -1,0 +1,21 @@
+dictionaries:
+  - type: pm_eps_type
+    name: EPS节点类型
+    details:
+      - {label: 集团, value: group}
+      - {label: 分公司, value: division}
+      - {label: 部门, value: department}
+      - {label: 项目组, value: project_group}
+      - {label: 项目, value: project}
+  - type: pm_eps_role
+    name: EPS成员角色
+    details:
+      - {label: 所有者, value: owner}
+      - {label: 经理, value: manager}
+      - {label: 成员, value: member}
+      - {label: 查看者, value: viewer}
+
+entities:
+  eps:
+    - {parent_path: "/", name: "集团总部", type: "group", code: "GROUP-001", sort: 1, is_active: true, status: active}
+    - {parent_path: "/集团总部", name: "技术中心", type: "division", code: "DIV-TECH", sort: 1, is_active: true, status: active}

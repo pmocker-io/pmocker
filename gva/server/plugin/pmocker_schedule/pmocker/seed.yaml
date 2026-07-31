@@ -1,0 +1,15 @@
+dictionaries:
+  - type: pm_task_constraint
+    name: 任务约束类型
+    details:
+      - {label: 越早越好, value: ASAP}
+      - {label: 越晚越好, value: ALAP}
+      - {label: 不得早于开始, value: SNET}
+      - {label: 不得晚于完成, value: FNLT}
+  - type: pm_task_status
+    name: 任务状态
+    details:
+      - {label: 已计划, value: planned}
+      - {label: 进行中, value: in_progress}
+      - {label: 已完成, value: completed}
+      - {label: 已逾期, value: overdue}

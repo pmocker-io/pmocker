@@ -1,0 +1,12 @@
+code: eps_node_approve
+name: EPS节点审批流
+entity_type: eps_node
+trigger: on_create
+nodes:
+  - {code: start, type: start}
+  - {code: review, type: approval, approvers: "ceo,cfo", sla_hours: 72, quorum: 1}
+  - {code: end, type: end}
+transitions:
+  - {from: start, to: review, on: submit}
+  - {from: review, to: end, on: approve, status: active}
+  - {from: review, to: end, on: reject, status: draft}

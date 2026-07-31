@@ -99,6 +99,33 @@ workflows: [requirement_review]
 	}
 }
 
+func TestLoadSchemaMultiEntity(t *testing.T) {
+	eav := &stubEAV{}
+	l := &Loader{EAV: eav}
+	yaml := []byte(`
+entity_types:
+  - entity_type: scope_item
+    module: scope
+    name: 范围项
+    fields:
+      - {field_key: code, field_label: 编号, data_type: string}
+  - entity_type: wbs_node
+    module: scope
+    name: WBS节点
+    fields:
+      - {field_key: path, field_label: 路径, data_type: string}
+`)
+	if err := l.LoadSchema(context.Background(), yaml); err != nil {
+		t.Fatalf("LoadSchema: %v", err)
+	}
+	if !eav.entityTypes["scope_item"] || !eav.entityTypes["wbs_node"] {
+		t.Errorf("entity types not registered: %v", eav.entityTypes)
+	}
+	if len(eav.fields) != 2 {
+		t.Errorf("expected 2 fields, got %d", len(eav.fields))
+	}
+}
+
 func TestLoadWorkflow(t *testing.T) {
 	wf := &stubWF{}
 	l := &Loader{Workflow: wf}

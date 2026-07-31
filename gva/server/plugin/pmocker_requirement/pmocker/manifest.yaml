@@ -1,0 +1,6 @@
+code: pmocker_requirement
+name: 需求管理
+version: 1.0.0
+description: 项目需求管理模块，支持需求收集、评审、追踪
+dependencies:
+  - pmocker_core

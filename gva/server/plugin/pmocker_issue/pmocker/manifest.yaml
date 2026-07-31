@@ -1,0 +1,6 @@
+code: pmocker_issue
+name: 问题管理
+version: 1.0.0
+description: 项目问题管理，支持登记、指派、解决、关闭全流程
+dependencies:
+  - pmocker_core

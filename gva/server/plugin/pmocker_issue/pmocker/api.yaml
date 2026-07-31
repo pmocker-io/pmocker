@@ -1,0 +1,12 @@
+apis:
+  - {path: /pmocker/issue/create, description: 创建问题, api_group: 问题管理, method: POST}
+  - {path: /pmocker/issue/delete, description: 删除问题, api_group: 问题管理, method: DELETE}
+  - {path: /pmocker/issue/update, description: 更新问题, api_group: 问题管理, method: PUT}
+  - {path: /pmocker/issue/find, description: 查询问题, api_group: 问题管理, method: GET}
+  - {path: /pmocker/issue/list, description: 问题列表, api_group: 问题管理, method: GET}
+  - {path: /pmocker/issue/board, description: 问题看板, api_group: 问题管理, method: GET}
+  - {path: /pmocker/issue/stats, description: 问题统计, api_group: 问题管理, method: GET}
+  - {path: /pmocker/issue/assign, description: 指派问题, api_group: 问题管理, method: POST}
+  - {path: /pmocker/issue/resolve, description: 解决问题, api_group: 问题管理, method: POST}
+  - {path: /pmocker/issue/close, description: 关闭问题, api_group: 问题管理, method: POST}
+  - {path: /pmocker/issue/reopen, description: 重开问题, api_group: 问题管理, method: POST}

@@ -1,0 +1,12 @@
+code: schedule_baseline
+name: 进度基线审批流
+entity_type: task
+trigger: on_baseline
+nodes:
+  - {code: start, type: start}
+  - {code: pm_approval, type: approval, approvers: "pm", sla_hours: 24, quorum: 1}
+  - {code: end, type: end}
+transitions:
+  - {from: start, to: pm_approval, on: submit}
+  - {from: pm_approval, to: end, on: approve, status: planned}
+  - {from: pm_approval, to: end, on: reject, status: draft}

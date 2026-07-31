@@ -1,0 +1,23 @@
+code: change_request
+name: 变更请求流
+entity_type: change_request
+trigger: on_submit
+nodes:
+  - {code: start, type: start}
+  - {code: submit, type: task, owner: pm_analyst}
+  - {code: analysis, type: task, owner: pm_analyst}
+  - {code: ccb, type: approval, approvers: ccb_chair, sla_hours: 72, quorum: 1}
+  - {code: implementation, type: task}
+  - {code: verification, type: task}
+  - {code: end, type: end}
+transitions:
+  - {from: start, to: submit, on: submit, status: submitted}
+  - {from: submit, to: analysis, on: start_analysis, status: analyzing}
+  - {from: analysis, to: ccb, on: analysis_done, status: ccb_review}
+  - {from: ccb, to: implementation, on: approve, status: approved}
+  - {from: ccb, to: end, on: reject, status: rejected}
+  - {from: ccb, to: end, on: cancel, status: cancelled}
+  - {from: implementation, to: verification, on: impl_done, status: implementing}
+  - {from: verification, to: end, on: verify_pass, status: verified}
+  - {from: verification, to: implementation, on: verify_fail, status: implementing}
+  - {from: end, to: end, on: close, status: closed}

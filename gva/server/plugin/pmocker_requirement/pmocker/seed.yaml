@@ -1,0 +1,14 @@
+dictionaries:
+  - type: pm_req_priority
+    name: 需求优先级
+    details:
+      - {label: 高, value: "1", extend: red}
+      - {label: 中, value: "2", extend: yellow}
+      - {label: 低, value: "3", extend: green}
+  - type: pm_req_source
+    name: 需求来源
+    details:
+      - {label: 客户, value: customer}
+      - {label: 市场, value: market}
+      - {label: 内部, value: internal}
+      - {label: 合规, value: compliance}

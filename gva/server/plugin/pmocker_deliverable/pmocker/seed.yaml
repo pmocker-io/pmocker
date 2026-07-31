@@ -1,0 +1,18 @@
+dictionaries:
+  - type: pm_deliverable_category
+    name: 交付物分类
+    details:
+      - {label: 文档, value: document}
+      - {label: 软件, value: software}
+      - {label: 硬件, value: hardware}
+      - {label: 服务, value: service}
+      - {label: 培训, value: training}
+  - type: pm_deliverable_format
+    name: 交付物格式
+    details:
+      - {label: PDF, value: PDF}
+      - {label: Word, value: Word}
+      - {label: Excel, value: Excel}
+      - {label: SourceCode, value: SourceCode}
+      - {label: Zip, value: Zip}
+      - {label: Other, value: Other}

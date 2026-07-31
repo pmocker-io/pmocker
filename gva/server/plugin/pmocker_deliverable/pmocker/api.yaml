@@ -1,0 +1,14 @@
+apis:
+  - {path: /pmocker/deliverable/create, description: 创建交付物, api_group: 交付物管理, method: POST}
+  - {path: /pmocker/deliverable/update, description: 更新交付物, api_group: 交付物管理, method: PUT}
+  - {path: /pmocker/deliverable/delete, description: 删除交付物, api_group: 交付物管理, method: DELETE}
+  - {path: /pmocker/deliverable/find, description: 查询交付物, api_group: 交付物管理, method: GET}
+  - {path: /pmocker/deliverable/list, description: 交付物列表, api_group: 交付物管理, method: GET}
+  - {path: /pmocker/deliverable/submitReview, description: 提交评审, api_group: 交付物管理, method: POST}
+  - {path: /pmocker/deliverable/accept, description: 验收通过, api_group: 交付物管理, method: POST}
+  - {path: /pmocker/deliverable/reject, description: 验收驳回, api_group: 交付物管理, method: POST}
+  - {path: /pmocker/deliverable/createVersion, description: 创建版本, api_group: 交付物管理, method: POST}
+  - {path: /pmocker/deliverable/listVersions, description: 版本列表, api_group: 交付物管理, method: GET}
+  - {path: /pmocker/deliverable/baseline, description: 基线化, api_group: 交付物管理, method: POST}
+  - {path: /pmocker/deliverable/traceReport, description: 追溯报告, api_group: 交付物管理, method: GET}
+  - {path: /pmocker/deliverable/stats, description: 交付物统计, api_group: 交付物管理, method: GET}

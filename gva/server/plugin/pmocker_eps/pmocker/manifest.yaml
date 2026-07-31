@@ -1,0 +1,6 @@
+code: pmocker_eps
+name: 组织级EPS
+version: 1.0.0
+description: 企业项目结构（Enterprise Project Structure）管理，多级组织树和权限继承
+dependencies:
+  - pmocker_core

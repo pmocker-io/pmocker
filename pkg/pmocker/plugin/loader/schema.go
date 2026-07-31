@@ -14,7 +14,25 @@ type ManifestYaml struct {
 }
 
 // SchemaYaml 对应 pmocker/schema.yaml
+// 支持单实体模式（向后兼容）或多实体模式（entity_types 数组优先）
 type SchemaYaml struct {
+	// 单实体模式（向后兼容）
+	EntityType string      `yaml:"entity_type"`
+	Module     string      `yaml:"module"`
+	Name       string      `yaml:"name"`
+	Icon       string      `yaml:"icon"`
+	IconColor  string      `yaml:"icon_color"`
+	Fields     []FieldYaml `yaml:"fields"`
+	States     []string    `yaml:"states"`
+	Workflows  []string    `yaml:"workflows"`
+
+	// 多实体模式：当 EntityTypes 非空时按数组注册多个实体类型
+	EntityTypes []EntitySchemaYaml `yaml:"entity_types"`
+}
+
+// EntitySchemaYaml 多实体模式（entity_types 数组）下的单个实体类型定义。
+// 字段与 SchemaYaml 的单实体字段一致。
+type EntitySchemaYaml struct {
 	EntityType string      `yaml:"entity_type"`
 	Module     string      `yaml:"module"`
 	Name       string      `yaml:"name"`

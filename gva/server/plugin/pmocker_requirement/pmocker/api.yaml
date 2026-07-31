@@ -1,0 +1,10 @@
+apis:
+  - {path: /pmocker/requirement/create, description: 创建需求, api_group: 需求管理, method: POST}
+  - {path: /pmocker/requirement/delete, description: 删除需求, api_group: 需求管理, method: DELETE}
+  - {path: /pmocker/requirement/update, description: 更新需求, api_group: 需求管理, method: PUT}
+  - {path: /pmocker/requirement/find, description: 查询需求, api_group: 需求管理, method: GET}
+  - {path: /pmocker/requirement/list, description: 需求列表, api_group: 需求管理, method: GET}
+  - {path: /pmocker/requirement/traceMatrix, description: 需求追踪矩阵, api_group: 需求管理, method: GET}
+  - {path: /pmocker/requirement/submitReview, description: 提交评审, api_group: 需求管理, method: POST}
+  - {path: /pmocker/requirement/approve, description: 批准需求, api_group: 需求管理, method: POST}
+  - {path: /pmocker/requirement/reject, description: 驳回需求, api_group: 需求管理, method: POST}

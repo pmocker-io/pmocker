@@ -1,0 +1,26 @@
+entity_types:
+  - entity_type: scope_item
+    module: scope
+    name: 范围项
+    icon: list
+    icon_color: "#67C23A"
+    fields:
+      - {field_key: code, field_label: 范围编号, data_type: string}
+      - {field_key: wbs_path, field_label: WBS路径, data_type: string}
+      - {field_key: is_deliverable, field_label: 是否交付物, data_type: bool, default_value: "false"}
+      - {field_key: description, field_label: 描述, data_type: text}
+      - {field_key: parent_id, field_label: 父范围项, data_type: ref}
+    states: [draft, baselined, changed]
+    workflows: [scope_baseline]
+
+  - entity_type: wbs_node
+    module: scope
+    name: WBS节点
+    icon: tree
+    icon_color: "#67C23A"
+    fields:
+      - {field_key: path, field_label: 物化路径, data_type: string}
+      - {field_key: level, field_label: 层级, data_type: int}
+      - {field_key: scope_item_id, field_label: 关联范围项, data_type: ref}
+      - {field_key: deliverable_id, field_label: 关联交付物, data_type: ref}
+    states: [active, archived]

@@ -1,0 +1,21 @@
+code: requirement_review
+name: 需求评审流
+entity_type: requirement
+trigger: on_submit
+nodes:
+  - code: start
+    type: start
+  - code: pm_review
+    type: approval
+    approvers: "pm,po"
+    sla_hours: 48
+    quorum: 1
+  - code: end
+    type: end
+transitions:
+  - {from: start, to: pm_review, on: submit}
+  - {from: pm_review, to: end, on: approve, status: approved}
+  - {from: pm_review, to: end, on: reject, status: rejected}
+on_complete:
+  action: set_status
+  sign: true

@@ -1,0 +1,20 @@
+entity_type: issue
+module: issue
+name: 问题
+icon: bug
+icon_color: "#F56C6C"
+fields:
+  - {field_key: code, field_label: 问题编号, data_type: string}
+  - {field_key: title, field_label: 标题, data_type: string}
+  - {field_key: description, field_label: 描述, data_type: text}
+  - {field_key: priority, field_label: 优先级, data_type: enum, options_json: '["紧急","高","中","低"]'}
+  - {field_key: severity, field_label: 严重程度, data_type: enum, options_json: '["fatal","critical","major","minor","trivial"]'}
+  - {field_key: category, field_label: 分类, data_type: enum, options_json: '["bug","performance","usability","other"]'}
+  - {field_key: assigned_to, field_label: 指派给, data_type: ref}
+  - {field_key: reported_by, field_label: 报告人, data_type: ref}
+  - {field_key: due_date, field_label: 截止日期, data_type: date}
+  - {field_key: resolution, field_label: 解决方案, data_type: text}
+  - {field_key: root_cause, field_label: 根本原因, data_type: text}
+  - {field_key: status, field_label: 状态, data_type: enum, options_json: '["open","assigned","in_progress","resolved","verified","closed","reopened"]'}
+states: [open, assigned, in_progress, resolved, verified, closed, reopened]
+workflows: [issue_resolve]

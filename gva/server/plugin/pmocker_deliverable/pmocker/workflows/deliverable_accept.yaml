@@ -1,0 +1,15 @@
+code: deliverable_accept
+name: 交付物验收流
+entity_type: deliverable
+trigger: on_submit
+nodes:
+  - {code: start, type: start}
+  - {code: submit, type: task}
+  - {code: qa_review, type: approval, approvers: "qa,pm", sla_hours: 72, quorum: 1}
+  - {code: end, type: end}
+transitions:
+  - {from: start, to: submit, on: submit}
+  - {from: submit, to: qa_review, on: submit}
+  - {from: qa_review, to: end, on: approve, status: accepted}
+  - {from: qa_review, to: submit, on: reject, status: rejected}
+  - {from: qa_review, to: submit, on: rework, status: submitted}

@@ -1,0 +1,12 @@
+code: scope_baseline
+name: 范围基线审批流
+entity_type: scope_item
+trigger: on_baseline
+nodes:
+  - {code: start, type: start}
+  - {code: cc_approval, type: approval, approvers: "cc", sla_hours: 24, quorum: 1}
+  - {code: end, type: end}
+transitions:
+  - {from: start, to: cc_approval, on: submit}
+  - {from: cc_approval, to: end, on: approve, status: baselined}
+  - {from: cc_approval, to: end, on: reject, status: draft}

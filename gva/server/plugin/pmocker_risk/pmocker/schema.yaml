@@ -1,0 +1,21 @@
+entity_type: risk
+module: risk
+name: 风险
+icon: warning
+icon_color: "#E6A23C"
+fields:
+  - {field_key: code, field_label: 风险编号, data_type: string}
+  - {field_key: category, field_label: 类别, data_type: enum, options_json: '["technical","external","organizational","project_management"]'}
+  - {field_key: description, field_label: 风险描述, data_type: text}
+  - {field_key: probability, field_label: 发生概率(1-5), data_type: int}
+  - {field_key: impact, field_label: 影响程度(1-5), data_type: int}
+  - {field_key: risk_score, field_label: 风险分值, data_type: int}
+  - {field_key: risk_level, field_label: 风险等级, data_type: enum, options_json: '["low","medium","high","critical"]'}
+  - {field_key: response_strategy, field_label: 应对策略, data_type: enum, options_json: '["avoid","mitigate","transfer","accept","escalate"]'}
+  - {field_key: response_plan, field_label: 应对计划, data_type: text}
+  - {field_key: trigger_condition, field_label: 触发条件, data_type: text}
+  - {field_key: owner_id, field_label: 责任人, data_type: ref}
+  - {field_key: due_date, field_label: 应对截止日, data_type: date}
+  - {field_key: status, field_label: 状态, data_type: enum, options_json: '["identified","assessed","responding","closed","realized"]'}
+states: [identified, assessed, responding, closed, realized]
+workflows: [risk_review]

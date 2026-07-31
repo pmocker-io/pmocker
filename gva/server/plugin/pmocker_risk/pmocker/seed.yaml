@@ -1,0 +1,16 @@
+dictionaries:
+  - type: pm_risk_category
+    name: 风险类别
+    details:
+      - {label: 技术, value: technical}
+      - {label: 外部, value: external}
+      - {label: 组织, value: organizational}
+      - {label: 项目管理, value: project_management}
+  - type: pm_risk_strategy
+    name: 风险应对策略
+    details:
+      - {label: 规避, value: avoid}
+      - {label: 减轻, value: mitigate}
+      - {label: 转移, value: transfer}
+      - {label: 接受, value: accept}
+      - {label: 上报, value: escalate}

@@ -1,0 +1,7 @@
+dictionaries:
+  - type: pm_scope_status
+    name: 范围状态
+    details:
+      - {label: 草稿, value: draft}
+      - {label: 已基线, value: baselined}
+      - {label: 已变更, value: changed}

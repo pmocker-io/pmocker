@@ -1,0 +1,3 @@
+package issue
+
+type ServiceGroup
