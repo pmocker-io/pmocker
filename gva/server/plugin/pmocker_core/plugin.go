@@ -2,6 +2,7 @@ package pmocker_core
 
 import (
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
+	pmockerRouter "github.com/flipped-aurora/gin-vue-admin/server/router/pmocker"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/pmocker"
 	interfaces "github.com/flipped-aurora/gin-vue-admin/server/utils/plugin/v2"
 	"github.com/gin-gonic/gin"
@@ -20,10 +21,11 @@ func init() {
 // gva 在启动时调用所有已注册插件的 Register，此时 GVA_DB 已初始化。
 func (p *plugin) Register(group *gin.Engine) {
 	registerTables()
+	// 注册 PMocker 路由
+	pmockerRouter.RouterGroupApp.InitEAV(group.Group("api").Group("pmocker"))
 }
 
 // registerTables 注册 PMocker 的所有数据库表。
-// 直接调用 AutoMigrate，避免导入 initialize 包导致循环依赖。
 func registerTables() {
 	if global.GVA_DB == nil {
 		return
