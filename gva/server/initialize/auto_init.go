@@ -33,34 +33,46 @@ func AutoInitIfEmpty() {
 		logger.Bg().Mod("auto-init").Err(err).Error("检查用户表失败")
 		return
 	}
-	if count > 0 {
-		logger.Bg().Mod("auto-init").Info("数据库已有用户数据，跳过自动初始化")
-		return
+	if count == 0 {
+		// 从配置构造 InitDB 请求
+		conf := request.InitDB{
+			AdminPassword: getAdminPassword(),
+			DBType:        global.GVA_CONFIG.System.DbType,
+		}
+
+		// SQLite 需要填充 DBPath 和 DBName
+		if conf.DBType == "sqlite" {
+			conf.DBPath = global.GVA_CONFIG.Sqlite.Path
+			conf.DBName = global.GVA_CONFIG.Sqlite.Dbname
+		}
+
+		logger.Bg().Mod("auto-init").Info("PMocker 自动初始化数据库...")
+		initDBService := &sysService.InitDBService{}
+		if err := initDBService.InitDB(conf); err != nil {
+			logger.Bg().Mod("auto-init").Err(err).Error("自动初始化数据库失败")
+			return
+		}
+		logger.Bg().Mod("auto-init").Info("PMocker 自动初始化数据库完成")
+	} else {
+		logger.Bg().Mod("auto-init").Info("数据库已有用户数据，跳过初始化")
 	}
 
-	// 从配置构造 InitDB 请求
-	conf := request.InitDB{
-		AdminPassword: getAdminPassword(),
-		DBType:        global.GVA_CONFIG.System.DbType,
-	}
-
-	// SQLite 需要填充 DBPath 和 DBName
-	if conf.DBType == "sqlite" {
-		conf.DBPath = global.GVA_CONFIG.Sqlite.Path
-		conf.DBName = global.GVA_CONFIG.Sqlite.Dbname
-	}
-
-	logger.Bg().Mod("auto-init").Info("PMocker 自动初始化数据库...")
-	initDBService := &sysService.InitDBService{}
-	if err := initDBService.InitDB(conf); err != nil {
-		logger.Bg().Mod("auto-init").Err(err).Error("自动初始化数据库失败")
-		return
-	}
 	// PMocker 实例模式禁用验证码（自动化测试/演示场景）
-	if err := global.GVA_DB.Table("sys_security_config").Where("id = ?", 1).Update("captcha_open", 99999).Error; err != nil {
-		logger.Bg().Mod("auto-init").Err(err).Error("禁用验证码失败")
+	// 无论是否首次初始化都执行：InitDB 不创建 sys_security_config 行，
+	// 直接 Update WHERE id=1 会影响 0 行；通过 SecurityConfigService.Get() 确保行存在
+	// （不存在则创建默认行），再 Set 更新并刷新内存缓存。
+	secSvc := &sysService.SecurityConfigService{}
+	secCfg, err := secSvc.Get(context.Background())
+	if err != nil {
+		logger.Bg().Mod("auto-init").Err(err).Error("获取安全配置失败，跳过验证码禁用")
+		return
 	}
-	logger.Bg().Mod("auto-init").Info("PMocker 自动初始化数据库完成")
+	secCfg.CaptchaOpen = 99999
+	if err := secSvc.Set(context.Background(), secCfg); err != nil {
+		logger.Bg().Mod("auto-init").Err(err).Error("禁用验证码失败")
+	} else {
+		logger.Bg().Mod("auto-init").Info("已禁用登录验证码（captcha_open=99999）")
+	}
 }
 
 // AutoInitPostPlugins 在插件初始化（Routers）之后执行，注册 MCP 动态工具、Casbin 规则和签发 API Token。
