@@ -52,10 +52,10 @@ mysql:
   max-open-conns: 100
 
 sqlite:
-  path: "{{.VolumePath}}"
+  path: '{{.VolumePath}}'
   port: ""
   config: ""
-  db-name: "system.db"
+  db-name: "system"
   username: ""
   password: ""
   max-idle-conns: 10
@@ -74,7 +74,8 @@ pgsql:
 db-list: []
 
 local:
-  path: "{{.UploadsPath}}"
+  path: '{{.UploadsPath}}'
+  store-path: '/uploads'
 
 autocode:
   transfer-restart: true

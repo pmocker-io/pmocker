@@ -5,6 +5,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
+	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -98,8 +101,7 @@ func (m *Manager) Run(opts RunOptions) (*Instance, error) {
 	// 6. fork gva-server
 	pid, err := m.startProcess(inst, opts.AdminPassword)
 	if err != nil {
-		m.volumes.Remove(volumeID)
-		return nil, fmt.Errorf("start process: %w", err)
+		return nil, fmt.Errorf("start process: %w (volume kept at %s for debugging)", err, m.volumes.Path(volumeID))
 	}
 
 	inst.PID = pid
@@ -187,6 +189,11 @@ func (m *Manager) Get(idOrName string) (*Instance, error) {
 // startProcess fork gva-server 进程
 func (m *Manager) startProcess(inst *Instance, adminPassword string) (int, error) {
 	cfgPath := m.volumes.ConfigPath(inst.VolumeID)
+	logPath := filepath.Join(m.volumes.Path(inst.VolumeID), "gva-server.log")
+	logFile, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	if err != nil {
+		return 0, fmt.Errorf("open log file: %w", err)
+	}
 	cmd := exec.Command(m.binPath)
 	cmd.Env = append(os.Environ(),
 		"GVA_CONFIG="+cfgPath,
@@ -195,20 +202,35 @@ func (m *Manager) startProcess(inst *Instance, adminPassword string) (int, error
 	if adminPassword != "" {
 		cmd.Env = append(cmd.Env, "PMOCKER_ADMIN_PASSWORD="+adminPassword)
 	}
+	cmd.Stdout = logFile
+	cmd.Stderr = logFile
+	// detach 进程，避免父进程退出时被杀
+	cmd.SysProcAttr = &syscall.SysProcAttr{}
 	if err := cmd.Start(); err != nil {
+		logFile.Close()
 		return 0, err
 	}
-	time.Sleep(500 * time.Millisecond)
-	if cmd.ProcessState != nil && cmd.ProcessState.Exited() {
-		return 0, fmt.Errorf("gva-server exited immediately")
+	pid := cmd.Process.Pid
+	// 释放资源，让进程独立运行
+	_ = cmd.Process.Release()
+	logFile.Close()
+	time.Sleep(2 * time.Second)
+	if !processExists(pid) {
+		return 0, fmt.Errorf("gva-server exited immediately, check log: %s", logPath)
 	}
-	return cmd.Process.Pid, nil
+	return pid, nil
 }
 
 // stopProcess 停止进程
 func (m *Manager) stopProcess(pid int) error {
 	if pid <= 0 {
 		return nil
+	}
+	if !processExists(pid) {
+		return nil
+	}
+	if runtime.GOOS == "windows" {
+		return exec.Command("taskkill", "/F", "/T", "/PID", strconv.Itoa(pid)).Run()
 	}
 	proc, err := os.FindProcess(pid)
 	if err != nil {
@@ -230,6 +252,23 @@ func (m *Manager) stopProcess(pid int) error {
 		<-done
 		return fmt.Errorf("process killed after timeout")
 	}
+}
+
+// processExists 检查进程是否存活
+func processExists(pid int) bool {
+	if pid <= 0 {
+		return false
+	}
+	if runtime.GOOS == "windows" {
+		out, _ := exec.Command("tasklist", "/FI", "PID eq "+strconv.Itoa(pid), "/NH", "/FO", "CSV").Output()
+		return strings.Contains(string(out), strconv.Itoa(pid))
+	}
+	proc, err := os.FindProcess(pid)
+	if err != nil {
+		return false
+	}
+	err = proc.Signal(syscall.Signal(0))
+	return err == nil
 }
 
 // parseRef 从 name:tag 中提取 name 和 tag
