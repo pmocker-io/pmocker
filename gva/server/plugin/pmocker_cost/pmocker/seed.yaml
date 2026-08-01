@@ -11,3 +11,15 @@ dictionaries:
     details:
       - {label: 人民币, value: CNY}
       - {label: 美元, value: USD}
+  - type: pm_cost_estimation_method
+    name: 成本估算方法
+    details:
+      - {label: 类比估算, value: analogous}
+      - {label: 参数估算, value: parametric}
+      - {label: 自下而上估算, value: bottom_up}
+      - {label: 三点估算, value: three_point}
+  - type: pm_reserve_type
+    name: 储备类型
+    details:
+      - {label: 应急储备, value: contingency}
+      - {label: 管理储备, value: management}

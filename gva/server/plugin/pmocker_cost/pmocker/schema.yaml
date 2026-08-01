@@ -13,5 +13,24 @@ fields:
   - {field_key: planned_start, field_label: 计划开始, data_type: date}
   - {field_key: planned_finish, field_label: 计划完成, data_type: date}
   - {field_key: currency, field_label: 币种, data_type: string, default_value: CNY}
+  # --- EVM 派生指标（auto 节点自动计算） ---
+  - {field_key: bac, field_label: 完工预算(BAC), data_type: decimal}
+  - {field_key: cv, field_label: 成本偏差(CV), data_type: decimal, default_value: "0"}
+  - {field_key: sv, field_label: 进度偏差(SV), data_type: decimal, default_value: "0"}
+  - {field_key: cpi, field_label: 成本绩效指数(CPI), data_type: decimal, default_value: "0"}
+  - {field_key: spi, field_label: 进度绩效指数(SPI), data_type: decimal, default_value: "0"}
+  - {field_key: eac, field_label: 完工估算(EAC), data_type: decimal}
+  - {field_key: etc, field_label: 完工尚需估算(ETC), data_type: decimal}
+  - {field_key: vac, field_label: 完工偏差(VAC), data_type: decimal}
+  - {field_key: tcpi, field_label: 完工尚需绩效指数(TCPI), data_type: decimal}
+  # --- 估算方法与储备 ---
+  - {field_key: estimation_method, field_label: 估算方法, data_type: enum, options_json: '["analogous","parametric","bottom_up","three_point"]'}
+  - {field_key: contingency_reserve, field_label: 应急储备, data_type: decimal, default_value: "0"}
+  - {field_key: management_reserve, field_label: 管理储备, data_type: decimal, default_value: "0"}
+  # --- 基线与实际 ---
+  - {field_key: baseline_version, field_label: 成本基线版本, data_type: string}
+  - {field_key: baseline_date, field_label: 基线日期, data_type: date}
+  - {field_key: actual_date, field_label: 实际发生日期, data_type: date}
+  - {field_key: variance_reason, field_label: 偏差原因分析, data_type: text}
 states: [planned, in_progress, closed, over_budget]
 workflows: [cost_baseline]

@@ -1,12 +1,18 @@
 code: cost_baseline
-name: 成本基线审批流
+name: 成本基线审批与执行流
 entity_type: cost_item
 trigger: on_baseline
 nodes:
   - {code: start, type: start}
   - {code: fm_approval, type: approval, approvers: "fm,pm", sla_hours: 24, quorum: 2}
+  - {code: evm_calc, type: auto, handler: pmocker.cost.evm_calc}
+  - {code: pm_review, type: approval, approvers: "pm", sla_hours: 48, quorum: 1}
   - {code: end, type: end}
 transitions:
   - {from: start, to: fm_approval, on: submit}
-  - {from: fm_approval, to: end, on: approve, status: planned}
+  - {from: fm_approval, to: evm_calc, on: approve, status: planned}
   - {from: fm_approval, to: end, on: reject, status: draft}
+  - {from: evm_calc, to: pm_review, on: start_work, status: in_progress}
+  - {from: pm_review, to: evm_calc, on: recalc, status: in_progress}
+  - {from: pm_review, to: end, on: close, status: closed}
+  - {from: pm_review, to: end, on: flag_over_budget, status: over_budget}
