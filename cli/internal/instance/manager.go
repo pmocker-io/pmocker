@@ -274,7 +274,7 @@ func (m *Manager) writeMCPConfig(volumeID string, instanceID string, gvaPort int
   path: /mcp
   addr: 8899
   base_url: http://127.0.0.1:8899/mcp
-  upstream_base_url: http://127.0.0.1:%d/api
+  upstream_base_url: http://127.0.0.1:%d
   auth_header: x-token
   request_timeout: 15
 `, instanceID[:8], gvaPort)

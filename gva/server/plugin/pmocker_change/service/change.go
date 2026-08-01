@@ -2,11 +2,14 @@ package change
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	pmservice "github.com/flipped-aurora/gin-vue-admin/server/service/pmocker"
 	eavtypes "github.com/pmocker-io/pmocker/pkg/pmocker/eav"
+	"gorm.io/gorm"
 )
 
 type Service struct{}
@@ -297,6 +300,9 @@ func (s *Service) ListChangeLogs(ctx context.Context, changeID uint) ([]eavtypes
 	if changeID > 0 {
 		cr, err := s.GetChangeRequest(ctx, changeID)
 		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) || strings.Contains(err.Error(), "is not a change_request") {
+				return []eavtypes.Entity{}, nil
+			}
 			return nil, err
 		}
 		projectID = cr.ProjectID

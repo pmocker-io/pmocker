@@ -2,12 +2,14 @@ package deliverable
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
 
 	eavtypes "github.com/pmocker-io/pmocker/pkg/pmocker/eav"
 	pmservice "github.com/flipped-aurora/gin-vue-admin/server/service/pmocker"
+	"gorm.io/gorm"
 )
 
 type Service struct{}
@@ -207,6 +209,9 @@ func (s *Service) ListVersions(ctx context.Context, deliverableID uint) ([]eavty
 	if deliverableID > 0 {
 		e, err := s.GetDeliverable(ctx, deliverableID)
 		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) || strings.Contains(err.Error(), "is not a deliverable") {
+				return []eavtypes.Entity{}, nil
+			}
 			return nil, err
 		}
 		projectID = e.ProjectID
