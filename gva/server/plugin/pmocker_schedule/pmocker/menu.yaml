@@ -1,28 +1,28 @@
 menus:
   - path: /pmocker/schedule
     name: pmockerSchedule
-    component: view/routerHolder
+    component: view/routerHolder.vue
     sort: 30
     title: 进度管理
     icon: calendar
   - path: gantt
     name: pmockerScheduleGantt
     parent_name: pmockerSchedule
-    component: view/pmocker/schedule/gantt
+    component: view/pmocker/schedule/gantt.vue
     sort: 1
     title: 甘特图
     icon: chart
   - path: critical
     name: pmockerScheduleCritical
     parent_name: pmockerSchedule
-    component: view/pmocker/schedule/critical
+    component: view/pmocker/schedule/critical.vue
     sort: 2
     title: 关键路径
     icon: warning
   - path: milestone
     name: pmockerScheduleMilestone
     parent_name: pmockerSchedule
-    component: view/pmocker/schedule/milestone
+    component: view/pmocker/schedule/milestone.vue
     sort: 3
     title: 里程碑
     icon: flag

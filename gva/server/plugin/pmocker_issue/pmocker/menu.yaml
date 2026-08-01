@@ -1,21 +1,21 @@
 menus:
   - path: /pmocker/issue
     name: pmockerIssue
-    component: view/routerHolder
+    component: view/routerHolder.vue
     sort: 60
     title: 问题管理
     icon: bug
   - path: list
     name: pmockerIssueList
     parent_name: pmockerIssue
-    component: view/pmocker/issue/list
+    component: view/pmocker/issue/list.vue
     sort: 1
     title: 问题列表
     icon: list
   - path: board
     name: pmockerIssueBoard
     parent_name: pmockerIssue
-    component: view/pmocker/issue/board
+    component: view/pmocker/issue/board.vue
     sort: 2
     title: 看板视图
     icon: grid

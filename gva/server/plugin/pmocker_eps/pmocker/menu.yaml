@@ -1,21 +1,21 @@
 menus:
   - path: /pmocker/eps
     name: pmockerEps
-    component: view/routerHolder
+    component: view/routerHolder.vue
     sort: 70
     title: 组织EPS
     icon: account_tree
   - path: tree
     name: pmockerEpsTree
     parent_name: pmockerEps
-    component: view/pmocker/eps/tree
+    component: view/pmocker/eps/tree.vue
     sort: 1
     title: EPS树
     icon: account_tree
   - path: members
     name: pmockerEpsMembers
     parent_name: pmockerEps
-    component: view/pmocker/eps/members
+    component: view/pmocker/eps/members.vue
     sort: 2
     title: 成员管理
     icon: user

@@ -1,35 +1,35 @@
 menus:
   - path: /pmocker/change
     name: pmockerChange
-    component: view/routerHolder
+    component: view/routerHolder.vue
     sort: 90
     title: 变更管理
     icon: swap_horiz
   - path: list
     name: pmockerChangeList
     parent_name: pmockerChange
-    component: view/pmocker/change/list
+    component: view/pmocker/change/list.vue
     sort: 1
     title: 变更请求列表
     icon: list
   - path: ccb
     name: pmockerChangeCCB
     parent_name: pmockerChange
-    component: view/pmocker/change/ccb
+    component: view/pmocker/change/ccb.vue
     sort: 2
     title: CCB审批台
     icon: how_to_reg
   - path: log
     name: pmockerChangeLog
     parent_name: pmockerChange
-    component: view/pmocker/change/log
+    component: view/pmocker/change/log.vue
     sort: 3
     title: 变更日志
     icon: notes
   - path: impact
     name: pmockerChangeImpact
     parent_name: pmockerChange
-    component: view/pmocker/change/impact
+    component: view/pmocker/change/impact.vue
     sort: 4
     title: 影响分析
     icon: analytics

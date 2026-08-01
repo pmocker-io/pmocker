@@ -1,21 +1,21 @@
 menus:
   - path: /pmocker/scope
     name: pmockerScope
-    component: view/routerHolder
+    component: view/routerHolder.vue
     sort: 20
     title: 范围管理
     icon: list
   - path: wbs
     name: pmockerScopeWBS
     parent_name: pmockerScope
-    component: view/pmocker/scope/wbs
+    component: view/pmocker/scope/wbs.vue
     sort: 1
     title: WBS分解
     icon: tree
   - path: baseline
     name: pmockerScopeBaseline
     parent_name: pmockerScope
-    component: view/pmocker/scope/baseline
+    component: view/pmocker/scope/baseline.vue
     sort: 2
     title: 范围基线
     icon: lock

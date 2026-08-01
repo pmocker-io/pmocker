@@ -1,21 +1,21 @@
 menus:
   - path: /pmocker/risk
     name: pmockerRisk
-    component: view/routerHolder
+    component: view/routerHolder.vue
     sort: 50
     title: 风险管理
     icon: warning
   - path: register
     name: pmockerRiskRegister
     parent_name: pmockerRisk
-    component: view/pmocker/risk/register
+    component: view/pmocker/risk/register.vue
     sort: 1
     title: 风险登记册
     icon: list
   - path: matrix
     name: pmockerRiskMatrix
     parent_name: pmockerRisk
-    component: view/pmocker/risk/matrix
+    component: view/pmocker/risk/matrix.vue
     sort: 2
     title: 风险矩阵
     icon: grid

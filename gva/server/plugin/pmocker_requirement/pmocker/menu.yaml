@@ -1,21 +1,21 @@
 menus:
   - path: /pmocker/requirement
     name: pmockerRequirement
-    component: view/routerHolder
+    component: view/routerHolder.vue
     sort: 10
     title: 需求管理
     icon: document
   - path: list
     name: pmockerRequirementList
     parent_name: pmockerRequirement
-    component: view/pmocker/requirement/list
+    component: view/pmocker/requirement/list.vue
     sort: 1
     title: 需求列表
     icon: list
   - path: matrix
     name: pmockerRequirementMatrix
     parent_name: pmockerRequirement
-    component: view/pmocker/requirement/matrix
+    component: view/pmocker/requirement/matrix.vue
     sort: 2
     title: 需求追踪矩阵
     icon: matrix

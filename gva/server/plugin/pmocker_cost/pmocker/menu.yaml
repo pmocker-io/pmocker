@@ -1,28 +1,28 @@
 menus:
   - path: /pmocker/cost
     name: pmockerCost
-    component: view/routerHolder
+    component: view/routerHolder.vue
     sort: 40
     title: 成本管理
     icon: money
   - path: budget
     name: pmockerCostBudget
     parent_name: pmockerCost
-    component: view/pmocker/cost/budget
+    component: view/pmocker/cost/budget.vue
     sort: 1
     title: 预算管理
     icon: wallet
   - path: evm
     name: pmockerCostEVM
     parent_name: pmockerCost
-    component: view/pmocker/cost/evm
+    component: view/pmocker/cost/evm.vue
     sort: 2
     title: 挣值分析
     icon: trend
   - path: s_curve
     name: pmockerCostCurve
     parent_name: pmockerCost
-    component: view/pmocker/cost/curve
+    component: view/pmocker/cost/curve.vue
     sort: 3
     title: S曲线
     icon: chart
