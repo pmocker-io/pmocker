@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 
+	adapter "github.com/casbin/gorm-adapter/v3"
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	sysModel "github.com/flipped-aurora/gin-vue-admin/server/model/system"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/system/request"
@@ -65,12 +66,21 @@ func AutoInitIfEmpty() {
 		logger.Bg().Mod("auto-init").Err(err).Error("加载 MCP 动态工具失败")
 	}
 
+	// 为 PMocker API 添加 Casbin 权限规则（authorityId=888），否则 API Token 调用返回"权限不足"
+	if err := insertPMockerCasbinRules(); err != nil {
+		logger.Bg().Mod("auto-init").Err(err).Error("插入 PMocker Casbin 规则失败")
+	}
+
 	// 签发长期 API Token 供 MCP 使用
 	token, err := issueLongLivedToken()
 	if err != nil {
 		logger.Bg().Mod("auto-init").Err(err).Error("签发 MCP Token 失败")
 	} else {
 		os.Setenv("PMOCKER_MCP_TOKEN", token)
+		// 写入文件供 pmocker inspect 读取（gva-server 工作目录即实例数据卷）
+		if werr := os.WriteFile("mcp_token.txt", []byte(token), 0644); werr != nil {
+			logger.Bg().Mod("auto-init").Err(werr).Error("写入 MCP Token 文件失败")
+		}
 		logger.Bg().Mod("auto-init").Info("MCP Token 已签发")
 	}
 }
@@ -187,6 +197,25 @@ func intToStr(n int) string {
 		buf[i] = '-'
 	}
 	return string(buf[i:])
+}
+
+// insertPMockerCasbinRules 为所有 PMocker API 创建 Casbin 权限规则（authorityId=888）。
+// 参考 log_viewer_seed.go 的模式：FirstOrCreate 确保规则幂等，FreshCasbin 使规则立即生效。
+func insertPMockerCasbinRules() error {
+	db := global.GVA_DB
+	var apis []sysModel.SysApi
+	if err := db.Where("path LIKE ?", "/pmocker/%").Find(&apis).Error; err != nil {
+		return err
+	}
+	for _, api := range apis {
+		rule := adapter.CasbinRule{Ptype: "p", V0: "888", V1: api.Path, V2: api.Method}
+		if err := db.Where(rule).FirstOrCreate(&rule).Error; err != nil {
+			return err
+		}
+	}
+	// 刷新 Casbin 使规则立即生效
+	casbinService := &sysService.CasbinService{}
+	return casbinService.FreshCasbin()
 }
 
 // getAdminPassword 从环境变量获取管理员密码，默认 123456
