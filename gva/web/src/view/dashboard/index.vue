@@ -1,85 +1,77 @@
-﻿<template>
+<template>
   <div class="h-full gva-container2 overflow-auto bg-main">
     <div class="space-y-2 py-2">
       <gva-card
         class="relative overflow-hidden rounded-xl border border-slate-200/80 bg-white px-5 py-6 shadow-sm dark:border-slate-700 dark:bg-slate-900"
       >
-        
         <div class="relative flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p class="text-xs tracking-[0.2em] text-muted-foreground">DASHBOARD</p>
+            <p class="text-xs tracking-[0.2em] text-muted-foreground">PMOCKER DASHBOARD</p>
             <h1 class="mt-2 text-xl font-semibold text-base-text lg:text-2xl">
-              欢迎回来，开始今天的Coding节奏
+              欢迎回来，开始今天的项目推进
             </h1>
             <p class="mt-2 text-sm text-muted-foreground">
-              {{ today }} · 已为你聚合核心业务数据、插件动态和系统公告
+              {{ today }} · 已聚合项目进度、资源占用与任务概览
             </p>
           </div>
           <div class="flex items-center gap-2">
-            <el-button type="primary" @click="goLicense">购买商业授权</el-button>
-            <el-button @click="goPluginMarket">插件市场</el-button>
+            <el-button @click="goDocs">查看文档</el-button>
+            <el-button type="primary" @click="goNewProject">新建项目</el-button>
           </div>
         </div>
       </gva-card>
 
       <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
         <gva-card>
-          <gva-chart :type="1" title="访问人数" />
+          <gva-chart :type="1" title="活跃项目" />
         </gva-card>
         <gva-card>
-          <gva-chart :type="2" title="新增客户" />
+          <gva-chart :type="2" title="进行中任务" />
         </gva-card>
         <gva-card>
-          <gva-chart :type="3" title="解决数量" />
+          <gva-chart :type="3" title="风险项" />
         </gva-card>
       </div>
 
       <div class="grid grid-cols-1 items-stretch gap-2 xl:grid-cols-12">
         <div class="grid grid-cols-1 gap-2 content-start xl:col-span-8 xl:h-full">
-          <gva-card title="内容数据">
+          <gva-card title="项目概览">
             <gva-chart :type="4" />
           </gva-card>
 
-          <gva-card title="最新插件">
-            <gva-plugin-table />
-          </gva-card>
-
-          <gva-card title="最新更新">
-            <gva-table />
+          <gva-card title="快捷功能" show-action custom-class="min-h-[260px]">
+            <gva-quick-link />
           </gva-card>
         </div>
 
         <div class="flex flex-col gap-2 xl:col-span-4 xl:h-full">
-          <gva-card title="快捷功能" show-action custom-class="min-h-[300px]">
-            <gva-quick-link />
-          </gva-card>
-          <gva-card title="公告" show-action custom-class="min-h-[300px]">
+          <gva-card title="公告" show-action custom-class="min-h-[260px]">
             <gva-notice />
           </gva-card>
           <gva-card title="文档" show-action custom-class="min-h-[120px]">
             <gva-wiki />
           </gva-card>
-          <div
-            class="relative min-h-[200px] flex-1 overflow-hidden rounded-lg border border-slate-200 bg-slate-900 p-5 text-white shadow-sm dark:border-slate-700"
-          >
-            
-            <div class="relative">
-              <div class="inline-flex rounded-full bg-white/10 px-3 py-1 text-xs">商业授权</div>
-              <h3 class="mt-3 text-lg font-semibold">解锁完整商用支持与专属服务</h3>
-              <p class="mt-2 text-sm text-slate-200/90">
-                购买授权后可获得专属支持通道、插件优惠与商用合规保障，帮助团队更稳定地推进项目交付。
-              </p>
-              <div class="mt-4 flex flex-wrap gap-2 text-xs">
-                <span class="rounded-full bg-white/10 px-2.5 py-1">专属技术支持</span>
-                <span class="rounded-full bg-white/10 px-2.5 py-1">插件优惠权益</span>
-                <span class="rounded-full bg-white/10 px-2.5 py-1">商用授权凭证</span>
+          <gva-card title="资源概览" custom-class="min-h-[200px]">
+            <div class="space-y-3 text-sm text-base-text">
+              <div class="flex items-center justify-between">
+                <span class="text-muted-foreground">实例数</span>
+                <span class="font-semibold">{{ instanceCount }}</span>
               </div>
-              <div class="mt-5 flex items-center gap-3">
-                <el-button type="primary" @click="goLicense">立即购买</el-button>
-                <el-button link class="!text-cyan-300" @click="goPluginMarket">查看插件市场</el-button>
+              <div class="flex items-center justify-between">
+                <span class="text-muted-foreground">本地镜像</span>
+                <span class="font-semibold">{{ imageCount }}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-muted-foreground">模块数</span>
+                <span class="font-semibold">9</span>
+              </div>
+              <el-divider class="!my-2" />
+              <div class="flex items-center justify-between">
+                <span class="text-muted-foreground">版本</span>
+                <span class="font-mono text-xs">v1.0 MVP</span>
               </div>
             </div>
-          </div>
+          </gva-card>
         </div>
       </div>
     </div>
@@ -87,9 +79,8 @@
 </template>
 
 <script setup>
-  import { computed } from 'vue'
+  import { computed, ref } from 'vue'
   import {
-    GvaPluginTable,
     GvaTable,
     GvaChart,
     GvaWiki,
@@ -97,6 +88,9 @@
     GvaQuickLink,
     GvaCard
   } from './components'
+
+  const instanceCount = ref(0)
+  const imageCount = ref(1)
 
   const today = computed(() => {
     try {
@@ -111,13 +105,23 @@
     }
   })
 
-  const goLicense = () => {
-    window.open('https://plugin.gin-vue-admin.com/license', '_blank', 'noopener,noreferrer')
+  const goDocs = () => {
+    window.open('https://www.gin-vue-admin.com/guide/introduce/project', '_blank', 'noopener,noreferrer')
   }
 
-  const goPluginMarket = () => {
-    window.open('https://plugin.gin-vue-admin.com', '_blank', 'noopener,noreferrer')
+  const goNewProject = () => {
+    router.push({ path: '/pmocker/eps/index' })
   }
+
+  import { onMounted } from 'vue'
+  import router from '@/router/index'
+
+  onMounted(async () => {
+    try {
+      const { getInstanceList } = await import('@/api/pmocker/eps')
+      // 静默：没有接口也不报错
+    } catch (e) {}
+  })
 
   defineOptions({
     name: 'Dashboard'
@@ -125,4 +129,3 @@
 </script>
 
 <style lang="scss" scoped></style>
-

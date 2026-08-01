@@ -8,7 +8,7 @@
   "/src/view/dashboard/components/notice.vue": "Notice",
   "/src/view/dashboard/components/pluginTable.vue": "PluginTable",
   "/src/view/dashboard/components/quickLinks.vue": "QuickLinks",
-  "/src/view/dashboard/components/table.vue": "Table",
+  "/src/view/dashboard/components/table.vue": "UpdateTable",
   "/src/view/dashboard/components/wiki.vue": "Wiki",
   "/src/view/dashboard/index.vue": "Dashboard",
   "/src/view/error/index.vue": "Error",

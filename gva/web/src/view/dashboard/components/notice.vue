@@ -1,6 +1,6 @@
-﻿<template>
+<template>
   <div class="space-y-3">
-    <el-scrollbar max-height="320px">
+    <el-scrollbar max-height="260px">
       <div class="space-y-2 pr-1">
         <div
           v-for="(item, index) in notices"
@@ -30,33 +30,32 @@
 </template>
 
 <script setup>
-
   const notices = [
     {
-      typeTitle: '通知',
+      typeTitle: '发布',
       time: '今天',
-      title: '购买商业授权后可进入专属技术支持通道，加快问题排查和版本升级效率。',
+      title: 'PMocker v1.0 MVP 已发布，包含 9 大项目管理模块：范围、进度、成本、风险、问题、需求、EPS、交付物、变更。',
       dotClass: 'bg-cyan-500',
       tagClass: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-200'
     },
     {
-      typeTitle: '活动',
+      typeTitle: '功能',
       time: '2天前',
-      title: '插件市场正在进行限时优惠活动，授权用户可获得更低的插件采购成本。',
+      title: 'CLI 新增 pmocker run 命令，支持从 PMI 镜像一键启动实例，自动初始化数据库和前端。',
       dotClass: 'bg-emerald-500',
       tagClass: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200'
     },
     {
-      typeTitle: '合规',
+      typeTitle: '提示',
       time: '3天前',
-      title: '未授权商用存在合规风险，建议团队尽快完成授权以保障项目持续交付。',
+      title: 'PMOCKER_HOME 环境变量可自定义数据目录，解决 Windows 下 ~/.pmocker 目录写权限问题。',
       dotClass: 'bg-amber-500',
       tagClass: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-200'
     },
     {
-      typeTitle: '服务',
+      typeTitle: '文档',
       time: '5天前',
-      title: '授权用户可获得官方长期维护承诺，包含安全修复与关键版本升级支持。',
+      title: 'EAV 动态字段、权限模型（RBAC + EPS 继承 + 状态权限）、工作流引擎设计文档已归档到 docs/superpowers/。',
       dotClass: 'bg-violet-500',
       tagClass: 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-200'
     }
@@ -64,4 +63,3 @@
 </script>
 
 <style scoped lang="scss"></style>
-
