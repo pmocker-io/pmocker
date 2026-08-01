@@ -78,5 +78,41 @@ func (b *Builder) buildWeb() error {
 	cmd.Dir = b.gvaWebDir
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("npm run build: %w", err)
+	}
+	// 复制 dist 到 binPath 同级目录
+	srcDist := filepath.Join(b.gvaWebDir, "dist")
+	dstDist := filepath.Join(filepath.Dir(b.binPath), "dist")
+	fmt.Println("复制前端 dist 到", dstDist)
+	return copyDir(srcDist, dstDist)
+}
+
+// copyDir 递归复制目录
+func copyDir(src, dst string) error {
+	if err := os.MkdirAll(dst, 0755); err != nil {
+		return err
+	}
+	entries, err := os.ReadDir(src)
+	if err != nil {
+		return err
+	}
+	for _, entry := range entries {
+		srcPath := filepath.Join(src, entry.Name())
+		dstPath := filepath.Join(dst, entry.Name())
+		if entry.IsDir() {
+			if err := copyDir(srcPath, dstPath); err != nil {
+				return err
+			}
+		} else {
+			data, err := os.ReadFile(srcPath)
+			if err != nil {
+				return err
+			}
+			if err := os.WriteFile(dstPath, data, 0644); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }

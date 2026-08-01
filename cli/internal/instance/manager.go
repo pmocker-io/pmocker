@@ -98,6 +98,12 @@ func (m *Manager) Run(opts RunOptions) (*Instance, error) {
 		return nil, fmt.Errorf("generate config: %w", err)
 	}
 
+	// 5.5 复制前端 dist 到数据卷（如果存在）
+	if err := m.copyFrontendDist(volumeID); err != nil {
+		// dist 不存在不阻止启动，只是没有前端页面
+		fmt.Printf("warning: copy frontend dist: %v\n", err)
+	}
+
 	// 6. fork gva-server
 	pid, err := m.startProcess(inst, opts.AdminPassword)
 	if err != nil {
@@ -189,15 +195,18 @@ func (m *Manager) Get(idOrName string) (*Instance, error) {
 // startProcess fork gva-server 进程
 func (m *Manager) startProcess(inst *Instance, adminPassword string) (int, error) {
 	cfgPath := m.volumes.ConfigPath(inst.VolumeID)
-	logPath := filepath.Join(m.volumes.Path(inst.VolumeID), "gva-server.log")
+	volPath := m.volumes.Path(inst.VolumeID)
+	logPath := filepath.Join(volPath, "gva-server.log")
 	logFile, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
 		return 0, fmt.Errorf("open log file: %w", err)
 	}
 	cmd := exec.Command(m.binPath)
+	cmd.Dir = volPath // 工作目录设为数据卷，使 ./dist 能被找到
 	cmd.Env = append(os.Environ(),
 		"GVA_CONFIG="+cfgPath,
 		"GIN_MODE=release",
+		"PMOCKER_AUTO_INIT=1",
 	)
 	if adminPassword != "" {
 		cmd.Env = append(cmd.Env, "PMOCKER_ADMIN_PASSWORD="+adminPassword)
@@ -219,6 +228,46 @@ func (m *Manager) startProcess(inst *Instance, adminPassword string) (int, error
 		return 0, fmt.Errorf("gva-server exited immediately, check log: %s", logPath)
 	}
 	return pid, nil
+}
+
+// copyFrontendDist 复制前端 dist 到数据卷
+func (m *Manager) copyFrontendDist(volumeID string) error {
+	// dist 与 gva-server 二进制同级目录
+	srcDist := filepath.Join(filepath.Dir(m.binPath), "dist")
+	if _, err := os.Stat(srcDist); err != nil {
+		return fmt.Errorf("dist not found at %s", srcDist)
+	}
+	dstDist := filepath.Join(m.volumes.Path(volumeID), "dist")
+	return copyDir(srcDist, dstDist)
+}
+
+// copyDir 递归复制目录
+func copyDir(src, dst string) error {
+	if err := os.MkdirAll(dst, 0755); err != nil {
+		return err
+	}
+	entries, err := os.ReadDir(src)
+	if err != nil {
+		return err
+	}
+	for _, entry := range entries {
+		srcPath := filepath.Join(src, entry.Name())
+		dstPath := filepath.Join(dst, entry.Name())
+		if entry.IsDir() {
+			if err := copyDir(srcPath, dstPath); err != nil {
+				return err
+			}
+		} else {
+			data, err := os.ReadFile(srcPath)
+			if err != nil {
+				return err
+			}
+			if err := os.WriteFile(dstPath, data, 0644); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 // stopProcess 停止进程

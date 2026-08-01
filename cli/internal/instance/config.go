@@ -37,7 +37,7 @@ system:
   use-multipoint: false
   iplimit-count: 15000
   iplimit-time: 3600
-  router-prefix: ""
+  router-prefix: /api
   use-strict-auth: false
   disable-auto-migrate: false
 
