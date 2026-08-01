@@ -1,0 +1,82 @@
+// Package builder 管理 gva server 二进制的自动构建。
+package builder
+
+import (
+	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"runtime"
+)
+
+// Builder gva server 二进制构建器
+type Builder struct {
+	binPath      string // ~/.pmocker/bin/gva-server
+	gvaServerDir string // gva/server 源码路径
+	gvaWebDir    string // gva/web 源码路径
+}
+
+// NewBuilder 创建构建器
+func NewBuilder(pmockerHome, gvaServerDir, gvaWebDir string) *Builder {
+	binName := "gva-server"
+	if runtime.GOOS == "windows" {
+		binName += ".exe"
+	}
+	return &Builder{
+		binPath:      filepath.Join(pmockerHome, "bin", binName),
+		gvaServerDir: gvaServerDir,
+		gvaWebDir:    gvaWebDir,
+	}
+}
+
+// Ensure 确保二进制存在，不存在则自动构建
+func (b *Builder) Ensure() error {
+	if _, err := os.Stat(b.binPath); err == nil {
+		return nil
+	}
+	fmt.Println("首次运行，正在构建 gva server 二进制...")
+	if err := b.buildServer(); err != nil {
+		return fmt.Errorf("build gva server: %w", err)
+	}
+	if err := b.buildWeb(); err != nil {
+		return fmt.Errorf("build gva web: %w", err)
+	}
+	fmt.Println("构建完成")
+	return nil
+}
+
+// BinPath 返回二进制路径
+func (b *Builder) BinPath() string {
+	return b.binPath
+}
+
+func (b *Builder) buildServer() error {
+	if err := os.MkdirAll(filepath.Dir(b.binPath), 0755); err != nil {
+		return err
+	}
+	cmd := exec.Command("go", "build", "-o", b.binPath, ".")
+	cmd.Dir = b.gvaServerDir
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
+func (b *Builder) buildWeb() error {
+	nodeModules := filepath.Join(b.gvaWebDir, "node_modules")
+	if _, err := os.Stat(nodeModules); os.IsNotExist(err) {
+		fmt.Println("安装前端依赖...")
+		cmd := exec.Command("npm", "install")
+		cmd.Dir = b.gvaWebDir
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("npm install: %w", err)
+		}
+	}
+	fmt.Println("构建前端...")
+	cmd := exec.Command("npm", "run", "build")
+	cmd.Dir = b.gvaWebDir
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
