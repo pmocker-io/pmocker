@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "gva": {
+      "url": "http://127.0.0.1:8889/mcp",
+      "headers": { "x-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVVUlEIjoiNDA0ZTQyMjAtMzg3MS00ZDZkLThkMTctODZkODk2ZDAyMDI4IiwiSUQiOjEsIlVzZXJuYW1lIjoiYWRtaW4iLCJOaWNrTmFtZSI6Ik1yLuWlh-a3vCIsIkF1dGhvcml0eUlkIjo4ODgsIlVzZXJUeXBlIjoiYWRtaW4iLCJCdWZmZXJUaW1lIjo4NjQwMCwibXVzdENoYW5nZVB3ZCI6ZmFsc2UsImlzcyI6InFtUGx1cyIsImF1ZCI6WyJHVkEiXSwiZXhwIjo0OTM5MTUyMzI2LCJuYmYiOjE3ODU1NTIzMjZ9.ZKKHrAGmOejz4HpnNYz0DIQ_MzGnJccbT4I8JtR1J2A" }
+    }
+  }
+}
