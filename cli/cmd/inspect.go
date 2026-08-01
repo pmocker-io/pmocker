@@ -66,6 +66,28 @@ func printInstanceInfo(inst *instance.Instance) error {
 	if inst.StoppedAt != nil {
 		fmt.Printf("  停止时间:    %s\n", inst.StoppedAt.Format("2006-01-02 15:04:05"))
 	}
+	if inst.McpPort > 0 {
+		fmt.Println()
+		fmt.Println("MCP 服务:")
+		fmt.Printf("  gva-server: http://localhost:%d\n", inst.Port)
+		fmt.Printf("  MCP 地址:   http://localhost:%d/mcp\n", inst.McpPort)
+		if inst.McpToken != "" {
+			fmt.Printf("  MCP Token:  %s\n", inst.McpToken)
+		}
+		fmt.Println()
+		fmt.Println("AI 编辑器配置（Claude Code）:")
+		fmt.Printf("  claude mcp add --transport http pmocker http://localhost:%d/mcp --header \"x-token: %s\"\n", inst.McpPort, inst.McpToken)
+		fmt.Println()
+		fmt.Println("AI 编辑器配置（Cursor/.cursor/mcp.json）:")
+		fmt.Printf("  {\n")
+		fmt.Printf("    \"mcpServers\": {\n")
+		fmt.Printf("      \"pmocker\": {\n")
+		fmt.Printf("        \"url\": \"http://localhost:%d/mcp\",\n", inst.McpPort)
+		fmt.Printf("        \"headers\": { \"x-token\": \"%s\" }\n", inst.McpToken)
+		fmt.Printf("      }\n")
+		fmt.Printf("    }\n")
+		fmt.Printf("  }\n")
+	}
 	return nil
 }
 

@@ -114,6 +114,19 @@ func (m *Manager) Run(opts RunOptions) (*Instance, error) {
 	inst.Status = "running"
 	inst.StartedAt = &now
 
+	// 6.5 Start MCP subprocess (optional, won't block if MCP binary not found)
+	mcpPort := 8899
+	mcpCfgPath, err := m.writeMCPConfig(inst.VolumeID, inst.ID, inst.Port)
+	if err == nil {
+		mcpPID, err := m.startMCPProcess(inst, mcpCfgPath)
+		if err != nil {
+			fmt.Printf("warning: start MCP: %v\n", err)
+		}
+		inst.McpPID = mcpPID
+		inst.McpPort = mcpPort
+		inst.McpToken = os.Getenv("PMOCKER_MCP_TOKEN")
+	}
+
 	// 7. 写入实例记录
 	if err := m.store.Create(inst); err != nil {
 		m.stopProcess(pid)
@@ -133,11 +146,16 @@ func (m *Manager) Stop(idOrName string) error {
 	if inst.Status != "running" {
 		return fmt.Errorf("instance %s is not running", inst.Name)
 	}
+	// Stop MCP first, then gva-server
+	if inst.McpPID > 0 {
+		_ = m.stopProcess(inst.McpPID)
+	}
 	if err := m.stopProcess(inst.PID); err != nil {
 		return err
 	}
 	now := time.Now()
 	inst.PID = 0
+	inst.McpPID = 0
 	inst.Status = "stopped"
 	inst.StoppedAt = &now
 	return m.store.Update(inst)
@@ -160,6 +178,12 @@ func (m *Manager) Start(idOrName string) error {
 	inst.PID = pid
 	inst.Status = "running"
 	inst.StartedAt = &now
+	// Also restart MCP if it was configured
+	if inst.McpPort > 0 {
+		mcpCfgPath, _ := m.writeMCPConfig(inst.VolumeID, inst.ID, inst.Port)
+		mcpPID, _ := m.startMCPProcess(inst, mcpCfgPath)
+		inst.McpPID = mcpPID
+	}
 	return m.store.Update(inst)
 }
 
@@ -239,6 +263,64 @@ func (m *Manager) copyFrontendDist(volumeID string) error {
 	}
 	dstDist := filepath.Join(m.volumes.Path(volumeID), "dist")
 	return copyDir(srcDist, dstDist)
+}
+
+// writeMCPConfig 在数据卷中生成 MCP 配置 YAML，返回配置文件路径。
+func (m *Manager) writeMCPConfig(volumeID string, instanceID string, gvaPort int) (string, error) {
+	cfgPath := filepath.Join(m.volumes.Path(volumeID), "mcp_config.yaml")
+	content := fmt.Sprintf(`mcp:
+  name: PMOCKER_MCP_%s
+  version: v1.0.0
+  path: /mcp
+  addr: 8899
+  base_url: http://127.0.0.1:8899/mcp
+  upstream_base_url: http://127.0.0.1:%d
+  auth_header: x-token
+  request_timeout: 15
+`, instanceID[:8], gvaPort)
+	return cfgPath, os.WriteFile(cfgPath, []byte(content), 0644)
+}
+
+// startMCPProcess 启动 MCP 子进程。若 gva-mcp 二进制不存在则返回 (0, nil) 静默跳过。
+func (m *Manager) startMCPProcess(inst *Instance, mcpCfgPath string) (int, error) {
+	// Look for gva-mcp binary next to gva-server
+	mcpBin := m.binPath + "-mcp"
+	if _, err := os.Stat(mcpBin); err != nil {
+		// Fallback: try gva-server mcp subcommand or go run
+		// For now, skip MCP if binary not found
+		return 0, nil
+	}
+
+	volPath := m.volumes.Path(inst.VolumeID)
+	logPath := filepath.Join(volPath, "mcp-server.log")
+	logFile, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	if err != nil {
+		return 0, fmt.Errorf("open mcp log file: %w", err)
+	}
+
+	mcpToken := os.Getenv("PMOCKER_MCP_TOKEN")
+	cmd := exec.Command(mcpBin, "-config", mcpCfgPath)
+	cmd.Dir = volPath
+	cmd.Env = append(os.Environ(),
+		"GIN_MODE=release",
+	)
+	if mcpToken != "" {
+		cmd.Env = append(cmd.Env, "PMOCKER_MCP_TOKEN="+mcpToken)
+	}
+	cmd.Stdout = logFile
+	cmd.Stderr = logFile
+	cmd.SysProcAttr = &syscall.SysProcAttr{}
+
+	if err := cmd.Start(); err != nil {
+		logFile.Close()
+		return 0, err
+	}
+	pid := cmd.Process.Pid
+	_ = cmd.Process.Release()
+	logFile.Close()
+	time.Sleep(1 * time.Second)
+
+	return pid, nil
 }
 
 // copyDir 递归复制目录
