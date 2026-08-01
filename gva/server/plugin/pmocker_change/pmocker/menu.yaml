@@ -8,28 +8,28 @@ menus:
   - path: list
     name: pmockerChangeList
     parent_name: pmockerChange
-    component: plugin/pmocker_change/view/list
+    component: view/pmocker/change/list
     sort: 1
     title: 变更请求列表
     icon: list
   - path: ccb
     name: pmockerChangeCCB
     parent_name: pmockerChange
-    component: plugin/pmocker_change/view/ccb
+    component: view/pmocker/change/ccb
     sort: 2
     title: CCB审批台
     icon: how_to_reg
   - path: log
     name: pmockerChangeLog
     parent_name: pmockerChange
-    component: plugin/pmocker_change/view/log
+    component: view/pmocker/change/log
     sort: 3
     title: 变更日志
     icon: notes
   - path: impact
     name: pmockerChangeImpact
     parent_name: pmockerChange
-    component: plugin/pmocker_change/view/impact
+    component: view/pmocker/change/impact
     sort: 4
     title: 影响分析
     icon: analytics

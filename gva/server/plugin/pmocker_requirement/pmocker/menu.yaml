@@ -8,14 +8,14 @@ menus:
   - path: list
     name: pmockerRequirementList
     parent_name: pmockerRequirement
-    component: plugin/pmocker_requirement/view/list
+    component: view/pmocker/requirement/list
     sort: 1
     title: 需求列表
     icon: list
   - path: matrix
     name: pmockerRequirementMatrix
     parent_name: pmockerRequirement
-    component: plugin/pmocker_requirement/view/matrix
+    component: view/pmocker/requirement/matrix
     sort: 2
     title: 需求追踪矩阵
     icon: matrix

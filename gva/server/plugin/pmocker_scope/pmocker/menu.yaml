@@ -8,14 +8,14 @@ menus:
   - path: wbs
     name: pmockerScopeWBS
     parent_name: pmockerScope
-    component: plugin/pmocker_scope/view/wbs
+    component: view/pmocker/scope/wbs
     sort: 1
     title: WBS分解
     icon: tree
   - path: baseline
     name: pmockerScopeBaseline
     parent_name: pmockerScope
-    component: plugin/pmocker_scope/view/baseline
+    component: view/pmocker/scope/baseline
     sort: 2
     title: 范围基线
     icon: lock

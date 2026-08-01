@@ -8,14 +8,14 @@ menus:
   - path: register
     name: pmockerRiskRegister
     parent_name: pmockerRisk
-    component: plugin/pmocker_risk/view/register
+    component: view/pmocker/risk/register
     sort: 1
     title: 风险登记册
     icon: list
   - path: matrix
     name: pmockerRiskMatrix
     parent_name: pmockerRisk
-    component: plugin/pmocker_risk/view/matrix
+    component: view/pmocker/risk/matrix
     sort: 2
     title: 风险矩阵
     icon: grid

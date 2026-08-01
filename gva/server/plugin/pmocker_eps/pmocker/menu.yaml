@@ -8,14 +8,14 @@ menus:
   - path: tree
     name: pmockerEpsTree
     parent_name: pmockerEps
-    component: plugin/pmocker_eps/view/tree
+    component: view/pmocker/eps/tree
     sort: 1
     title: EPS树
     icon: account_tree
   - path: members
     name: pmockerEpsMembers
     parent_name: pmockerEps
-    component: plugin/pmocker_eps/view/members
+    component: view/pmocker/eps/members
     sort: 2
     title: 成员管理
     icon: user

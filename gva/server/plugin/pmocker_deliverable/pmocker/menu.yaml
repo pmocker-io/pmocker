@@ -8,21 +8,21 @@ menus:
   - path: list
     name: pmockerDeliverableList
     parent_name: pmockerDeliverable
-    component: plugin/pmocker_deliverable/view/list
+    component: view/pmocker/deliverable/list
     sort: 1
     title: 交付物列表
     icon: list
   - path: versions
     name: pmockerDeliverableVersions
     parent_name: pmockerDeliverable
-    component: plugin/pmocker_deliverable/view/versions
+    component: view/pmocker/deliverable/versions
     sort: 2
     title: 版本追踪
     icon: history
   - path: trace
     name: pmockerDeliverableTrace
     parent_name: pmockerDeliverable
-    component: plugin/pmocker_deliverable/view/trace
+    component: view/pmocker/deliverable/trace
     sort: 3
     title: 追溯视图
     icon: link

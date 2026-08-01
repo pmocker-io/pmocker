@@ -8,21 +8,21 @@ menus:
   - path: budget
     name: pmockerCostBudget
     parent_name: pmockerCost
-    component: plugin/pmocker_cost/view/budget
+    component: view/pmocker/cost/budget
     sort: 1
     title: 预算管理
     icon: wallet
   - path: evm
     name: pmockerCostEVM
     parent_name: pmockerCost
-    component: plugin/pmocker_cost/view/evm
+    component: view/pmocker/cost/evm
     sort: 2
     title: 挣值分析
     icon: trend
   - path: s_curve
     name: pmockerCostCurve
     parent_name: pmockerCost
-    component: plugin/pmocker_cost/view/curve
+    component: view/pmocker/cost/curve
     sort: 3
     title: S曲线
     icon: chart

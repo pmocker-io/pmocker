@@ -8,14 +8,14 @@ menus:
   - path: list
     name: pmockerIssueList
     parent_name: pmockerIssue
-    component: plugin/pmocker_issue/view/list
+    component: view/pmocker/issue/list
     sort: 1
     title: 问题列表
     icon: list
   - path: board
     name: pmockerIssueBoard
     parent_name: pmockerIssue
-    component: plugin/pmocker_issue/view/board
+    component: view/pmocker/issue/board
     sort: 2
     title: 看板视图
     icon: grid
