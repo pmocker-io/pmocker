@@ -460,6 +460,12 @@ func ReadMCPToken(volumeID string) string {
 	return strings.TrimSpace(string(data))
 }
 
+// DefaultPMockerHome 返回 PMocker 根目录（PMOCKER_HOME 或 ~/.pmocker）。
+// 供 builder 等需要根目录的调用方使用，区别于 DefaultInstancesDir/VolumesDir 等子目录。
+func DefaultPMockerHome() (string, error) {
+	return pmockerRoot()
+}
+
 // DefaultBinDir 返回默认二进制目录 ~/.pmocker/bin
 func DefaultBinDir() (string, error) {
 	root, err := pmockerRoot()

@@ -26,8 +26,8 @@ var startCmd = &cobra.Command{
 		imgDir, _ := image.DefaultStoreDir()
 		imgStore := image.NewStore(imgDir)
 
-		pmockerHome, _ := instance.DefaultInstancesDir()
-		b := builder.NewBuilder(pmockerHome, findGVAServerDir(), findGVAWebDir())
+		pmockerHome, _ := instance.DefaultPMockerHome()
+	b := builder.NewBuilder(pmockerHome, findGVAServerDir(), findGVAWebDir())
 		if err := b.Ensure(); err != nil {
 			return err
 		}

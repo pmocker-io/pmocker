@@ -47,8 +47,8 @@ var runCmd = &cobra.Command{
 		}
 
 		// 1. 确保二进制存在
-		pmockerHome, _ := instance.DefaultInstancesDir()
-		gvaServerDir := findGVAServerDir()
+		pmockerHome, _ := instance.DefaultPMockerHome()
+	gvaServerDir := findGVAServerDir()
 		gvaWebDir := findGVAWebDir()
 		b := builder.NewBuilder(pmockerHome, gvaServerDir, gvaWebDir)
 		if err := b.Ensure(); err != nil {
