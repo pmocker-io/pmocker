@@ -330,31 +330,44 @@ func parseRef(ref string) (name, tag string) {
 	return ref, "latest"
 }
 
-// DefaultInstancesDir 返回默认实例目录 ~/.pmocker/instances
-func DefaultInstancesDir() (string, error) {
+// pmockerRoot 返回 PMocker 根目录。
+// 支持通过 PMOCKER_HOME 环境变量自定义，默认为 ~/.pmocker
+func pmockerRoot() (string, error) {
+	if home := os.Getenv("PMOCKER_HOME"); home != "" {
+		return home, nil
+	}
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(home, ".pmocker", "instances"), nil
+	return filepath.Join(home, ".pmocker"), nil
+}
+
+// DefaultInstancesDir 返回默认实例目录 ~/.pmocker/instances
+func DefaultInstancesDir() (string, error) {
+	root, err := pmockerRoot()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(root, "instances"), nil
 }
 
 // DefaultVolumesDir 返回默认数据卷目录 ~/.pmocker/volumes
 func DefaultVolumesDir() (string, error) {
-	home, err := os.UserHomeDir()
+	root, err := pmockerRoot()
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(home, ".pmocker", "volumes"), nil
+	return filepath.Join(root, "volumes"), nil
 }
 
 // DefaultBinDir 返回默认二进制目录 ~/.pmocker/bin
 func DefaultBinDir() (string, error) {
-	home, err := os.UserHomeDir()
+	root, err := pmockerRoot()
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(home, ".pmocker", "bin"), nil
+	return filepath.Join(root, "bin"), nil
 }
 
 // InitDefaultStore 初始化默认实例存储

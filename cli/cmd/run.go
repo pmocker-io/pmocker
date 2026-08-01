@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"strconv"
 
 	"github.com/pmocker-io/pmocker/cli/internal/builder"
@@ -9,6 +11,23 @@ import (
 	"github.com/pmocker-io/pmocker/pkg/pmocker/image"
 	"github.com/spf13/cobra"
 )
+
+// findProjectRoot 基于 CLI 可执行文件位置推导项目根目录。
+// 结构约定：<root>/cli/pmocker.exe → 上一级即为 root，内含 gva/server 和 gva/web。
+func findProjectRoot() string {
+	exe, err := os.Executable()
+	if err == nil {
+		// <root>/cli/pmocker.exe → <root>/cli → <root>
+		root := filepath.Dir(filepath.Dir(exe))
+		if _, err2 := os.Stat(filepath.Join(root, "gva", "server")); err2 == nil {
+			if _, err3 := os.Stat(filepath.Join(root, "gva", "web")); err3 == nil {
+				return root
+			}
+		}
+	}
+	wd, _ := os.Getwd()
+	return wd
+}
 
 var runCmd = &cobra.Command{
 	Use:   "run",
@@ -91,9 +110,9 @@ func init() {
 }
 
 func findGVAServerDir() string {
-	return "../gva/server"
+	return filepath.Join(findProjectRoot(), "gva", "server")
 }
 
 func findGVAWebDir() string {
-	return "../gva/web"
+	return filepath.Join(findProjectRoot(), "gva", "web")
 }

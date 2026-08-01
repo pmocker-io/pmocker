@@ -47,7 +47,14 @@ func NewStore(dbPath string) (*SQLiteStore, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open sqlite %s: %w", dbPath, err)
 	}
+	// 限制并发连接，避免 SQLite 写锁冲突
+	db.SetMaxOpenConns(1)
 	s := &SQLiteStore{db: db}
+	// 设置 busy_timeout，避免写锁竞争时立即返回错误
+	if _, err := db.Exec("PRAGMA busy_timeout=5000"); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("set busy_timeout: %w", err)
+	}
 	if err := s.migrate(); err != nil {
 		db.Close()
 		return nil, err

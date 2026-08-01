@@ -51,8 +51,12 @@ func NewStore(baseDir string) *Store {
 	}
 }
 
-// DefaultStoreDir 返回默认存储路径 ~/.pmocker/images
+// DefaultStoreDir 返回默认存储路径 ~/.pmocker/images。
+// 支持通过 PMOCKER_HOME 环境变量自定义根目录。
 func DefaultStoreDir() (string, error) {
+	if home := os.Getenv("PMOCKER_HOME"); home != "" {
+		return filepath.Join(home, "images"), nil
+	}
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
