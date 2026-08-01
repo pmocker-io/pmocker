@@ -49,13 +49,12 @@ func Routers() *gin.Engine {
 	systemRouter := router.RouterGroupApp.System
 	exampleRouter := router.RouterGroupApp.Example
 	mediaRouter := router.RouterGroupApp.Media
-	// 如果想要不使用nginx代理前端网页，可以修改 web/.env.production 下的
-	// VUE_APP_BASE_API = /
-	// VUE_APP_BASE_PATH = http://localhost
-	// 然后执行打包命令 npm run build。在打开下面3行注释
-	// Router.StaticFile("/favicon.ico", "./dist/favicon.ico")
-	// Router.Static("/assets", "./dist/assets")   // dist里面的静态资源
-	// Router.StaticFile("/", "./dist/index.html") // 前端网页入口页面
+	// 如果 dist 目录存在，服务前端静态文件（pmocker 实例模式）
+	if _, err := os.Stat("./dist"); err == nil {
+		Router.StaticFile("/favicon.ico", "./dist/favicon.ico")
+		Router.Static("/assets", "./dist/assets")
+		Router.StaticFile("/", "./dist/index.html")
+	}
 
 	Router.Use(middleware.UploadResponseHeaders(global.GVA_CONFIG.Local.StorePath))
 	Router.StaticFS(global.GVA_CONFIG.Local.StorePath, justFilesFilesystem{http.Dir(global.GVA_CONFIG.Local.StorePath)})

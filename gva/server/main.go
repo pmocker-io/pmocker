@@ -50,4 +50,6 @@ func initializeSystem() {
 		initialize.RegisterTables()             // 初始化表
 		initialize.LoadTimedTasks()             // 从 DB 恢复定时任务调度(必须在建表后)
 	}
+	// PMocker 实例模式：自动初始化数据库（建表后执行）
+	initialize.AutoInitIfEmpty()
 }
