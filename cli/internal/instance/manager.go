@@ -207,13 +207,34 @@ func (m *Manager) Remove(idOrName string, removeVolume bool) error {
 	return nil
 }
 
-// Get 按 ID 或名称查找实例
+// Get 按 ID 或名称查找实例。支持 ID 前缀匹配（Docker 风格）：
+// 先精确匹配 ID/名称，失败后按 ID 前缀查找，要求前缀唯一。
 func (m *Manager) Get(idOrName string) (*Instance, error) {
-	inst, err := m.store.GetByID(idOrName)
-	if err == nil {
+	if inst, err := m.store.GetByID(idOrName); err == nil {
 		return inst, nil
 	}
-	return m.store.GetByName(idOrName)
+	if inst, err := m.store.GetByName(idOrName); err == nil {
+		return inst, nil
+	}
+	// ID 前缀匹配：ps 命令显示截断的 ID，用户常复制前缀来操作
+	all, err := m.store.List(true)
+	if err != nil {
+		return nil, fmt.Errorf("instance not found: %s", idOrName)
+	}
+	var matched []*Instance
+	for _, inst := range all {
+		if strings.HasPrefix(inst.ID, idOrName) {
+			matched = append(matched, inst)
+		}
+	}
+	switch len(matched) {
+	case 1:
+		return matched[0], nil
+	case 0:
+		return nil, fmt.Errorf("instance not found: %s", idOrName)
+	default:
+		return nil, fmt.Errorf("ambiguous ID prefix %q matches %d instances; use a longer prefix", idOrName, len(matched))
+	}
 }
 
 // startProcess fork gva-server 进程
