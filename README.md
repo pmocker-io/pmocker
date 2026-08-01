@@ -52,6 +52,7 @@ make build-cli
 pmocker ps                       # 查看运行中实例
 pmocker stop <name|id>          # 停止实例（数据卷保留）
 pmocker start <name|id>         # 重启已停止实例
+pmocker logs <name|id> [-f] [--mcp|--access] [-n N]  # 查看实例日志（-f 跟踪，--mcp 看 MCP，--access 看访问日志，-n 最后 N 行）
 pmocker inspect <name|id>       # 查看实例元信息 + MCP 连接配置
 pmocker images                  # 列出本地镜像缓存
 pmocker commit <name> -t <tag>  # 把实例当前状态导出为 .pmi 镜像
