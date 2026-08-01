@@ -13,3 +13,16 @@ dictionaries:
       - {label: 进行中, value: in_progress}
       - {label: 已完成, value: completed}
       - {label: 已逾期, value: overdue}
+  - type: pm_dependency_type
+    name: 依赖类型
+    details:
+      - {label: 完成-开始(FS), value: FS}
+      - {label: 完成-完成(FF), value: FF}
+      - {label: 开始-开始(SS), value: SS}
+      - {label: 开始-完成(SF), value: SF}
+  - type: pm_task_type
+    name: 任务类型
+    details:
+      - {label: 固定工期, value: fixed_duration}
+      - {label: 固定工时, value: fixed_work}
+      - {label: 固定单位, value: fixed_units}

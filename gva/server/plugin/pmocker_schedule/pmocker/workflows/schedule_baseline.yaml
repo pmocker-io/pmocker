@@ -1,12 +1,18 @@
 code: schedule_baseline
-name: 进度基线审批流
+name: 进度基线审批与执行流
 entity_type: task
 trigger: on_baseline
 nodes:
   - {code: start, type: start}
   - {code: pm_approval, type: approval, approvers: "pm", sla_hours: 24, quorum: 1}
+  - {code: cpm_calc, type: auto, handler: pmocker.schedule.cpm}
+  - {code: progress_review, type: approval, approvers: "pm", sla_hours: 48, quorum: 1}
   - {code: end, type: end}
 transitions:
   - {from: start, to: pm_approval, on: submit}
-  - {from: pm_approval, to: end, on: approve, status: planned}
+  - {from: pm_approval, to: cpm_calc, on: approve, status: planned}
   - {from: pm_approval, to: end, on: reject, status: draft}
+  - {from: cpm_calc, to: progress_review, on: start_work, status: in_progress}
+  - {from: progress_review, to: progress_review, on: recalc, status: in_progress}
+  - {from: progress_review, to: end, on: complete, status: completed}
+  - {from: progress_review, to: end, on: flag_overdue, status: overdue}
