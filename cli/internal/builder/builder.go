@@ -12,6 +12,7 @@ import (
 // Builder gva server 二进制构建器
 type Builder struct {
 	binPath      string // ~/.pmocker/bin/gva-server
+	mcpBinPath   string // ~/.pmocker/bin/gva-mcp
 	gvaServerDir string // gva/server 源码路径
 	gvaWebDir    string // gva/web 源码路径
 }
@@ -19,24 +20,41 @@ type Builder struct {
 // NewBuilder 创建构建器
 func NewBuilder(pmockerHome, gvaServerDir, gvaWebDir string) *Builder {
 	binName := "gva-server"
+	mcpBinName := "gva-mcp"
 	if runtime.GOOS == "windows" {
 		binName += ".exe"
+		mcpBinName += ".exe"
 	}
 	return &Builder{
 		binPath:      filepath.Join(pmockerHome, "bin", binName),
+		mcpBinPath:   filepath.Join(pmockerHome, "bin", mcpBinName),
 		gvaServerDir: gvaServerDir,
 		gvaWebDir:    gvaWebDir,
 	}
 }
 
+// McpBinPath 返回 MCP 二进制路径
+func (b *Builder) McpBinPath() string {
+	return b.mcpBinPath
+}
+
 // Ensure 确保二进制存在，不存在则自动构建
 func (b *Builder) Ensure() error {
-	if _, err := os.Stat(b.binPath); err == nil {
+	serverExists := fileExists(b.binPath)
+	mcpExists := fileExists(b.mcpBinPath)
+	if serverExists && mcpExists {
 		return nil
 	}
-	fmt.Println("首次运行，正在构建 gva server 二进制...")
-	if err := b.buildServer(); err != nil {
-		return fmt.Errorf("build gva server: %w", err)
+	fmt.Println("首次运行，正在构建 gva 二进制...")
+	if !serverExists {
+		if err := b.buildServer(); err != nil {
+			return fmt.Errorf("build gva server: %w", err)
+		}
+	}
+	if !mcpExists {
+		if err := b.buildMCPServer(); err != nil {
+			return fmt.Errorf("build gva mcp: %w", err)
+		}
 	}
 	if err := b.buildWeb(); err != nil {
 		return fmt.Errorf("build gva web: %w", err)
@@ -59,6 +77,22 @@ func (b *Builder) buildServer() error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
+}
+
+func (b *Builder) buildMCPServer() error {
+	if err := os.MkdirAll(filepath.Dir(b.mcpBinPath), 0755); err != nil {
+		return err
+	}
+	cmd := exec.Command("go", "build", "-o", b.mcpBinPath, "./cmd/mcp")
+	cmd.Dir = b.gvaServerDir
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
+func fileExists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
 }
 
 func (b *Builder) buildWeb() error {

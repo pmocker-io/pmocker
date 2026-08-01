@@ -67,6 +67,11 @@ func printInstanceInfo(inst *instance.Instance) error {
 		fmt.Printf("  停止时间:    %s\n", inst.StoppedAt.Format("2006-01-02 15:04:05"))
 	}
 	if inst.McpPort > 0 {
+		// gva-server 与 pmocker 是独立进程，环境变量无法跨进程传递，
+		// 因此 Run 时设置的 McpToken 可能为空，此处从数据卷文件补读
+		if inst.McpToken == "" {
+			inst.McpToken = instance.ReadMCPToken(inst.VolumeID)
+		}
 		fmt.Println()
 		fmt.Println("MCP 服务:")
 		fmt.Printf("  gva-server: http://localhost:%d\n", inst.Port)

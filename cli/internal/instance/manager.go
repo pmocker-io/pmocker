@@ -274,7 +274,7 @@ func (m *Manager) writeMCPConfig(volumeID string, instanceID string, gvaPort int
   path: /mcp
   addr: 8899
   base_url: http://127.0.0.1:8899/mcp
-  upstream_base_url: http://127.0.0.1:%d
+  upstream_base_url: http://127.0.0.1:%d/api
   auth_header: x-token
   request_timeout: 15
 `, instanceID[:8], gvaPort)
@@ -283,11 +283,13 @@ func (m *Manager) writeMCPConfig(volumeID string, instanceID string, gvaPort int
 
 // startMCPProcess 启动 MCP 子进程。若 gva-mcp 二进制不存在则返回 (0, nil) 静默跳过。
 func (m *Manager) startMCPProcess(inst *Instance, mcpCfgPath string) (int, error) {
-	// Look for gva-mcp binary next to gva-server
-	mcpBin := m.binPath + "-mcp"
+	// gva-mcp 与 gva-server 同目录，由 builder.Ensure() 一并构建
+	mcpBinName := "gva-mcp"
+	if runtime.GOOS == "windows" {
+		mcpBinName += ".exe"
+	}
+	mcpBin := filepath.Join(filepath.Dir(m.binPath), mcpBinName)
 	if _, err := os.Stat(mcpBin); err != nil {
-		// Fallback: try gva-server mcp subcommand or go run
-		// For now, skip MCP if binary not found
 		return 0, nil
 	}
 
@@ -441,6 +443,21 @@ func DefaultVolumesDir() (string, error) {
 		return "", err
 	}
 	return filepath.Join(root, "volumes"), nil
+}
+
+// ReadMCPToken 从实例数据卷读取 gva-server AutoInitIfEmpty 写入的 mcp_token.txt。
+// 用于 pmocker inspect 展示 MCP 鉴权 token（gva-server 与 pmocker 是独立进程，环境变量无法跨进程传递）。
+func ReadMCPToken(volumeID string) string {
+	vols, err := InitDefaultVolumes()
+	if err != nil {
+		return ""
+	}
+	path := filepath.Join(vols.Path(volumeID), "mcp_token.txt")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(data))
 }
 
 // DefaultBinDir 返回默认二进制目录 ~/.pmocker/bin
