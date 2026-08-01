@@ -211,7 +211,7 @@ sqlite:
     prefix: ""
     port: ""
     config: ""
-    db-name: pmocker.db
+    db-name: pmocker
     username: ""
     password: ""
     path: ""
