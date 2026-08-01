@@ -12,3 +12,31 @@ dictionaries:
       - {label: 市场, value: market}
       - {label: 内部, value: internal}
       - {label: 合规, value: compliance}
+  - type: pm_moscow_priority
+    name: MoSCoW优先级
+    details:
+      - {label: 必须有, value: must}
+      - {label: 应该有, value: should}
+      - {label: 可以有, value: could}
+      - {label: 不会有, value: wont}
+  - type: pm_requirement_type
+    name: 需求类型
+    details:
+      - {label: 业务需求, value: business}
+      - {label: 用户需求, value: user}
+      - {label: 系统需求, value: system}
+      - {label: 功能需求, value: feature}
+      - {label: 非功能需求, value: non_functional}
+  - type: pm_verification_method
+    name: 验证方式
+    details:
+      - {label: 检查, value: inspection}
+      - {label: 演示, value: demonstration}
+      - {label: 测试, value: test}
+      - {label: 分析, value: analysis}
+  - type: pm_agile_level
+    name: 敏捷层级
+    details:
+      - {label: 史诗, value: epic}
+      - {label: 故事, value: story}
+      - {label: 任务, value: task}

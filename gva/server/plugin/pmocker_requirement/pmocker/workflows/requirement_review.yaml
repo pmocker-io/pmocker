@@ -1,5 +1,5 @@
 code: requirement_review
-name: 需求评审流
+name: 需求评审与 fulfillment 流
 entity_type: requirement
 trigger: on_submit
 nodes:
@@ -10,12 +10,21 @@ nodes:
     approvers: "pm,po"
     sla_hours: 48
     quorum: 1
+  - code: fulfill_check
+    type: approval
+    approvers: "pm"
+    sla_hours: 24
+    quorum: 1
   - code: end
     type: end
 transitions:
   - {from: start, to: pm_review, on: submit}
   - {from: pm_review, to: end, on: approve, status: approved}
   - {from: pm_review, to: end, on: reject, status: rejected}
+  - {from: pm_review, to: pm_review, on: revise, status: reviewing}
+  - {from: pm_review, to: fulfill_check, on: start_fulfill, status: approved}
+  - {from: fulfill_check, to: end, on: complete, status: fulfilled}
+  - {from: fulfill_check, to: fulfill_check, on: reopen, status: approved}
 on_complete:
   action: set_status
   sign: true

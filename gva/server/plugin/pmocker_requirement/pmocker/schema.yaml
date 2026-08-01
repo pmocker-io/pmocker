@@ -35,5 +35,54 @@ fields:
   - field_key: planned_release
     field_label: 计划发布版本
     data_type: string
+  # --- MoSCoW 优先级 ---
+  - field_key: moscow_priority
+    field_label: MoSCoW优先级
+    data_type: enum
+    options_json: '["must","should","could","wont"]'
+  # --- 需求分类细化 ---
+  - field_key: requirement_type
+    field_label: 需求类型
+    data_type: enum
+    options_json: '["business","user","system","feature","non_functional"]'
+  - field_key: verification_method
+    field_label: 验证方式
+    data_type: enum
+    options_json: '["inspection","demonstration","test","analysis"]'
+  # --- 追踪关系 ---
+  - field_key: traceability_links
+    field_label: 追踪关系
+    data_type: json
+  # --- 基线 ---
+  - field_key: baseline_version
+    field_label: 需求基线版本
+    data_type: string
+  - field_key: baseline_date
+    field_label: 基线日期
+    data_type: date
+  # --- 状态字段（补齐 states 对应） ---
+  - field_key: status
+    field_label: 需求状态
+    data_type: enum
+    options_json: '["draft","reviewing","approved","rejected","fulfilled"]'
+  # --- 提出人 ---
+  - field_key: requested_by
+    field_label: 需求提出人
+    data_type: ref
+  - field_key: requested_date
+    field_label: 提出日期
+    data_type: date
+  # --- 敏捷字段 ---
+  - field_key: agile_level
+    field_label: 敏捷层级
+    data_type: enum
+    options_json: '["epic","story","task"]'
+  - field_key: story_points
+    field_label: 故事点
+    data_type: decimal
+  # --- 干系人 ---
+  - field_key: stakeholder_id
+    field_label: 干系人
+    data_type: ref
 states: [draft, reviewing, approved, rejected, fulfilled]
 workflows: [requirement_review]
