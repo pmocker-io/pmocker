@@ -83,6 +83,11 @@ func AutoInitPostPlugins() {
 		logger.Bg().Mod("auto-init").Err(err).Error("插入 PMocker Casbin 规则失败")
 	}
 
+	// 将 PMocker 菜单授予管理员角色（authorityId=888），否则实例模式下菜单默认不可见，需手动在后台勾选
+	if err := grantPMockerMenusToAdmin(); err != nil {
+		logger.Bg().Mod("auto-init").Err(err).Error("授予 PMocker 菜单权限失败")
+	}
+
 	// 签发长期 API Token 供 MCP 使用
 	token, err := issueLongLivedToken()
 	if err != nil {
@@ -233,6 +238,39 @@ func insertPMockerCasbinRules() error {
 	// 刷新 Casbin 使规则立即生效
 	casbinService := &sysService.CasbinService{}
 	return casbinService.FreshCasbin()
+}
+
+// grantPMockerMenusToAdmin 将所有 PMocker 菜单授予管理员角色（authorityId=888）。
+// 解决实例模式下每次重新初始化后菜单默认不可见、需手动在后台「角色权限」勾选的问题。
+// 参考 log_viewer_seed.go 的 FirstOrCreate 幂等模式。
+func grantPMockerMenusToAdmin() error {
+	db := global.GVA_DB
+	var menus []sysModel.SysBaseMenu
+	if err := db.Where("name LIKE ?", "pmocker%").Find(&menus).Error; err != nil {
+		return err
+	}
+	if len(menus) == 0 {
+		logger.Bg().Mod("auto-init").Info("未找到 PMocker 菜单，跳过菜单授权")
+		return nil
+	}
+	granted := 0
+	for _, menu := range menus {
+		menuRole := sysModel.SysAuthorityMenu{
+			MenuId:      fmt.Sprint(menu.ID),
+			AuthorityId: "888",
+		}
+		// FirstOrCreate 幂等：已存在的关联不重复插入
+		result := db.Where(menuRole).FirstOrCreate(&menuRole)
+		if result.Error != nil {
+			logger.Bg().Mod("auto-init").Err(result.Error).Error("授予菜单权限失败: " + menu.Name)
+			continue
+		}
+		if result.RowsAffected > 0 {
+			granted++
+		}
+	}
+	logger.Bg().Mod("auto-init").Info("PMocker 菜单授权完成: " + intToStr(granted) + " 新增, " + intToStr(len(menus)) + " 总计")
+	return nil
 }
 
 // getAdminPassword 从环境变量获取管理员密码，默认 123456
