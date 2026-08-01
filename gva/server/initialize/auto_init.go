@@ -1,13 +1,17 @@
 package initialize
 
 import (
+	"context"
+	"errors"
 	"os"
 
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	sysModel "github.com/flipped-aurora/gin-vue-admin/server/model/system"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/system/request"
+	autoModel "github.com/flipped-aurora/gin-vue-admin/server/plugin/ai/model"
 	sysService "github.com/flipped-aurora/gin-vue-admin/server/service/system"
 	"github.com/flipped-aurora/gin-vue-admin/server/utils/logger"
+	"gorm.io/gorm"
 )
 
 // AutoInitIfEmpty 在 PMocker 实例模式下自动初始化数据库
@@ -55,6 +59,134 @@ func AutoInitIfEmpty() {
 		logger.Bg().Mod("auto-init").Err(err).Error("禁用验证码失败")
 	}
 	logger.Bg().Mod("auto-init").Info("PMocker 自动初始化数据库完成")
+
+	// 加载 PMocker 插件的 MCP 动态工具定义（创建 MCP 记录 + 绑定 PMocker API）
+	if err := loadPMockerDynamicTools(); err != nil {
+		logger.Bg().Mod("auto-init").Err(err).Error("加载 MCP 动态工具失败")
+	}
+
+	// 签发长期 API Token 供 MCP 使用
+	token, err := issueLongLivedToken()
+	if err != nil {
+		logger.Bg().Mod("auto-init").Err(err).Error("签发 MCP Token 失败")
+	} else {
+		os.Setenv("PMOCKER_MCP_TOKEN", token)
+		logger.Bg().Mod("auto-init").Info("MCP Token 已签发")
+	}
+}
+
+// loadPMockerDynamicTools 创建 PMocker MCP 定义并绑定所有 PMocker API 为动态工具。
+// MCP 进程启动时通过 /mcpApi/listBindingsPublic 接口自动加载这些绑定。
+func loadPMockerDynamicTools() error {
+	db := global.GVA_DB
+
+	// 1. 创建或获取名为 "pmocker" 的 MCP 记录
+	var mcp autoModel.SysMcp
+	err := db.Where("name = ?", "pmocker").First(&mcp).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		mcp = autoModel.SysMcp{
+			Name:        "pmocker",
+			DisplayName: "PMocker 项目管理",
+			Description: "PMocker 项目管理系统的 MCP 动态工具集，包含 9 大模块的 CRUD 操作",
+			Status:      "enabled",
+			Version:     "v1",
+		}
+		if err := db.Create(&mcp).Error; err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+
+	// 2. 查询所有 PMocker API（path 以 /pmocker/ 开头）
+	var apis []sysModel.SysApi
+	if err := db.Where("path LIKE ?", "/pmocker/%").Find(&apis).Error; err != nil {
+		return err
+	}
+	if len(apis) == 0 {
+		logger.Bg().Mod("auto-init").Info("未找到 PMocker API，跳过 MCP 动态工具注册")
+		return nil
+	}
+
+	// 3. 为每个 API 创建绑定（跳过已存在的）
+	bound := 0
+	for _, api := range apis {
+		var existing autoModel.SysMcpApi
+		err := db.Where("mcp_id = ? AND api_id = ?", mcp.ID, api.ID).First(&existing).Error
+		if err == nil {
+			continue // 已存在绑定，跳过
+		}
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return err
+		}
+		binding := autoModel.SysMcpApi{
+			McpID:   mcp.ID,
+			ApiID:   api.ID,
+			Enabled: true,
+		}
+		if err := db.Create(&binding).Error; err != nil {
+			logger.Bg().Mod("auto-init").Err(err).Error("创建 MCP 绑定失败: " + api.Path)
+			continue
+		}
+		bound++
+	}
+	logger.Bg().Mod("auto-init").Info("MCP 动态工具注册完成: " + intToStr(len(apis)) + " API, " + intToStr(bound) + " 新绑定")
+	return nil
+}
+
+// issueLongLivedToken 为管理员用户签发有效期 -1（100年）的 API Token，供 MCP 进程调用后端 API。
+func issueLongLivedToken() (string, error) {
+	ctx := context.Background()
+	db := global.GVA_DB
+
+	// 查询管理员用户
+	var admin sysModel.SysUser
+	if err := db.Where("username = ?", "admin").First(&admin).Error; err != nil {
+		return "", err
+	}
+
+	// 检查是否已有 PMocker MCP Token（避免重复签发）
+	var existingToken sysModel.SysApiToken
+	err := db.Where("user_id = ? AND remark = ?", admin.ID, "PMocker MCP Token").First(&existingToken).Error
+	if err == nil && existingToken.Token != "" {
+		return existingToken.Token, nil
+	}
+
+	// 签发新 Token
+	apiToken := sysModel.SysApiToken{
+		UserID:      admin.ID,
+		AuthorityID: admin.AuthorityId,
+		Remark:      "PMocker MCP Token",
+	}
+	tokenService := &sysService.ApiTokenService{}
+	token, err := tokenService.CreateApiToken(ctx, apiToken, -1) // -1 = 100年有效期
+	if err != nil {
+		return "", err
+	}
+	return token, nil
+}
+
+// intToStr 避免 fmt.Sprintf 在初始化路径引入额外依赖
+func intToStr(n int) string {
+	if n == 0 {
+		return "0"
+	}
+	neg := n < 0
+	if neg {
+		n = -n
+	}
+	var buf [20]byte
+	i := len(buf)
+	for n > 0 {
+		i--
+		buf[i] = byte('0' + n%10)
+		n /= 10
+	}
+	if neg {
+		i--
+		buf[i] = '-'
+	}
+	return string(buf[i:])
 }
 
 // getAdminPassword 从环境变量获取管理员密码，默认 123456
