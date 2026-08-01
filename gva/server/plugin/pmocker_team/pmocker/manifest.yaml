@@ -1,0 +1,6 @@
+code: pmocker_team
+name: 团队管理
+version: 1.0.0
+description: 项目团队管理，含成员分配、角色定义、培训记录、绩效评估（对标 PMBOK 资源管理）
+dependencies:
+  - pmocker_core

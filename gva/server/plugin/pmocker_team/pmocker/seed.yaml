@@ -1,0 +1,70 @@
+dictionaries:
+  - type: pm_team_role
+    name: 项目角色
+    details:
+      - {label: 项目经理, value: pm}
+      - {label: 发起人, value: sponsor}
+      - {label: 业务分析师, value: ba}
+      - {label: 开发, value: dev}
+      - {label: 测试, value: qa}
+      - {label: 设计师, value: designer}
+      - {label: 架构师, value: architect}
+      - {label: 领域专家, value: sme}
+  - type: pm_skill_level
+    name: 技能等级
+    details:
+      - {label: 初级, value: junior}
+      - {label: 中级, value: mid}
+      - {label: 高级, value: senior}
+      - {label: 专家, value: expert}
+  - type: pm_communication_mode
+    name: 工作模式
+    details:
+      - {label: 现场, value: onsite}
+      - {label: 混合, value: hybrid}
+      - {label: 远程, value: remote}
+  - type: pm_authority_level
+    name: 权限级别
+    details:
+      - {label: 高管, value: executive}
+      - {label: 经理, value: manager}
+      - {label: 专家, value: specialist}
+      - {label: 贡献者, value: contributor}
+  - type: pm_training_type
+    name: 培训类型
+    details:
+      - {label: 技术, value: technical}
+      - {label: 软技能, value: soft_skill}
+      - {label: 安全, value: safety}
+      - {label: 认证, value: certification}
+      - {label: 入职, value: onboarding}
+  - type: pm_review_type
+    name: 评估类型
+    details:
+      - {label: 季度, value: quarterly}
+      - {label: 年度, value: annual}
+      - {label: 项目结项, value: project_end}
+      - {label: 试用, value: probation}
+  - type: pm_performance_rating
+    name: 绩效评级
+    details:
+      - {label: 优秀, value: excellent}
+      - {label: 良好, value: good}
+      - {label: 合格, value: satisfactory}
+      - {label: 待改进, value: needs_improvement}
+      - {label: 不合格, value: unsatisfactory}
+  - type: pm_member_status
+    name: 成员状态
+    details:
+      - {label: 候选人, value: candidate}
+      - {label: 已入职, value: onboarded}
+      - {label: 在职, value: active}
+      - {label: 离职中, value: leaving}
+      - {label: 已离职, value: offboarded}
+  - type: pm_review_status
+    name: 评估状态
+    details:
+      - {label: 草稿, value: draft}
+      - {label: 评估中, value: in_review}
+      - {label: 已完成, value: completed}
+      - {label: 申诉, value: appealed}

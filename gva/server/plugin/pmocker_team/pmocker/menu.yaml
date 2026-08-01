@@ -1,0 +1,35 @@
+menus:
+  - path: /pmocker/team
+    name: pmockerTeam
+    component: view/routerHolder.vue
+    sort: 60
+    title: 团队管理
+    icon: user
+  - path: member
+    name: pmockerTeamMember
+    parent_name: pmockerTeam
+    component: view/pmocker/team/member.vue
+    sort: 1
+    title: 团队成员
+    icon: user
+  - path: role
+    name: pmockerTeamRole
+    parent_name: pmockerTeam
+    component: view/pmocker/team/role.vue
+    sort: 2
+    title: 角色定义
+    icon: medal
+  - path: training
+    name: pmockerTeamTraining
+    parent_name: pmockerTeam
+    component: view/pmocker/team/training.vue
+    sort: 3
+    title: 培训记录
+    icon: reading
+  - path: performance
+    name: pmockerTeamPerformance
+    parent_name: pmockerTeam
+    component: view/pmocker/team/performance.vue
+    sort: 4
+    title: 绩效评估
+    icon: trend-charts

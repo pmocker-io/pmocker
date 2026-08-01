@@ -1,0 +1,14 @@
+code: performance_review_flow
+name: 绩效评估流
+entity_type: performance_review
+trigger: on_create
+nodes:
+  - {code: start, type: start}
+  - {code: reviewer_review, type: approval, approvers: "reviewer", sla_hours: 72, quorum: 1}
+  - {code: score_calc, type: auto, handler: pmocker.team.score_calc}
+  - {code: end, type: end}
+transitions:
+  - {from: start, to: reviewer_review, on: submit, status: in_review}
+  - {from: reviewer_review, to: score_calc, on: approve}
+  - {from: reviewer_review, to: end, on: reject, status: draft}
+  - {from: score_calc, to: end, on: complete, status: completed}

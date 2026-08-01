@@ -1,0 +1,12 @@
+code: team_member_onboard
+name: 团队成员入职流
+entity_type: team_member
+trigger: on_create
+nodes:
+  - {code: start, type: start}
+  - {code: hr_approval, type: approval, approvers: "hr,pm", sla_hours: 24, quorum: 1}
+  - {code: end, type: end}
+transitions:
+  - {from: start, to: hr_approval, on: submit}
+  - {from: hr_approval, to: end, on: approve, status: onboarded}
+  - {from: hr_approval, to: end, on: reject, status: candidate}

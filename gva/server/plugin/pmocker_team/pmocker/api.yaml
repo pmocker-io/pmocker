@@ -1,0 +1,29 @@
+apis:
+  # 团队成员
+  - {path: /pmocker/team/member/create, description: 创建团队成员, api_group: 团队管理, method: POST}
+  - {path: /pmocker/team/member/delete, description: 删除团队成员, api_group: 团队管理, method: DELETE}
+  - {path: /pmocker/team/member/update, description: 更新团队成员, api_group: 团队管理, method: PUT}
+  - {path: /pmocker/team/member/find, description: 查询团队成员, api_group: 团队管理, method: GET}
+  - {path: /pmocker/team/member/list, description: 团队成员列表, api_group: 团队管理, method: GET}
+  - {path: /pmocker/team/member/transition, description: 团队成员状态流转, api_group: 团队管理, method: POST}
+  # 角色定义
+  - {path: /pmocker/team/role/create, description: 创建角色, api_group: 团队管理, method: POST}
+  - {path: /pmocker/team/role/delete, description: 删除角色, api_group: 团队管理, method: DELETE}
+  - {path: /pmocker/team/role/update, description: 更新角色, api_group: 团队管理, method: PUT}
+  - {path: /pmocker/team/role/find, description: 查询角色, api_group: 团队管理, method: GET}
+  - {path: /pmocker/team/role/list, description: 角色列表, api_group: 团队管理, method: GET}
+  - {path: /pmocker/team/role/transition, description: 角色状态流转, api_group: 团队管理, method: POST}
+  # 培训记录
+  - {path: /pmocker/team/training/create, description: 创建培训记录, api_group: 团队管理, method: POST}
+  - {path: /pmocker/team/training/delete, description: 删除培训记录, api_group: 团队管理, method: DELETE}
+  - {path: /pmocker/team/training/update, description: 更新培训记录, api_group: 团队管理, method: PUT}
+  - {path: /pmocker/team/training/find, description: 查询培训记录, api_group: 团队管理, method: GET}
+  - {path: /pmocker/team/training/list, description: 培训记录列表, api_group: 团队管理, method: GET}
+  - {path: /pmocker/team/training/transition, description: 培训记录状态流转, api_group: 团队管理, method: POST}
+  # 绩效评估
+  - {path: /pmocker/team/performance/create, description: 创建绩效评估, api_group: 团队管理, method: POST}
+  - {path: /pmocker/team/performance/delete, description: 删除绩效评估, api_group: 团队管理, method: DELETE}
+  - {path: /pmocker/team/performance/update, description: 更新绩效评估, api_group: 团队管理, method: PUT}
+  - {path: /pmocker/team/performance/find, description: 查询绩效评估, api_group: 团队管理, method: GET}
+  - {path: /pmocker/team/performance/list, description: 绩效评估列表, api_group: 团队管理, method: GET}
+  - {path: /pmocker/team/performance/transition, description: 绩效评估状态流转, api_group: 团队管理, method: POST}

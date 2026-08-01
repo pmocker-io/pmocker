@@ -1,0 +1,89 @@
+entity_types:
+  - entity_type: team_member
+    module: team
+    name: 团队成员
+    icon: user
+    icon_color: "#409EFF"
+    fields:
+      - {field_key: code, field_label: 成员编号, data_type: string}
+      - {field_key: user_id, field_label: 关联用户, data_type: ref}
+      - {field_key: full_name, field_label: 姓名, data_type: string}
+      - {field_key: role, field_label: 角色, data_type: enum, options_json: '["pm","sponsor","ba","dev","qa","designer","architect","sme"]'}
+      - {field_key: department, field_label: 部门, data_type: string}
+      - {field_key: allocation_percent, field_label: 投入比例(%), data_type: decimal}
+      - {field_key: start_date, field_label: 开始日期, data_type: date}
+      - {field_key: end_date, field_label: 结束日期, data_type: date}
+      - {field_key: skills, field_label: 技能, data_type: json}
+      - {field_key: skill_level, field_label: 技能等级, data_type: enum, options_json: '["junior","mid","senior","expert"]'}
+      - {field_key: certifications, field_label: 认证, data_type: json}
+      - {field_key: hourly_rate, field_label: 时薪, data_type: decimal}
+      - {field_key: cost_center, field_label: 成本中心, data_type: string}
+      - {field_key: billable, field_label: 是否计费, data_type: bool, default_value: "false"}
+      - {field_key: location, field_label: 所在地, data_type: string}
+      - {field_key: timezone, field_label: 时区, data_type: string}
+      - {field_key: communication_mode, field_label: 工作模式, data_type: enum, options_json: '["onsite","hybrid","remote"]'}
+      - {field_key: reporting_to, field_label: 汇报对象, data_type: ref}
+      - {field_key: performance_rating, field_label: 绩效评分, data_type: decimal}
+      - {field_key: utilization_rate, field_label: 利用率(%), data_type: decimal}
+      - {field_key: status, field_label: 状态, data_type: enum, options_json: '["candidate","onboarded","active","leaving","offboarded"]'}
+      - {field_key: offboard_reason, field_label: 离职原因, data_type: text}
+    states: [candidate, onboarded, active, leaving, offboarded]
+    workflows: [team_member_onboard]
+  - entity_type: team_role
+    module: team
+    name: 角色定义
+    icon: medal
+    icon_color: "#67C23A"
+    fields:
+      - {field_key: code, field_label: 角色编号, data_type: string}
+      - {field_key: name, field_label: 角色名称, data_type: string}
+      - {field_key: description, field_label: 角色描述, data_type: text}
+      - {field_key: responsibilities, field_label: 职责, data_type: text}
+      - {field_key: required_skills, field_label: 必备技能, data_type: json}
+      - {field_key: authority_level, field_label: 权限级别, data_type: enum, options_json: '["executive","manager","specialist","contributor"]'}
+      - {field_key: raci_default, field_label: 默认RACI, data_type: enum, options_json: '["R","A","C","I"]'}
+      - {field_key: min_experience_years, field_label: 最低经验年限, data_type: int}
+      - {field_key: max_headcount, field_label: 最大编制, data_type: int}
+      - {field_key: is_active, field_label: 是否启用, data_type: bool, default_value: "true"}
+    states: [active, inactive]
+  - entity_type: training_record
+    module: team
+    name: 培训记录
+    icon: reading
+    icon_color: "#909399"
+    fields:
+      - {field_key: member_id, field_label: 培训成员, data_type: ref}
+      - {field_key: course_name, field_label: 课程名称, data_type: string}
+      - {field_key: training_type, field_label: 培训类型, data_type: enum, options_json: '["technical","soft_skill","safety","certification","onboarding"]'}
+      - {field_key: start_date, field_label: 开始日期, data_type: date}
+      - {field_key: end_date, field_label: 结束日期, data_type: date}
+      - {field_key: duration_hours, field_label: 培训时长(小时), data_type: decimal}
+      - {field_key: provider, field_label: 培训机构, data_type: string}
+      - {field_key: cost, field_label: 培训费用, data_type: decimal}
+      - {field_key: location, field_label: 培训地点, data_type: string}
+      - {field_key: certification_obtained, field_label: 是否获证, data_type: bool, default_value: "false"}
+      - {field_key: certification_id, field_label: 证书编号, data_type: string}
+      - {field_key: effectiveness_score, field_label: 效果评分, data_type: decimal}
+    states: [planned, in_progress, completed, cancelled]
+  - entity_type: performance_review
+    module: team
+    name: 绩效评估
+    icon: trend-charts
+    icon_color: "#F56C6C"
+    fields:
+      - {field_key: member_id, field_label: 评估成员, data_type: ref}
+      - {field_key: review_period, field_label: 评估周期, data_type: string}
+      - {field_key: review_date, field_label: 评估日期, data_type: date}
+      - {field_key: reviewer_id, field_label: 评估人, data_type: ref}
+      - {field_key: review_type, field_label: 评估类型, data_type: enum, options_json: '["quarterly","annual","project_end","probation"]'}
+      - {field_key: rating, field_label: 评级, data_type: enum, options_json: '["excellent","good","satisfactory","needs_improvement","unsatisfactory"]'}
+      - {field_key: score, field_label: 评分, data_type: decimal}
+      - {field_key: strengths, field_label: 优势, data_type: text}
+      - {field_key: improvement_areas, field_label: 待改进, data_type: text}
+      - {field_key: goals_achieved, field_label: 目标达成, data_type: text}
+      - {field_key: feedback, field_label: 反馈, data_type: text}
+      - {field_key: development_plan, field_label: 发展计划, data_type: text}
+      - {field_key: next_review_date, field_label: 下次评估日, data_type: date}
+      - {field_key: status, field_label: 状态, data_type: enum, options_json: '["draft","in_review","completed","appealed"]'}
+    states: [draft, in_review, completed, appealed]
+    workflows: [performance_review_flow]
