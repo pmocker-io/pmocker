@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"time"
 
 	"github.com/pmocker-io/pmocker/cli/internal/builder"
 	"github.com/pmocker-io/pmocker/cli/internal/instance"
@@ -28,6 +29,8 @@ func findProjectRoot() string {
 	wd, _ := os.Getwd()
 	return wd
 }
+
+var runFollow bool
 
 var runCmd = &cobra.Command{
 	Use:   "run",
@@ -94,6 +97,21 @@ var runCmd = &cobra.Command{
 		fmt.Printf("  状态:   %s\n", inst.Status)
 		fmt.Printf("  PID:    %d\n", inst.PID)
 		fmt.Printf("\n访问地址: http://localhost:%d\n", inst.Port)
+
+		// 5. --follow 模式：自动跟踪 gva-server 实时日志，Ctrl+C 退出
+		if runFollow {
+			logPath := filepath.Join(vols.Path(inst.VolumeID), "gva-server.log")
+			fmt.Printf("\n实时日志（Ctrl+C 退出，实例继续运行）:\n")
+			fmt.Printf("----------------------------------------\n")
+			// 等待日志文件创建（进程刚启动可能尚未写日志）
+			for i := 0; i < 50; i++ {
+				if _, err := os.Stat(logPath); err == nil {
+					break
+				}
+				time.Sleep(100 * time.Millisecond)
+			}
+			return followLog(logPath, false)
+		}
 		return nil
 	},
 }
@@ -107,6 +125,7 @@ func init() {
 	runCmd.Flags().String("db-dsn", "", "数据库 DSN（mysql/postgres 时必填）")
 	runCmd.Flags().StringP("volume", "v", "", "数据卷路径")
 	runCmd.Flags().String("admin-password", "", "管理员密码")
+	runCmd.Flags().BoolVarP(&runFollow, "follow", "f", false, "启动后自动跟踪 gva-server 实时日志（Ctrl+C 退出，实例继续运行）")
 }
 
 func findGVAServerDir() string {
