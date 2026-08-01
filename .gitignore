@@ -39,6 +39,8 @@ gva/web/dist/
 
 # SQLite 数据库文件
 *.db
+*.db-shm
+*.db-wal
 *.sqlite
 *.sqlite3
 
