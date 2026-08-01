@@ -3,6 +3,7 @@ package initialize
 import (
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/flipped-aurora/gin-vue-admin/server/docs"
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
@@ -52,8 +53,19 @@ func Routers() *gin.Engine {
 	// 如果 dist 目录存在，服务前端静态文件（pmocker 实例模式）
 	if _, err := os.Stat("./dist"); err == nil {
 		Router.StaticFile("/favicon.ico", "./dist/favicon.ico")
+		Router.StaticFile("/logo.png", "./dist/logo.png")
 		Router.Static("/assets", "./dist/assets")
 		Router.StaticFile("/", "./dist/index.html")
+		// SPA fallback：所有未匹配的非 API GET 请求返回 index.html，避免前端路由刷新时 404
+		Router.NoRoute(func(c *gin.Context) {
+			if c.Request.Method != http.MethodGet {
+				return
+			}
+			if strings.HasPrefix(c.Request.URL.Path, global.GVA_CONFIG.System.RouterPrefix+"/") {
+				return
+			}
+			c.File("./dist/index.html")
+		})
 	}
 
 	Router.Use(middleware.UploadResponseHeaders(global.GVA_CONFIG.Local.StorePath))

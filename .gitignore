@@ -46,7 +46,11 @@ gva/web/dist/
 
 # PMocker 运行时
 .pmock/
+.pmocker-data*/
 *.pmi
+
+# PMocker 二进制/数据目录
+gva/server/bin/
 
 # 临时文件
 /tmp/
