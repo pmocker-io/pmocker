@@ -1,12 +1,16 @@
 code: scope_baseline
-name: 范围基线审批流
+name: 范围基线审批与变更流
 entity_type: scope_item
 trigger: on_baseline
 nodes:
   - {code: start, type: start}
   - {code: cc_approval, type: approval, approvers: "cc", sla_hours: 24, quorum: 1}
+  - {code: change_review, type: approval, approvers: "cc,pm", sla_hours: 48, quorum: 1}
   - {code: end, type: end}
 transitions:
   - {from: start, to: cc_approval, on: submit}
   - {from: cc_approval, to: end, on: approve, status: baselined}
   - {from: cc_approval, to: end, on: reject, status: draft}
+  - {from: cc_approval, to: change_review, on: request_change, status: changed}
+  - {from: change_review, to: end, on: approve, status: baselined}
+  - {from: change_review, to: end, on: reject, status: changed}

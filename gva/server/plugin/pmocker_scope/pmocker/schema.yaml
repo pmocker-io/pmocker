@@ -10,6 +10,22 @@ entity_types:
       - {field_key: is_deliverable, field_label: 是否交付物, data_type: bool, default_value: "false"}
       - {field_key: description, field_label: 描述, data_type: text}
       - {field_key: parent_id, field_label: 父范围项, data_type: ref}
+      # --- WBS 结构化 ---
+      - {field_key: wbs_code, field_label: WBS编码, data_type: string}
+      - {field_key: is_work_package, field_label: 是否工作包, data_type: bool, default_value: "false"}
+      # --- RACI 矩阵 ---
+      - {field_key: raci_responsible, field_label: RACI-执行人(R), data_type: ref}
+      - {field_key: raci_accountable, field_label: RACI-负责人(A), data_type: ref}
+      - {field_key: raci_consulted, field_label: RACI-咨询人(C), data_type: json}
+      - {field_key: raci_informed, field_label: RACI-知会人(I), data_type: json}
+      # --- 基线 ---
+      - {field_key: baseline_version, field_label: 范围基线版本, data_type: string}
+      - {field_key: baseline_date, field_label: 基线日期, data_type: date}
+      # --- 范围说明书要素 ---
+      - {field_key: acceptance_status, field_label: 范围确认状态, data_type: enum, options_json: '["pending","accepted","rejected"]'}
+      - {field_key: assumptions, field_label: 假设条件, data_type: text}
+      - {field_key: constraints, field_label: 制约因素, data_type: text}
+      - {field_key: exclusions, field_label: 范围排除项, data_type: text}
     states: [draft, baselined, changed]
     workflows: [scope_baseline]
 
@@ -23,4 +39,12 @@ entity_types:
       - {field_key: level, field_label: 层级, data_type: int}
       - {field_key: scope_item_id, field_label: 关联范围项, data_type: ref}
       - {field_key: deliverable_id, field_label: 关联交付物, data_type: ref}
+      # --- 补血字段 ---
+      - {field_key: name, field_label: 节点名称, data_type: string}
+      - {field_key: description, field_label: 节点描述, data_type: text}
+      - {field_key: weight, field_label: 权重, data_type: decimal}
+      - {field_key: planned_start, field_label: 计划开始, data_type: date}
+      - {field_key: planned_finish, field_label: 计划完成, data_type: date}
+      - {field_key: cost, field_label: 预算成本, data_type: decimal}
+      - {field_key: estimated_effort, field_label: 估算工时, data_type: decimal}
     states: [active, archived]
