@@ -149,11 +149,7 @@ func (a *Api) CreateVersion(c *gin.Context) {
 }
 
 func (a *Api) ListVersions(c *gin.Context) {
-	deliverableID, err := strconv.ParseUint(c.Query("deliverableId"), 10, 64)
-	if err != nil {
-		response.FailWithMessage("参数错误: deliverableId 必填", c)
-		return
-	}
+	deliverableID, _ := strconv.ParseUint(c.DefaultQuery("deliverableId", "0"), 10, 64)
 	list, err := ServiceGroupApp.ListVersions(c.Request.Context(), uint(deliverableID))
 	if err != nil {
 		response.FailWithMessage("查询失败: "+err.Error(), c)

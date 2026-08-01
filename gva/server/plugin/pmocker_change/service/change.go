@@ -293,13 +293,20 @@ func (s *Service) CloseChange(ctx context.Context, id, userID uint) error {
 }
 
 func (s *Service) ListChangeLogs(ctx context.Context, changeID uint) ([]eavtypes.Entity, error) {
-	cr, err := s.GetChangeRequest(ctx, changeID)
-	if err != nil {
-		return nil, err
+	var projectID uint
+	if changeID > 0 {
+		cr, err := s.GetChangeRequest(ctx, changeID)
+		if err != nil {
+			return nil, err
+		}
+		projectID = cr.ProjectID
 	}
-	logs, _, listErr := pmservice.ServiceGroupApp.ListEntities(ctx, cr.ProjectID, "change_log", 0, 10000)
+	logs, _, listErr := pmservice.ServiceGroupApp.ListEntities(ctx, projectID, "change_log", 0, 10000)
 	if listErr != nil {
 		return nil, listErr
+	}
+	if changeID == 0 {
+		return logs, nil
 	}
 	filtered := make([]eavtypes.Entity, 0, len(logs))
 	for _, log := range logs {

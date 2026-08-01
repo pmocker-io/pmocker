@@ -203,20 +203,26 @@ func (s *Service) CreateVersion(ctx context.Context, deliverableID uint, version
 }
 
 func (s *Service) ListVersions(ctx context.Context, deliverableID uint) ([]eavtypes.Entity, error) {
-	e, err := s.GetDeliverable(ctx, deliverableID)
-	if err != nil {
-		return nil, err
+	var projectID uint
+	if deliverableID > 0 {
+		e, err := s.GetDeliverable(ctx, deliverableID)
+		if err != nil {
+			return nil, err
+		}
+		projectID = e.ProjectID
 	}
 
-	entities, _, err := pmservice.ServiceGroupApp.ListEntities(ctx, e.ProjectID, "deliverable_version", 0, 10000)
+	entities, _, err := pmservice.ServiceGroupApp.ListEntities(ctx, projectID, "deliverable_version", 0, 10000)
 	if err != nil {
 		return nil, err
 	}
 
 	var result []eavtypes.Entity
 	for _, ent := range entities {
-		if ent.Attrs != nil && toUint(ent.Attrs["deliverable_id"]) == deliverableID {
-			result = append(result, ent)
+		if ent.Attrs != nil {
+			if deliverableID == 0 || toUint(ent.Attrs["deliverable_id"]) == deliverableID {
+				result = append(result, ent)
+			}
 		}
 	}
 
