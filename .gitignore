@@ -46,7 +46,7 @@ gva/web/dist/
 
 # PMocker 运行时
 .pmock/
-.pmocker-data*/
+.pmocker*/
 *.pmi
 
 # PMocker 二进制/数据目录
