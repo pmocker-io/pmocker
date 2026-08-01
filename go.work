@@ -3,5 +3,6 @@ go 1.25.0
 use (
 	./cli
 	./gva/server
+	./images/pmbok6-hybrid
 	./pkg
 )
