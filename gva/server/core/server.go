@@ -35,6 +35,8 @@ func RunServer() {
 	}
 
 	Router := initialize.Routers()
+	// PMocker 实例模式：路由注册（含插件初始化）后注册 MCP 动态工具、Casbin 规则和签发 API Token
+	initialize.AutoInitPostPlugins()
 	address := fmt.Sprintf(":%d", global.GVA_CONFIG.System.Addr)
 	mcpBaseURL := mcpTool.ResolveMCPServiceURL()
 

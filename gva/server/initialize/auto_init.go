@@ -3,6 +3,7 @@ package initialize
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 
 	adapter "github.com/casbin/gorm-adapter/v3"
@@ -60,6 +61,17 @@ func AutoInitIfEmpty() {
 		logger.Bg().Mod("auto-init").Err(err).Error("禁用验证码失败")
 	}
 	logger.Bg().Mod("auto-init").Info("PMocker 自动初始化数据库完成")
+}
+
+// AutoInitPostPlugins 在插件初始化（Routers）之后执行，注册 MCP 动态工具、Casbin 规则和签发 API Token。
+// 这些操作依赖 PMocker 插件已注册的 /pmocker/* API，必须在 Routers() 之后调用。
+func AutoInitPostPlugins() {
+	if os.Getenv("PMOCKER_AUTO_INIT") != "1" {
+		return
+	}
+	if global.GVA_DB == nil {
+		return
+	}
 
 	// 加载 PMocker 插件的 MCP 动态工具定义（创建 MCP 记录 + 绑定 PMocker API）
 	if err := loadPMockerDynamicTools(); err != nil {
@@ -89,6 +101,11 @@ func AutoInitIfEmpty() {
 // MCP 进程启动时通过 /mcpApi/listBindingsPublic 接口自动加载这些绑定。
 func loadPMockerDynamicTools() error {
 	db := global.GVA_DB
+
+	// AutoInitIfEmpty 早于 AI 插件 Gorm() 初始化，需先确保 MCP 表已创建
+	if err := db.AutoMigrate(&autoModel.SysMcp{}, &autoModel.SysMcpApi{}); err != nil {
+		return fmt.Errorf("auto migrate mcp tables: %w", err)
+	}
 
 	// 1. 创建或获取名为 "pmocker" 的 MCP 记录
 	var mcp autoModel.SysMcp
