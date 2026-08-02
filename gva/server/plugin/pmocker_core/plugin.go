@@ -34,8 +34,8 @@ func (p *plugin) Register(group *gin.Engine) {
 	if errs := pmockerplugin.InitAllPMockerPlugins(ctx, plugins); len(errs) > 0 {
 		global.GVA_LOG.Error("PMocker plugin init errors", zap.Any("errors", errs))
 	}
-	// 注册 PMocker 路由
-	pmockerRouter.RouterGroupApp.InitEAV(group.Group("api").Group("pmocker"))
+	// 注册 PMocker 路由（与其他 pmocker 插件路由一致，均在 /pmocker/ 下）
+	pmockerRouter.RouterGroupApp.InitEAV(group.Group("pmocker"))
 }
 
 // registerTables 注册 PMocker 的所有数据库表。
