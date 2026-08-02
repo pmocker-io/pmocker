@@ -5,6 +5,7 @@ import (
 	"embed"
 
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/pmocker_cost/initialize"
+	costsvc "github.com/flipped-aurora/gin-vue-admin/server/plugin/pmocker_cost/service"
 	"github.com/flipped-aurora/gin-vue-admin/server/service/pmocker"
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/plugin-tool/utils"
 	interfaces "github.com/flipped-aurora/gin-vue-admin/server/utils/plugin/v2"
@@ -60,5 +61,10 @@ func (p *plugin) InitPMocker(ctx context.Context) error {
 	if err := l.LoadAPI(apiBytes); err != nil {
 		return err
 	}
-	return l.LoadWorkflowDir(ctx, workflowFS, "pmocker/workflows")
+	if err := l.LoadWorkflowDir(ctx, workflowFS, "pmocker/workflows"); err != nil {
+		return err
+	}
+	// ★ 注册工作流 auto 节点 handler
+	pmocker.ServiceGroupApp.WorkflowService.RegisterAutoHandler("pmocker.cost.evm_calc", costsvc.EVMHandler)
+	return nil
 }

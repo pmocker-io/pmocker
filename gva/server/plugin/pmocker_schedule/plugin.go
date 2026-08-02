@@ -5,6 +5,7 @@ import (
 	"embed"
 
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/pmocker_schedule/initialize"
+	schedulesvc "github.com/flipped-aurora/gin-vue-admin/server/plugin/pmocker_schedule/service"
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/plugin-tool/utils"
 	interfaces "github.com/flipped-aurora/gin-vue-admin/server/utils/plugin/v2"
 	pmockerplugin "github.com/pmocker-io/pmocker/pkg/pmocker/plugin"
@@ -64,5 +65,9 @@ func (p *plugin) InitPMocker(ctx context.Context) error {
 	if err := l.LoadAPI(apiBytes); err != nil {
 		return err
 	}
-	return l.LoadWorkflowDir(ctx, workflowFS, "pmocker/workflows")
+	if err := l.LoadWorkflowDir(ctx, workflowFS, "pmocker/workflows"); err != nil {
+		return err
+	}
+	pmocker.ServiceGroupApp.WorkflowService.RegisterAutoHandler("pmocker.schedule.cpm", schedulesvc.CPMHandler)
+	return nil
 }

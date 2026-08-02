@@ -1,9 +1,13 @@
 package schedule
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"sort"
 	"time"
+
+	pmservice "github.com/flipped-aurora/gin-vue-admin/server/service/pmocker"
 )
 
 // Task 用于 CPM 计算的任务
@@ -176,4 +180,110 @@ func CPM(tasks []Task) ([]CPMResult, error) {
 // FormatDate 将天数偏移转为日期（基于 baseDate）
 func FormatDate(baseDate time.Time, days int) string {
 	return baseDate.AddDate(0, 0, days).Format("2006-01-02")
+}
+
+// CPMHandler 工作流 auto 节点处理器：读取项目下所有 task，执行 CPM，写回关键路径/浮动等派生字段。
+// handler 名：pmocker.schedule.cpm
+func CPMHandler(ctx context.Context, taskEntityID uint) error {
+	// 通过 task 实体反查 ProjectID
+	root, err := pmservice.ServiceGroupApp.GetEntity(ctx, taskEntityID)
+	if err != nil {
+		return fmt.Errorf("get task entity %d: %w", taskEntityID, err)
+	}
+	if root.EntityType != "task" {
+		return fmt.Errorf("entity %d is %q, expect task", taskEntityID, root.EntityType)
+	}
+	projectID := root.ProjectID
+	entities, _, err := pmservice.ServiceGroupApp.ListEntities(ctx, projectID, "task", 0, 10000)
+	if err != nil {
+		return fmt.Errorf("list tasks for project %d: %w", projectID, err)
+	}
+	// 构造 CPM 输入
+	tasks := make([]Task, 0, len(entities))
+	for _, e := range entities {
+		t := Task{ID: e.ID, Code: e.Title}
+		if d, ok := e.Attrs["duration"]; ok {
+			t.Duration = asInt(d)
+		}
+		if t.Duration <= 0 {
+			t.Duration = 1
+		}
+		if preds, ok := e.Attrs["predecessors"]; ok {
+			if b, mErr := json.Marshal(preds); mErr == nil {
+				_ = json.Unmarshal(b, &t.Predecessors)
+			} else if arr, ok := preds.([]interface{}); ok {
+				for _, it := range arr {
+					if m, ok := it.(map[string]interface{}); ok {
+						dep := TaskDep{
+							TaskID:   uint(asInt(m["taskId"])),
+							LinkType: asStr(m["linkType"]),
+							Lag:      asInt(m["lag"]),
+						}
+						if dep.LinkType == "" {
+							dep.LinkType = "FS"
+						}
+						t.Predecessors = append(t.Predecessors, dep)
+					}
+				}
+			}
+		}
+		tasks = append(tasks, t)
+	}
+	results, err := CPM(tasks)
+	if err != nil {
+		return fmt.Errorf("cpm compute: %w", err)
+	}
+	// 按 TaskID 回写字段
+	resByID := make(map[uint]CPMResult, len(results))
+	for _, r := range results {
+		resByID[r.TaskID] = r
+	}
+	for _, e := range entities {
+		r, ok := resByID[e.ID]
+		if !ok {
+			continue
+		}
+		if e.Attrs == nil {
+			e.Attrs = map[string]interface{}{}
+		}
+		e.Attrs["is_critical_path"] = r.IsCritical
+		e.Attrs["total_float"] = float64(r.TotalFloat)
+		e.Attrs["free_float"] = float64(r.FreeFloat)
+		// 若任务有 start_date，基于偏移推导 earliest/latest 日期
+		if sd, ok := e.Attrs["start_date"].(string); ok && sd != "" {
+			if base, pErr := time.Parse("2006-01-02", sd); pErr == nil {
+				e.Attrs["baseline_start"] = FormatDate(base, r.EarlyStart)
+				e.Attrs["baseline_finish"] = FormatDate(base, r.EarlyFinish)
+			}
+		}
+		if upErr := pmservice.ServiceGroupApp.UpdateEntity(ctx, e); upErr != nil {
+			return fmt.Errorf("update task %d: %w", e.ID, upErr)
+		}
+	}
+	return nil
+}
+
+func asInt(v interface{}) int {
+	switch n := v.(type) {
+	case int:
+		return n
+	case int64:
+		return int(n)
+	case uint:
+		return int(n)
+	case float64:
+		return int(n)
+	case string:
+		x := 0
+		fmt.Sscanf(n, "%d", &x)
+		return x
+	}
+	return 0
+}
+
+func asStr(v interface{}) string {
+	if s, ok := v.(string); ok {
+		return s
+	}
+	return ""
 }

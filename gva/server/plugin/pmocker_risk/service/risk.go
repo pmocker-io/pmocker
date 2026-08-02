@@ -135,7 +135,64 @@ func (s *Service) AssessRisk(ctx context.Context, id uint, probability, impact i
 	e.Attrs["impact"] = impact
 	e.Attrs["risk_score"] = score
 	e.Attrs["risk_level"] = string(level)
+	e.Attrs["expected_monetary_value"] = calcEMV(e.Attrs, score)
 	return pmservice.ServiceGroupApp.UpdateEntity(ctx, *e)
+}
+
+// ScoreHandler 工作流 auto 节点处理器：基于 probability/impact 计算 risk_score/risk_level/EMV 并回写。
+// handler 名：pmocker.risk.score
+func ScoreHandler(ctx context.Context, entityID uint) error {
+	e, err := pmservice.ServiceGroupApp.GetEntity(ctx, entityID)
+	if err != nil {
+		return fmt.Errorf("get risk entity %d: %w", entityID, err)
+	}
+	if e.EntityType != "risk" {
+		return fmt.Errorf("entity %d is %q, expect risk", entityID, e.EntityType)
+	}
+	if e.Attrs == nil {
+		e.Attrs = map[string]interface{}{}
+	}
+	prob := toInt(e.Attrs["probability"])
+	imp := toInt(e.Attrs["impact"])
+	if prob <= 0 {
+		prob = 1
+	}
+	if prob > 5 {
+		prob = 5
+	}
+	if imp <= 0 {
+		imp = 1
+	}
+	if imp > 5 {
+		imp = 5
+	}
+	level, score := CalcRiskLevel(prob, imp)
+	e.Attrs["probability"] = prob
+	e.Attrs["impact"] = imp
+	e.Attrs["risk_score"] = score
+	e.Attrs["risk_level"] = string(level)
+	e.Attrs["expected_monetary_value"] = calcEMV(e.Attrs, score)
+	return pmservice.ServiceGroupApp.UpdateEntity(ctx, *e)
+}
+
+// calcEMV = impact_amount * (probability / 5)；无影响金额时退化 score*1000 作为参考值。
+func calcEMV(attrs map[string]interface{}, score int) float64 {
+	if v, ok := attrs["impact_amount"]; ok {
+		if amt, ok := v.(float64); ok && amt != 0 {
+			p := 0.0
+			if pv, ok := attrs["probability"].(float64); ok {
+				p = pv / 5.0
+			} else if pv, ok := attrs["probability"].(int); ok {
+				p = float64(pv) / 5.0
+			}
+			if p == 0 {
+				p = 0.2
+			}
+			r := amt * p
+			return float64(int64(r*100+0.5)) / 100
+		}
+	}
+	return float64(score * 1000)
 }
 
 // ProjectMatrix 生成项目风险矩阵
