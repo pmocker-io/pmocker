@@ -137,6 +137,7 @@ func createPositions(db *gorm.DB) error {
 		{"PMO管理员", "PMO_ADMIN", 13},
 		{"部门负责人", "DEPT_LEADER", 14},
 		{"CCB成员", "CCB_MEMBER", 15},
+		{"质量经理", "QA_MANAGER", 16},
 	}
 	for _, p := range positions {
 		pos := system.SysPosition{Name: p.name, Code: p.code, Sort: p.sort, Status: &statusTrue}

@@ -109,13 +109,14 @@ type DeliverableSeed struct {
 }
 
 type runtimeCtx struct {
-	db       *gorm.DB
-	project  *pmocker.PMEntity
-	leader   uint
+	db        *gorm.DB
+	project   *pmocker.PMEntity
+	leader    uint
 	userIdMap map[string]uint
 	userNick  map[string]string
 	memberId  map[string]uint
 	taskId    map[string]uint
+	allProjects []*pmocker.PMEntity
 }
 
 func LoadBusinessSeed(ctx context.Context) error {
@@ -140,6 +141,11 @@ func LoadBusinessSeed(ctx context.Context) error {
 		if err := createProject(ctx, &seed.Projects[i], rt); err != nil {
 			return fmt.Errorf("项目 %s: %w", seed.Projects[i].Code, err)
 		}
+	}
+
+	// V2-4: 派生扩展数据（milestone/baselines/time_entries/cost_actuals/workflows/relations/reports/archive）
+	if err := extendAllProjectsData(ctx, rt); err != nil {
+		return fmt.Errorf("扩展种子数据失败: %w", err)
 	}
 	return nil
 }
@@ -238,7 +244,9 @@ func createProject(_ context.Context, p *ProjectSeedYAML, rt *runtimeCtx) error 
 	}
 
 	for _, t := range p.Schedule {
-		ownerID := rt.memberId[t.Owner]
+		// task owner_id 必须存 sys_user ID（与 task_center/service 查询逻辑对齐），
+		// 而非 team_member 实体 ID；否则按用户过滤的"我关注/我的任务"返回空。
+		ownerID := rt.userIdMap[t.Owner]
 		task := &pmocker.PMEntity{
 			ProjectID:  projectID,
 			EntityType: "task",
@@ -339,6 +347,9 @@ func createProject(_ context.Context, p *ProjectSeedYAML, rt *runtimeCtx) error 
 		createAttrStr(db, eid, "code", r.Code)
 		createAttrStr(db, eid, "lock_status", "available")
 	}
+
+	// 收集项目实体指针供 extendAllProjectsData 使用
+	rt.allProjects = append(rt.allProjects, projEntity)
 	return nil
 }
 
