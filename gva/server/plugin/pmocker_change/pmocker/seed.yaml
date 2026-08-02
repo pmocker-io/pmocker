@@ -23,3 +23,10 @@ dictionaries:
       - {label: CCB成员, value: ccb_member}
       - {label: 技术专家, value: tech_expert}
       - {label: 业务代表, value: biz_rep}
+  - type: pm_change_nature
+    name: 变更性质(PMBOK)
+    details:
+      - {label: 纠正措施, value: corrective}
+      - {label: 预防措施, value: preventive}
+      - {label: 缺陷修复, value: defect_repair}
+      - {label: 增强更新, value: enhancement}

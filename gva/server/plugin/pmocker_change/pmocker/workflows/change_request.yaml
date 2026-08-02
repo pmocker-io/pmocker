@@ -9,6 +9,7 @@ nodes:
   - {code: ccb, type: approval, approvers: ccb_chair, sla_hours: 72, quorum: 1}
   - {code: implementation, type: task}
   - {code: verification, type: task}
+  - {code: closed, type: approval, approvers: "pm", sla_hours: 24, quorum: 1}
   - {code: end, type: end}
 transitions:
   - {from: start, to: submit, on: submit, status: submitted}
@@ -18,6 +19,6 @@ transitions:
   - {from: ccb, to: end, on: reject, status: rejected}
   - {from: ccb, to: end, on: cancel, status: cancelled}
   - {from: implementation, to: verification, on: impl_done, status: implementing}
-  - {from: verification, to: end, on: verify_pass, status: verified}
+  - {from: verification, to: closed, on: verify_pass, status: verified}
   - {from: verification, to: implementation, on: verify_fail, status: implementing}
-  - {from: end, to: end, on: close, status: closed}
+  - {from: closed, to: end, on: close, status: closed}

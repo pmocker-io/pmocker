@@ -21,6 +21,16 @@ entity_types:
       - {field_key: implemented_by, field_label: 实施人, data_type: ref}
       - {field_key: implemented_date, field_label: 实施日期, data_type: date}
       - {field_key: validation_result, field_label: 验证结果, data_type: text}
+      # --- PMBOK 四分类（纠正/预防/缺陷修复/增强）---
+      - {field_key: change_nature, field_label: 变更性质, data_type: enum, options_json: '["corrective","preventive","defect_repair","enhancement"]'}
+      # --- CCB 评审记录 ---
+      - {field_key: ccb_decision_date, field_label: CCB决议日期, data_type: date}
+      - {field_key: ccb_decision_maker, field_label: CCB决议人, data_type: ref}
+      - {field_key: impact_analyzed_by, field_label: 影响分析人, data_type: ref}
+      - {field_key: validated_by, field_label: 验证人, data_type: ref}
+      # --- 紧急标识 + 受影响基线 ---
+      - {field_key: is_emergency, field_label: 是否紧急变更, data_type: bool, default_value: "false"}
+      - {field_key: affected_baselines, field_label: 受影响基线, data_type: json}
     states: [draft, submitted, analyzing, ccb_review, approved, rejected, implementing, verified, closed, cancelled]
     workflows: [change_request]
 
