@@ -14,6 +14,12 @@ type ServiceGroup struct {
 	BaselineService
 	VarianceService
 	ProgressService
+	DashboardService
+	ReportService
+	PMODashboardService
+	ArchiveService
+	TaskCenterService
+	ProjectWorkbenchService
 }
 
 // ServiceGroupApp 全局 service 入口

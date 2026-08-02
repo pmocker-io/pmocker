@@ -55,3 +55,15 @@ type PMApprovalRecord struct {
 }
 
 func (PMApprovalRecord) TableName() string { return "pm_approval_records" }
+
+// PMReportSnapshot 报告快照表（里程碑存档）
+type PMReportSnapshot struct {
+	global.GVA_MODEL
+	ProjectID    uint   `json:"projectId" gorm:"index;not null;comment:项目ID"`
+	ReportType   string `json:"reportType" gorm:"size:32;index;not null;comment:dashboard/pmo/close"`
+	Period       string `json:"period" gorm:"size:10;index;comment:报告周期如2026-06或close"`
+	SnapshotJSON string `json:"snapshotJson" gorm:"type:text;comment:快照JSON"`
+	GeneratedBy  uint   `json:"generatedBy" gorm:"comment:生成人"`
+}
+
+func (PMReportSnapshot) TableName() string { return "pm_report_snapshots" }

@@ -11,6 +11,11 @@ type RouterGroup struct {
 	BaselineRouter
 	VarianceRouter
 	ProgressRouter
+	DashboardRouter
+	PMORouter
+	ArchiveRouter
+	TaskCenterRouter
+	ProjectWorkbenchRouter
 }
 
 // RouterGroupApp 全局路由入口

@@ -28,6 +28,11 @@ func Router(engine *gin.Engine) {
 	pmockerRouter.RouterGroupApp.InitBaseline(public, private)
 	pmockerRouter.RouterGroupApp.InitVariance(public, private)
 	pmockerRouter.RouterGroupApp.InitProgress(public, private)
+	pmockerRouter.RouterGroupApp.InitDashboard(public, private)
+	pmockerRouter.RouterGroupApp.InitPMO(public, private)
+	pmockerRouter.RouterGroupApp.InitArchive(public, private)
+	pmockerRouter.RouterGroupApp.InitTaskCenter(public, private)
+	pmockerRouter.RouterGroupApp.InitProjectWorkbench(public, private)
 }
 
 // SeedOrgData 组织架构种子数据调用框架（供启动流程或初始化脚本调用）。

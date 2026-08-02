@@ -11,6 +11,11 @@ type ApiGroup struct {
 	BaselineApi
 	VarianceApi
 	ProgressApi
+	DashboardApi
+	PMOApi
+	ArchiveApi
+	TaskCenterApi
+	ProjectWorkbenchApi
 }
 
 // ApiGroupApp 全局 API 入口
