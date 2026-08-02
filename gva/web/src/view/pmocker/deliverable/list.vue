@@ -1,5 +1,6 @@
 <template>
   <div>
+    <ProjectSelector @change="onProjectChange" />
     <div class="gva-search-box">
       <el-form :inline="true" :model="searchInfo">
         <el-form-item label="名称">
@@ -101,8 +102,13 @@ import { ref, reactive } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getDeliverableList, createDeliverable, updateDeliverable, deleteDeliverable, submitDeliverableReview, acceptDeliverable, rejectDeliverable } from '@/api/pmocker/deliverable'
 import DynamicForm from '../components/DynamicForm.vue'
+import ProjectSelector from '../components/ProjectSelector.vue'
+import { useProjectStore } from '@/pinia'
 
 defineOptions({ name: 'PmockerDeliverableList' })
+
+const projectStore = useProjectStore()
+const onProjectChange = () => { page.value = 1; getTableData() }
 
 const searchInfo = ref({})
 const tableData = ref([])
@@ -125,7 +131,7 @@ const reviewStatusType = (s) => ({ pending: 'info', in_review: 'warning', approv
 const securityType = (s) => ({ public: 'info', internal: '', confidential: 'warning', secret: 'danger' }[s] || 'info')
 
 const getTableData = async () => {
-  const params = { page: page.value, pageSize: pageSize.value, ...searchInfo.value }
+  const params = { page: page.value, pageSize: pageSize.value, projectId: projectStore.projectId, ...searchInfo.value }
   const res = await getDeliverableList(params)
   if (res.code === 0) {
     tableData.value = res.data.list || []
@@ -165,7 +171,7 @@ const handleSave = async () => {
   await formRef.value.validate(async (valid) => {
     if (!valid) return
     const api = dialogType.value === 'add' ? createDeliverable : updateDeliverable
-    const res = await api(form)
+    const res = await api({ ...form, projectId: projectStore.projectId })
     if (res.code === 0) {
       ElMessage.success(dialogType.value === 'add' ? '添加成功' : '更新成功')
       dialogVisible.value = false

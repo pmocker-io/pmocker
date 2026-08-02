@@ -1,5 +1,6 @@
 <template>
   <div>
+    <ProjectSelector @change="onProjectChange" />
     <div class="gva-search-box">
       <el-form :inline="true" :model="searchInfo">
         <el-form-item label="变更标题">
@@ -161,7 +162,7 @@ const formatBaselines = (val) => {
 }
 
 const getTableData = async () => {
-  const params = { page: page.value, pageSize: pageSize.value, ...searchInfo.value }
+  const params = { page: page.value, pageSize: pageSize.value, projectId: projectStore.projectId, ...searchInfo.value }
   const res = await getChangeList(params)
   if (res.code === 0) {
     tableData.value = res.data.list || []
@@ -201,7 +202,7 @@ const handleSave = async () => {
   await formRef.value.validate(async (valid) => {
     if (!valid) return
     const api = dialogType.value === 'add' ? createChange : updateChange
-    const res = await api(form)
+    const res = await api({ ...form, projectId: projectStore.projectId })
     if (res.code === 0) {
       ElMessage.success(dialogType.value === 'add' ? '添加成功' : '更新成功')
       dialogVisible.value = false

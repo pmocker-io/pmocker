@@ -1,5 +1,6 @@
 <template>
   <div>
+    <ProjectSelector @change="onProjectChange" />
     <div class="gva-btn-list">
       <el-button type="primary" @click="openTaskDialog(null)">
         <svg-icon icon="lucide:plus" /> 新增任务
@@ -83,8 +84,13 @@ import {
   deleteTask
 } from '@/api/pmocker/schedule'
 import DynamicForm from '../components/DynamicForm.vue'
+import ProjectSelector from '../components/ProjectSelector.vue'
+import { useProjectStore } from '@/pinia'
 
 defineOptions({ name: 'PmockerScheduleGantt' })
+
+const projectStore = useProjectStore()
+const onProjectChange = () => { loadData() }
 
 const tableData = ref([])
 const dialogVisible = ref(false)
@@ -399,7 +405,7 @@ const handleSave = async () => {
         ...payload
       })
     } else {
-      res = await createScheduleTask(payload)
+      res = await createScheduleTask({ ...payload, projectId: projectStore.projectId })
     }
     if (res.code === 0) {
       ElMessage.success('保存成功')

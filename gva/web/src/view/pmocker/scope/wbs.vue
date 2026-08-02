@@ -1,5 +1,6 @@
 <template>
   <div>
+    <ProjectSelector @change="onProjectChange" />
     <el-tabs v-model="activeTab" class="raci-tabs">
       <el-tab-pane label="WBS 树" name="tree">
         <div class="gva-table-box">
@@ -125,8 +126,13 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { getScopeWBS, createScopeItem, updateScopeItem, deleteScopeItem } from '@/api/pmocker/scope'
 import { listRole } from '@/api/pmocker/team'
 import DynamicForm from '../components/DynamicForm.vue'
+import ProjectSelector from '../components/ProjectSelector.vue'
+import { useProjectStore } from '@/pinia'
 
 defineOptions({ name: 'PmockerScopeWBS' })
+
+const projectStore = useProjectStore()
+const onProjectChange = () => { loadRaci() }
 
 const activeTab = ref('tree')
 const treeData = ref([])
@@ -161,7 +167,7 @@ const acceptanceType = (status) => {
 }
 
 const loadWBS = async () => {
-  const res = await getScopeWBS({})
+  const res = await getScopeWBS({ projectId: projectStore.projectId })
   if (res.code === 0) {
     treeData.value = res.data || []
   }
@@ -294,7 +300,7 @@ const handleSave = async () => {
   await formRef.value.validate(async (valid) => {
     if (!valid) return
     const api = dialogType.value === 'add' ? createScopeItem : updateScopeItem
-    const res = await api(form)
+    const res = await api({ ...form, projectId: projectStore.projectId })
     if (res.code === 0) {
       ElMessage.success(dialogType.value === 'add' ? '添加成功' : '更新成功')
       dialogVisible.value = false

@@ -1,5 +1,6 @@
 <template>
   <div>
+    <ProjectSelector @change="onProjectChange" />
     <div class="gva-search-box">
       <el-form :inline="true" :model="searchInfo">
         <el-form-item label="风险名称">
@@ -204,7 +205,7 @@ const handleSave = async () => {
         ...payload
       })
     } else {
-      res = await createRisk(payload)
+      res = await createRisk({ ...payload, projectId: projectStore.projectId })
     }
     if (res.code === 0) {
       ElMessage.success('保存成功')

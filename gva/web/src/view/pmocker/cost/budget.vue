@@ -1,5 +1,6 @@
 <template>
   <div>
+    <ProjectSelector @change="onProjectChange" />
     <div class="gva-table-box">
       <div class="gva-btn-list">
         <el-button type="primary" @click="openDialog(null)">
@@ -105,8 +106,13 @@ import {
 } from '@/api/pmocker/cost'
 import { listMember } from '@/api/pmocker/team'
 import DynamicForm from '../components/DynamicForm.vue'
+import ProjectSelector from '../components/ProjectSelector.vue'
+import { useProjectStore } from '@/pinia'
 
 defineOptions({ name: 'PmockerCostBudget' })
+
+const projectStore = useProjectStore()
+const onProjectChange = () => { loadData(); loadMembers() }
 
 const tableData = ref([])
 const dialogVisible = ref(false)
@@ -168,7 +174,7 @@ const memberCostPercent = (row) => {
 }
 
 const loadMembers = async () => {
-  const res = await listMember({ page: 1, pageSize: 1000 })
+  const res = await listMember({ projectId: projectStore.projectId, page: 1, pageSize: 1000 })
   if (res.code === 0) {
     memberList.value = res.data.list || []
   }
@@ -214,7 +220,7 @@ const handleSave = async () => {
         ...payload
       })
     } else {
-      res = await createCostItem(payload)
+      res = await createCostItem({ ...payload, projectId: projectStore.projectId })
     }
     if (res.code === 0) {
       ElMessage.success('保存成功')

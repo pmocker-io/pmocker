@@ -53,3 +53,9 @@ export const getEPSMembers = (params) => {
 export const findEPSNode = (params) => {
   return service({ url: '/pmocker/eps/find', method: 'get', params })
 }
+
+// @Summary 获取 EPS 树结构（用于项目选择器/仪表盘）
+// @Router /eps/tree [get]
+export const getEPSTree = (params) => {
+  return service({ url: '/pmocker/eps/tree', method: 'get', params })
+}

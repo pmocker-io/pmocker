@@ -1,5 +1,6 @@
 <template>
   <div>
+    <ProjectSelector @change="onProjectChange" />
     <div class="gva-search-box">
       <el-form :inline="true" :model="searchInfo">
         <el-form-item label="需求名称">
@@ -109,8 +110,13 @@ import {
   rejectRequirement
 } from '@/api/pmocker/requirement'
 import DynamicForm from '../components/DynamicForm.vue'
+import ProjectSelector from '../components/ProjectSelector.vue'
+import { useProjectStore } from '@/pinia'
 
 defineOptions({ name: 'PmockerRequirementList' })
+
+const projectStore = useProjectStore()
+const onProjectChange = () => { page.value = 1; getTableData() }
 
 const searchInfo = ref({})
 const tableData = ref([])
@@ -193,7 +199,7 @@ const handleSave = async () => {
   await formRef.value.validate(async (valid) => {
     if (!valid) return
     const api = dialogType.value === 'add' ? createRequirement : updateRequirement
-    const res = await api(form)
+    const res = await api({ ...form, projectId: projectStore.projectId })
     if (res.code === 0) {
       ElMessage.success(dialogType.value === 'add' ? '添加成功' : '更新成功')
       dialogVisible.value = false

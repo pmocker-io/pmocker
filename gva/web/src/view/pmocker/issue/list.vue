@@ -1,5 +1,6 @@
 <template>
   <div>
+    <ProjectSelector @change="onProjectChange" />
     <div class="gva-search-box">
       <el-form :inline="true" :model="searchInfo">
         <el-form-item label="问题名称">
@@ -105,8 +106,13 @@ import { ref, reactive } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getIssueList, createIssue, updateIssue, deleteIssue, assignIssue, resolveIssue, closeIssue, reopenIssue } from '@/api/pmocker/issue'
 import DynamicForm from '../components/DynamicForm.vue'
+import ProjectSelector from '../components/ProjectSelector.vue'
+import { useProjectStore } from '@/pinia'
 
 defineOptions({ name: 'PmockerIssueList' })
+
+const projectStore = useProjectStore()
+const onProjectChange = () => { page.value = 1; getTableData() }
 
 const searchInfo = ref({})
 const tableData = ref([])
@@ -129,7 +135,7 @@ const statusType = (s) => ({ open: 'info', in_progress: 'warning', resolved: 'su
 const statusLabel = (s) => ({ open: '待处理', in_progress: '处理中', resolved: '已解决', closed: '已关闭' }[s] || s)
 
 const getTableData = async () => {
-  const params = { page: page.value, pageSize: pageSize.value, ...searchInfo.value }
+  const params = { page: page.value, pageSize: pageSize.value, projectId: projectStore.projectId, ...searchInfo.value }
   const res = await getIssueList(params)
   if (res.code === 0) {
     tableData.value = res.data.list || []
@@ -165,7 +171,7 @@ const handleSave = async () => {
   await formRef.value.validate(async (valid) => {
     if (!valid) return
     const api = dialogType.value === 'add' ? createIssue : updateIssue
-    const res = await api(form)
+    const res = await api({ ...form, projectId: projectStore.projectId })
     if (res.code === 0) {
       ElMessage.success(dialogType.value === 'add' ? '添加成功' : '更新成功')
       dialogVisible.value = false

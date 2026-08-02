@@ -1,5 +1,6 @@
 <template>
   <div>
+    <ProjectSelector @change="onProjectChange" />
     <div class="gva-table-box">
       <div class="gva-btn-list">
         <el-button type="primary" @click="openDialog(null)">
@@ -125,7 +126,7 @@ const formatCost = (val) => {
 }
 
 const getTableData = async () => {
-  const res = await listMember({ page: page.value, pageSize: pageSize.value })
+  const res = await listMember({ projectId: projectStore.projectId, page: page.value, pageSize: pageSize.value })
   if (res.code === 0) {
     tableData.value = res.data.list || []
     total.value = res.data.total || 0
@@ -157,7 +158,7 @@ const handleSave = async () => {
       await updateMember({ id: editingId.value, title: form.title, status: form.status, entity_type: 'team_member', attrs: form.attrs })
     } else {
       // status 由后端 service 默认值处理（member→candidate）
-      await createMember({ title: form.title, attrs: form.attrs })
+      await createMember({ projectId: projectStore.projectId, title: form.title, attrs: form.attrs })
     }
     ElMessage.success('保存成功')
     dialogVisible.value = false
