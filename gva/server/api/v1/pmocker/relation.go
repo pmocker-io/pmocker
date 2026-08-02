@@ -47,3 +47,49 @@ func (a *RelationApi) List(c *gin.Context) {
 	}
 	response.OkWithData(rels, c)
 }
+
+func (a *RelationApi) CreateTaskLink(c *gin.Context) {
+	var link pmocker.PMTaskLink
+	if err := c.ShouldBindJSON(&link); err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	if err := service.CreateTaskLink(link); err != nil {
+		global.GVA_LOG.Error("创建任务依赖失败", zap.Error(err))
+		response.FailWithMessage("创建任务依赖失败", c)
+		return
+	}
+	response.OkWithMessage("创建成功", c)
+}
+
+func (a *RelationApi) DeleteTaskLink(c *gin.Context) {
+	idStr := c.Query("id")
+	id, _ := strconv.ParseUint(idStr, 10, 32)
+	if err := service.DeleteTaskLink(uint(id)); err != nil {
+		response.FailWithMessage("删除失败", c)
+		return
+	}
+	response.OkWithMessage("删除成功", c)
+}
+
+func (a *RelationApi) ListTaskLinks(c *gin.Context) {
+	projectIDStr := c.Query("projectId")
+	projectID, _ := strconv.ParseUint(projectIDStr, 10, 32)
+	links, err := service.ListTaskLinks(uint(projectID))
+	if err != nil {
+		response.FailWithMessage("查询失败", c)
+		return
+	}
+	response.OkWithData(links, c)
+}
+
+func (a *RelationApi) ListChangeLogs(c *gin.Context) {
+	entityIDStr := c.Query("entityId")
+	entityID, _ := strconv.ParseUint(entityIDStr, 10, 32)
+	logs, err := service.ListChangeLogs(uint(entityID))
+	if err != nil {
+		response.FailWithMessage("查询失败", c)
+		return
+	}
+	response.OkWithData(logs, c)
+}

@@ -70,10 +70,11 @@
         <el-table-column label="创建时间" prop="CreatedAt" width="180">
           <template #default="{ row }">{{ formatDate(row.CreatedAt) }}</template>
         </el-table-column>
-        <el-table-column label="操作" width="200" fixed="right">
+        <el-table-column label="操作" width="260" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" link @click="openDialog(row)">编辑</el-button>
             <el-button v-if="row.status === 'submitted'" type="warning" link @click="handleAnalyze(row)">影响分析</el-button>
+            <el-button type="primary" link size="small" @click="showAuditLogs(row.ID)">审计</el-button>
             <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
@@ -102,6 +103,16 @@
         <el-button type="primary" @click="handleSave">保存</el-button>
       </template>
     </el-dialog>
+
+    <el-drawer v-model="logDrawerVisible" title="变更审计追溯" size="50%">
+      <el-table :data="changeLogs" border stripe size="small">
+        <el-table-column prop="fieldKey" label="字段" width="140" />
+        <el-table-column prop="oldValue" label="旧值" show-overflow-tooltip />
+        <el-table-column prop="newValue" label="新值" show-overflow-tooltip />
+        <el-table-column prop="changedBy" label="变更人" width="100" />
+        <el-table-column prop="CreatedAt" label="时间" width="170" />
+      </el-table>
+    </el-drawer>
   </div>
 </template>
 
@@ -109,6 +120,7 @@
 import { ref, reactive } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getChangeList, createChange, updateChange, deleteChange, analyzeChange } from '@/api/pmocker/change'
+import { listChangeLogs } from '@/api/pmocker/changeLog'
 import DynamicForm from '../components/DynamicForm.vue'
 
 defineOptions({ name: 'PmockerChangeList' })
@@ -216,6 +228,14 @@ const handleAnalyze = async (row) => {
     ElMessage.success('分析完成')
     getTableData()
   }
+}
+
+const logDrawerVisible = ref(false)
+const changeLogs = ref([])
+const showAuditLogs = async (entityId) => {
+  const res = await listChangeLogs({ entityId })
+  if (res.code === 0) changeLogs.value = res.data || []
+  logDrawerVisible.value = true
 }
 
 getTableData()

@@ -6,6 +6,8 @@ type ServiceGroup struct {
 	WorkflowService
 	RBACService
 	RelationService
+	TaskLinkService
+	ChangeLogService
 }
 
 // ServiceGroupApp 全局 service 入口
