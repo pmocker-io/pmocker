@@ -821,18 +821,33 @@ Step 5: 批准项目结项（3个项目全部归档）
 
 ***
 
-## 8. 待 Brainstorm 的技术选型
+## 8. 技术选型决策（已确认）
 
-以下技术点需要在方案文档评审后，通过 brainstorm 深入讨论：
+| # | 技术点 | 决策 | 理由/行业对标 |
+|---|--------|------|-------------|
+| 1 | 工时表设计 | **独立表 pm_time_entries** | 对标禅道工时单、MS Project 资源工作表；独立表支持高效 SUM/GROUP BY 聚合、独立审批流、直接成本计算 |
+| 2 | 事件引擎架构 | **NodeHook 同步回调** | 对比观察者/事件总线，同步回调事务内完成、简单可控、与现有 AutoHandler 一致；耗时操作可后续异步化 |
+| 3 | 基线快照机制 | **全量 JSON 快照** | 对标 MS Project 基线（Baseline1-11 存完整快照）；种子数据最大 46 任务，JSON 可控；对比直接 |
+| 4 | 项目完成度算法 | **3 种算法全部提供，下拉可选** | 对标 MS Project（工时加权）+ PMBOK（WBS 层级）+ 简单平均；3 个测试项目各覆盖 1 种：项目A=工时加权、项目B=WBS层级、项目C=任务数平均 |
+| 5 | pm_relations 通用关联 | **统一 pm_relations 表** | 对标 PLM 的关联关系表（如华天 PLM link 表）；统一表灵活可扩展任意关联类型，relation_type 区分 |
+| 6 | 种子数据生成 | **混合：Go 基础+YAML 业务** | 组织架构/角色用 Go（类型安全）；业务数据用 YAML（数据与代码分离，非开发可编辑）；Go 解析 YAML 加载 |
+| 7 | 报告快照 | **混合：实时+里程碑快照** | 对标禅道仪表盘（实时）+ MS Project 基准报告（快照）；日常实时查询，月报/结项生成快照存档 |
+| 8 | 归档机制 | **状态标记+软删除** | 对标禅道/华天 PLM 归档实践；项目 status=archived，关联实体软删除标记，只读不可编辑，全局过滤 |
 
-1. **工时表设计**：pm\_time\_entries 独立表 vs EAV attrs？工时审批流复杂度？
-2. **事件引擎架构**：NodeHook 接口 vs 观察者模式 vs 事件总线？同步 vs 异步？
-3. **基线快照机制**：全量 JSON 快照 vs 增量 diff？快照大小控制？
-4. **项目完成度算法**：加权平均（工时）vs 按任务数平均 vs WBS 层级加权？
-5. **pm\_relations 通用关联**：统一关联表 vs 各模块专用外键？查询性能？
-6. **种子数据生成**：Go 代码生成 vs YAML seed？数据量大的可维护性？
-7. **报告快照**：实时查询 vs 定时快照？仪表盘性能？
-8. **归档机制**：软删除标记 vs 独立归档表？归档后权限？
+### 8.1 行业最佳实践对标（表设计）
+
+| 表 | 行业对标 | 关键设计点 |
+|----|---------|-----------|
+| pm_time_entries | 禅道工时单、MS Project 资源工作表 | 按 date+task+member 维度登记，审批状态流转，cost 自动计算 |
+| pm_cost_actuals | MS Project 实际成本、PMBOK 挣值管理 | cost_type 分类（labor/material/equipment），source 追溯（manual/time_entry） |
+| pm_baselines | MS Project Baseline1-11、PMBOK 基准 | type 区分（schedule/cost/scope），snapshot_json 全量快照，change_req_id 关联变更 |
+| pm_task_links | MS Project 前置任务、PMP 依赖关系 | link_type（FS/SS/FF/SF），lag 滞后量，CPM 基于 FS 计算 |
+| pm_relations | 华天 PLM link 表、PMBOK 追溯矩阵 | relation_type 区分（decomposes/relates_to/triggers/impacts/delivers/changes） |
+| pm_change_logs | 华天 PLM ECN 审计、ITIL 变更管理 | entity_id+field_key+old_value+new_value，change_req_id 关联 |
+| pm_approval_records | 禅道审批记录、ISO 9001 审签记录 | approver_id+action+comment+signature（电子签名）+acted_at |
+| pm_deliverable_files | 华天 PLM 文档管理、PMBOS 交付物 | lock_status+checked_out_by+checked_out_at，版本控制 |
+| sys_departments | gva 内置（对标钉钉/企微组织架构） | ParentId+Ancestors 物化路径，LeaderId 负责人 |
+| sys_positions | gva 内置（对标岗位职级体系） | Code 编码，与角色正交 |
 
 ***
 
