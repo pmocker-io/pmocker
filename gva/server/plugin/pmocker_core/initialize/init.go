@@ -24,6 +24,8 @@ func Router(engine *gin.Engine) {
 	pmockerRouter.RouterGroupApp.InitRelation(public, private)
 	pmockerRouter.RouterGroupApp.InitTimeEntry(public, private)
 	pmockerRouter.RouterGroupApp.InitCostActual(public, private)
+	pmockerRouter.RouterGroupApp.InitBaseline(public, private)
+	pmockerRouter.RouterGroupApp.InitVariance(public, private)
 }
 
 // SeedOrgData 组织架构种子数据调用框架（供启动流程或初始化脚本调用）。

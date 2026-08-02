@@ -11,6 +11,8 @@ type ServiceGroup struct {
 	TimeEntryService
 	CostLinkService
 	CostActualService
+	BaselineService
+	VarianceService
 }
 
 // ServiceGroupApp 全局 service 入口

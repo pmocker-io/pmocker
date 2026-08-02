@@ -8,6 +8,8 @@ type RouterGroup struct {
 	RelationRouter
 	TimeEntryRouter
 	CostActualRouter
+	BaselineRouter
+	VarianceRouter
 }
 
 // RouterGroupApp 全局路由入口

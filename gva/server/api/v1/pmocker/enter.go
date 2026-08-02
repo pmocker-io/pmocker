@@ -8,6 +8,8 @@ type ApiGroup struct {
 	RelationApi
 	TimeEntryApi
 	CostActualApi
+	BaselineApi
+	VarianceApi
 }
 
 // ApiGroupApp 全局 API 入口
