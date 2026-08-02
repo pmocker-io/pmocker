@@ -63,22 +63,17 @@ const props = defineProps({
   modelValue: { type: Object, default: () => ({}) }
 })
 
-const emit = defineEmits(['update:modelValue'])
 const loading = ref(false)
 const allFields = ref([])
 
-// attrs 引用，直接操作 modelValue.attrs
-const attrs = computed({
-  get: () => props.modelValue.attrs || {},
-  set: (val) => emit('update:modelValue', { ...props.modelValue, attrs: val })
-})
-
-// 确保 attrs 初始化
-const ensureAttrs = () => {
+// attrs 直接引用 modelValue.attrs，利用 Vue 3 reactive 深层响应式
+// 不触发 update:modelValue 替换整个对象，避免父组件 const reactive 赋值失败导致响应式断裂
+const attrs = computed(() => {
   if (!props.modelValue.attrs) {
-    emit('update:modelValue', { ...props.modelValue, attrs: {} })
+    props.modelValue.attrs = {}
   }
-}
+  return props.modelValue.attrs
+})
 
 // 核心字段列表
 const coreFields = computed(() => {
@@ -108,23 +103,20 @@ const loadSchema = async () => {
     const res = await getSchema(props.entityType)
     if (res.code === 0) {
       allFields.value = res.data.fields || []
-      // 为每个字段设置默认值
-      ensureAttrs()
-      const currentAttrs = props.modelValue.attrs || {}
+      // 为每个字段设置默认值，直接写入 attrs 对象（深层响应式）
       allFields.value.forEach(f => {
-        if (currentAttrs[f.field_key] === undefined) {
+        if (attrs.value[f.field_key] === undefined) {
           if (f.default_value) {
-            currentAttrs[f.field_key] = parseDefaultValue(f)
+            attrs.value[f.field_key] = parseDefaultValue(f)
           } else if (f.data_type === 'bool') {
-            currentAttrs[f.field_key] = false
+            attrs.value[f.field_key] = false
           } else if (['int', 'decimal'].includes(f.data_type)) {
-            currentAttrs[f.field_key] = 0
+            attrs.value[f.field_key] = 0
           } else {
-            currentAttrs[f.field_key] = null
+            attrs.value[f.field_key] = null
           }
         }
       })
-      emit('update:modelValue', { ...props.modelValue, attrs: currentAttrs })
     }
   } catch (e) {
     console.error('loadSchema error:', e)
@@ -152,33 +144,33 @@ const getComponent = (field) => {
 
 // 组件属性映射
 const getComponentProps = (field) => {
-  const props = {}
+  const cProps = {}
   switch (field.data_type) {
     case 'text':
-      props.type = 'textarea'
-      props.rows = 3
+      cProps.type = 'textarea'
+      cProps.rows = 3
       break
     case 'int':
-      props.controlsPosition = 'right'
+      cProps.controlsPosition = 'right'
       break
     case 'decimal':
-      props.precision = 2
-      props.controlsPosition = 'right'
+      cProps.precision = 2
+      cProps.controlsPosition = 'right'
       break
     case 'date':
-      props.type = 'date'
-      props.valueFormat = 'YYYY-MM-DD'
+      cProps.type = 'date'
+      cProps.valueFormat = 'YYYY-MM-DD'
       break
     case 'datetime':
-      props.type = 'datetime'
-      props.valueFormat = 'YYYY-MM-DD HH:mm:ss'
+      cProps.type = 'datetime'
+      cProps.valueFormat = 'YYYY-MM-DD HH:mm:ss'
       break
     case 'json':
-      props.type = 'textarea'
-      props.rows = 4
+      cProps.type = 'textarea'
+      cProps.rows = 4
       break
   }
-  return props
+  return cProps
 }
 
 // 栅格宽度：text/json 全宽，其余半宽
