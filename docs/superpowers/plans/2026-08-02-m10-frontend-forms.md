@@ -27,8 +27,8 @@
 | P1 | T3 | 10 模块前端页面适配（引入 DynamicForm） | ✅ 已完成 | 高 |
 | P1 | T4 | API 层（schema.js + 10 模块专用 API） | ✅ 已完成 | 高 |
 | P1 | T5 | Team 模块 4 页面（member/role/training/performance） | ✅ 已完成 | 高 |
-| P2 | T6 | 收尾：修复 member.vue createMember 未传 status | ⬜ 待执行 | 中 |
-| P2 | T7 | 端到端回归验证（EAV entity CRUD + 10 模块流程） | ⬜ 待执行 | 高 |
+| P2 | T6 | 收尾：修复 member.vue createMember 未传 status | ✅ 已完成（ce7edd6e） | 中 |
+| P2 | T7 | 端到端回归验证（EAV entity CRUD + 10 模块流程） | ✅ 已完成 | 高 |
 
 ---
 
@@ -169,117 +169,32 @@
 
 ---
 
-## Task 6: 收尾——修复 member.vue createMember 未传 status ⬜
+## Task 6: 收尾——修复 member.vue createMember 未传 status ✅
 
-**Problem:** [member.vue#L136](file:///d:/Dev/pmocker/gva/web/src/view/pmocker/team/member.vue#L136) 的 `createMember({ title: form.title, attrs: form.attrs })` 未传 `status`，而 update（L134）传了 `status: form.status`。虽然后端 service 层有默认值兜底，但前端不一致且新增成员状态不可控。
+**完成内容（commit ce7edd6e）：**
 
-**Goal:** createMember 调用补传 `status: form.status`，与 update 保持一致。
-
-**Files:**
-- Modify: `gva/web/src/view/pmocker/team/member.vue:136`
-
-**Interfaces:**
-- Consumes: team 后端 `create(c, entityType)` 接收 `{projectId, title, attrs, creatorId}`（status 由 service 默认值处理，但前端传 status 可作为意向值，若后端支持则采纳）
-
-- [ ] **Step 1: 检查 team service 层 create 方法是否接收 status**
-
-  Read: `gva/server/plugin/pmocker_team/service/team.go`
-  确认 `Create(ctx, entityType, projectID, title, attrs, creatorID)` 签名。若不接收 status，则前端传 status 无效，需评估是否改 service 签名。若 service 用默认值 'candidate'，则前端可不传，仅补注释说明。
-
-- [ ] **Step 2: 修复 member.vue createMember 调用**
-
-  根据Step 1 结果：
-  - 方案 A（service 不接收 status）：保持 createMember 不传 status，补注释 `// status 由后端 service 默认 'candidate'`，并在 form 初始化时确保 `status: 'candidate'`
-  - 方案 B（service 可扩展接收 status）：改为 `createMember({ title: form.title, status: form.status, attrs: form.attrs })`
-
-```javascript
-// 修改前（member.vue L136）
-await createMember({ title: form.title, attrs: form.attrs })
-
-// 修改后（方案 B）
-await createMember({ title: form.title, status: form.status, attrs: form.attrs })
-```
-
-- [ ] **Step 3: 同步检查 role/training/performance 三页 create 调用**
-
-  Read: `gva/web/src/view/pmocker/team/{role,training,performance}.vue`
-  确认三页 createXxx 调用是否同样缺失 status，统一修复。
-
-- [ ] **Step 4: 前端编译验证**
-
-  Run: `cd gva/web && npm run build`
-  Expected: build success，无 lint error
-
-- [ ] **Step 5: Commit**
-
-  Run: `git add gva/web/src/view/pmocker/team/ && git commit -m "fix(pmocker): team 模块 create 调用补传 status 保持一致性"`
+- [x] **Step 1: 检查 team service 层 create 方法**
+- [x] **Step 2: 修复 member.vue createMember 调用（补传 status 默认值）**
+- [x] **Step 3: 同步检查 role/training/performance 三页 create 调用**
+- [x] **Step 4: 前端编译验证通过**
+- [x] **Step 5: Commit（ce7edd6e）**
 
 ---
 
-## Task 7: 端到端回归验证 ⬜
+## Task 7: 端到端回归验证 ✅
 
-**Problem:** M10 完成后未做完整端到端验证。memory 中有两个遗留疑虑需澄清：
-1. "EAV entity API 404" —— 路由检查完整（GET entity/:id 存在）且前缀已修复，需实测确认
-2. "team createMember attrs 保存" —— 前端不传 entity_type 是正确的（后端硬编码绑定），需实测确认 attrs 真的落库
+**完成内容：** 通过 `pmocker run --rebuild` 启动实例，完成 EAV entity CRUD 全闭环 + 10 模块新建→填字段→保存→列表显示→编辑全流程验证。
 
-**Goal:** 通过 `pmocker run --rebuild` 启动实例，验证 EAV entity CRUD 全闭环 + 10 模块新建→填字段→保存→列表显示→编辑全流程。
-
-**Files:**
-- 无代码改动，纯验证任务
-
-- [ ] **Step 1: 启动实例（强制重建确保最新代码）**
-
-  Run: `./cli/pmocker.exe run -n pms-dev -i images/pmbok6-hybrid/pmbok6-hybrid.pmi -p 8080 -f --rebuild`
-  Expected: 实例启动成功，前端可访问 http://127.0.0.1:8080
-
-- [ ] **Step 2: 验证 EAV schema API**
-
-  浏览器登录后，打开任一模块（如需求管理-列表），点「新增需求」打开 Dialog。
-  Expected: DynamicForm 渲染出核心字段（基本信息区）+ 扩展属性折叠区，字段数与 M9 schema 一致（requirement 约 21 字段）
-  Console: 无 JS error
-
-- [ ] **Step 3: 验证 EAV entity 创建（attrs 落库）**
-
-  在需求 Dialog 填写：名称=「测试需求001」+ 核心字段 priority=high + moscow_priority=Must + 扩展字段若干 → 保存
-  Expected: 保存成功，列表显示「测试需求001」+ priority=high + moscow_priority=Must
-  验证 attrs 真的落库：刷新页面后字段值仍在
-
-- [ ] **Step 4: 验证 EAV entity 更新**
-
-  编辑「测试需求001」，修改 priority=low → 保存
-  Expected: 列表更新为 priority=low
-
-- [ ] **Step 5: 验证 EAV entity 详情查询（澄清 404 疑虑）**
-
-  后端日志或浏览器 Network 面板检查：GET `/api/pmocker/eav/entity/:id` 返回 200（非 404）
-  Expected: entity 详情含 attrs 完整字段
-
-- [ ] **Step 6: 验证 team 模块 attrs 保存（澄清遗留疑虑）**
-
-  打开团队管理-成员，点「新增成员」填：名称=「张三」+ role=PM + allocation_percent=80 + skill_level=senior → 保存
-  Expected: 保存成功，列表显示张三 + role=PM + 投入度 80% + 技能等级 senior
-  验证 attrs 落库：编辑张三，确认字段值仍在
-
-- [ ] **Step 7: 抽查 3 个模块的新建→编辑闭环**
-
-  抽查：成本管理-预算、风险管理-登记册、进度管理-甘特图
-  每个模块：新建填字段→保存→列表显示→编辑修改→保存→确认更新
-  Expected: 全部通过，字段值正确显示和保存
-
-- [ ] **Step 8: 验证已有 7 个专业可视化页面可渲染**
-
-  逐一访问：cost/curve（S曲线）、schedule/critical（关键路径图）、risk/matrix（风险矩阵）、scope/wbs（WBS树）、eps/tree（EPS树）、issue/board（看板）
-  Expected: 图表/树/看板正常渲染，Console 无 error
-
-- [ ] **Step 9: 验证工作流状态转移**
-
-  在需求列表：草稿→提交评审→批准（或驳回）
-  Expected: 状态正确流转，按钮按状态显示/隐藏
-
-- [ ] **Step 10: 记录验证结果**
-
-  若全部通过：M10 标记完成，更新 topics.md
-  若有失败：记录失败现象 + 根因 + 修复方案，必要时开新 Task
+- [x] **Step 1: 启动实例（强制重建确保最新代码）**
+- [x] **Step 2: 验证 EAV schema API（DynamicForm 渲染核心字段+扩展属性）**
+- [x] **Step 3: 验证 EAV entity 创建（attrs 落库）**
+- [x] **Step 4: 验证 EAV entity 更新**
+- [x] **Step 5: 验证 EAV entity 详情查询（澄清 404 疑虑，路由前缀已修复 02dd6d33）**
+- [x] **Step 6: 验证 team 模块 attrs 保存**
+- [x] **Step 7: 抽查 3 个模块的新建→编辑闭环**
+- [x] **Step 8: 验证已有 7 个专业可视化页面可渲染**
+- [x] **Step 9: 验证工作流状态转移**
+- [x] **Step 10: 记录验证结果（全部通过，M10 标记完成）**
 
 ---
 
