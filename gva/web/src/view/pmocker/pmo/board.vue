@@ -18,10 +18,10 @@
               <span class="proj-name">{{ card.projectName }}</span>
               <el-tag size="small" :type="priorityTag(card.priority)" style="margin-left: auto">{{ priorityLabel(card.priority) }}</el-tag>
             </div>
-            <el-progress :percentage="Math.round(card.progress)" :color="healthColor(card.health)" style="margin: 8px 0" />
+            <el-progress :percentage="Math.round(card.progress || 0)" :color="healthColor(card.health)" style="margin: 8px 0" />
             <div class="card-row">
               <span>成本偏差：</span>
-              <b :class="card.costVariance > 0 ? 'red' : 'green'">{{ card.costVariance > 0 ? '+' : '' }}{{ card.costVariance.toFixed(2) }}</b>
+              <b :class="(card.costVariance || 0) > 0 ? 'red' : 'green'">{{ (card.costVariance || 0) > 0 ? '+' : '' }}{{ (card.costVariance || 0).toFixed(2) }}</b>
             </div>
             <div class="card-row">
               <span>风险数：</span><b>{{ card.riskCount }}</b>
@@ -35,10 +35,10 @@
     <el-card shadow="hover" style="margin-top: 16px">
       <template #header>资源负荷汇总</template>
       <el-descriptions :column="4" border>
-        <el-descriptions-item label="总人数">{{ dash.loadSummary.totalMembers }}</el-descriptions-item>
-        <el-descriptions-item label="总工时">{{ dash.loadSummary.totalHours.toFixed(1) }}</el-descriptions-item>
-        <el-descriptions-item label="平均负荷">{{ dash.loadSummary.avgLoad.toFixed(1) }}%</el-descriptions-item>
-        <el-descriptions-item label="超负荷人数">{{ dash.loadSummary.overloadedCount }}</el-descriptions-item>
+        <el-descriptions-item label="总人数">{{ dash.loadSummary.totalMembers || 0 }}</el-descriptions-item>
+        <el-descriptions-item label="总工时">{{ (dash.loadSummary.totalHours || 0).toFixed(1) }}</el-descriptions-item>
+        <el-descriptions-item label="平均负荷">{{ (dash.loadSummary.avgLoad || 0).toFixed(1) }}%</el-descriptions-item>
+        <el-descriptions-item label="超负荷人数">{{ dash.loadSummary.overloadedCount || 0 }}</el-descriptions-item>
       </el-descriptions>
     </el-card>
   </div>

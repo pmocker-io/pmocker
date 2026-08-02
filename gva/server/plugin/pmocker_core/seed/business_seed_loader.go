@@ -2,9 +2,8 @@ package seed
 
 import (
 	"context"
+	_ "embed"
 	"fmt"
-	"os"
-	"path/filepath"
 
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/pmocker"
@@ -12,6 +11,9 @@ import (
 	"gopkg.in/yaml.v3"
 	"gorm.io/gorm"
 )
+
+//go:embed business_seed.yaml
+var businessSeedBytes []byte
 
 type BusinessSeedYAML struct {
 	Projects []ProjectSeedYAML `yaml:"projects"`
@@ -125,17 +127,7 @@ func LoadBusinessSeed(ctx context.Context) error {
 		return nil
 	}
 
-	yamlPath := filepath.Join("gva", "server", "plugin", "pmocker_core", "seed", "business_seed.yaml")
-	if _, err := os.Stat(yamlPath); os.IsNotExist(err) {
-		altPath := filepath.Join("plugin", "pmocker_core", "seed", "business_seed.yaml")
-		if _, err2 := os.Stat(altPath); err2 == nil {
-			yamlPath = altPath
-		}
-	}
-	data, err := os.ReadFile(yamlPath)
-	if err != nil {
-		return fmt.Errorf("read business_seed.yaml: %w", err)
-	}
+	data := businessSeedBytes
 	var seed BusinessSeedYAML
 	if err := yaml.Unmarshal(data, &seed); err != nil {
 		return fmt.Errorf("parse yaml: %w", err)
@@ -178,6 +170,8 @@ func createProject(_ context.Context, p *ProjectSeedYAML, rt *runtimeCtx) error 
 		CreatedBy:  leader,
 	}
 	db.Create(projEntity)
+	// GORM 对 int 零值使用 default tag（Priority 默认 2），需强制更新以确保 P0(0) 正确落库
+	db.Model(projEntity).Update("priority", p.Priority)
 	rt.project = projEntity
 	rt.leader = leader
 	projectID := projEntity.ID
@@ -287,7 +281,7 @@ func createProject(_ context.Context, p *ProjectSeedYAML, rt *runtimeCtx) error 
 		db.Create(item)
 		createAttrStr(db, item.ID, "code", c.Code)
 		createAttrStr(db, item.ID, "cost_type", c.CostType)
-		createAttrDec(db, item.ID, "planned_amount", c.Amount)
+		createAttrDec(db, item.ID, "planned_value", c.Amount)
 	}
 
 	newGenericEntity := func(entityType, title, ownerName, status string, priority int) uint {
@@ -324,8 +318,16 @@ func createProject(_ context.Context, p *ProjectSeedYAML, rt *runtimeCtx) error 
 		createAttrDec(db, eid, "probability", r.Probability)
 		createAttrDec(db, eid, "impact", r.Impact)
 		score := r.Probability * r.Impact
-		createAttrDec(db, eid, "score", score)
-		createAttrStr(db, eid, "response", r.Response)
+		createAttrDec(db, eid, "risk_score", score)
+		// 根据 score 计算 risk_level（与 risk schema 的 risk_level 字段对齐）
+		level := "low"
+		if score >= 0.5 {
+			level = "high"
+		} else if score >= 0.25 {
+			level = "medium"
+		}
+		createAttrStr(db, eid, "risk_level", level)
+		createAttrStr(db, eid, "response_plan", r.Response)
 	}
 	for _, r := range p.Change {
 		eid := newGenericEntity("change_request", r.Title, r.Owner, r.Status, r.Priority)

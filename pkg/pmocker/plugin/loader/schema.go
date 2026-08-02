@@ -57,6 +57,11 @@ type SeedYaml struct {
 	Roles        []map[string]interface{} `yaml:"roles"`
 	Dictionaries []DictYaml               `yaml:"dictionaries"`
 	EPS          []EPSYaml                `yaml:"eps"`
+	Entities     EntitiesYaml             `yaml:"entities"`
+}
+
+type EntitiesYaml struct {
+	EPS []EPSYaml `yaml:"eps"`
 }
 
 type DictYaml struct {
@@ -75,6 +80,10 @@ type EPSYaml struct {
 	ParentPath string `yaml:"parent_path"`
 	Name       string `yaml:"name"`
 	Type       string `yaml:"type"`
+	Code       string `yaml:"code"`
+	Sort       int    `yaml:"sort"`
+	IsActive   bool   `yaml:"is_active"`
+	Status     string `yaml:"status"`
 }
 
 // MenuYaml 对应 pmocker/menu.yaml

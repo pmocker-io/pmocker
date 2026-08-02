@@ -22,18 +22,18 @@ func (s *ProjectWorkbenchService) GetMyProjects(userID uint) (*MyProjects, error
 		Created: []ProjectCard{}, Lead: []ProjectCard{}, Involved: []ProjectCard{},
 	}
 
-	// 我创建的：pm_entities.created_by = userID 且 entity_type=eps_node
+	// 我创建的：pm_entities.created_by = userID 且 entity_type=eps_node（仅项目，排除 EPS 组织节点）
 	var created []pmocker.PMEntity
-	db.Where("entity_type = ? AND created_by = ?", "eps_node", userID).Find(&created)
+	db.Where("entity_type = ? AND created_by = ? AND id IN (SELECT entity_id FROM pm_attrs WHERE field_key = ?)", "eps_node", userID, "progress_algo").Find(&created)
 	for _, p := range created {
 		if card, err := (&PMODashboardService{}).GetProjectCard(p.ID); err == nil {
 			result.Created = append(result.Created, *card)
 		}
 	}
 
-	// 我负责的：owner_id = userID 且 entity_type=eps_node
+	// 我负责的：owner_id = userID 且 entity_type=eps_node（仅项目）
 	var lead []pmocker.PMEntity
-	db.Where("entity_type = ? AND owner_id = ?", "eps_node", userID).Find(&lead)
+	db.Where("entity_type = ? AND owner_id = ? AND id IN (SELECT entity_id FROM pm_attrs WHERE field_key = ?)", "eps_node", userID, "progress_algo").Find(&lead)
 	for _, p := range lead {
 		if card, err := (&PMODashboardService{}).GetProjectCard(p.ID); err == nil {
 			result.Lead = append(result.Lead, *card)
@@ -90,7 +90,7 @@ func (s *ProjectWorkbenchService) GetMyFocusedProjects(userID uint) ([]ProjectCa
 	scope := getUserVisibilityScope(db, userID)
 
 	var projects []pmocker.PMEntity
-	q := db.Where("entity_type = ? AND priority BETWEEN ? AND ?", "eps_node", 0, 1)
+	q := db.Where("entity_type = ? AND priority BETWEEN ? AND ? AND id IN (SELECT entity_id FROM pm_attrs WHERE field_key = ?)", "eps_node", 0, 1, "progress_algo")
 	if !scope.IsPMOAdmin {
 		if scope.IsDeptLeader && scope.DeptID > 0 {
 			// 部门负责人：本部门及子级下的项目
@@ -147,9 +147,9 @@ func (s *ProjectWorkbenchService) getDeptAndChildren(db *gorm.DB, deptID uint, a
 // getMyInvolvedProjectIDs 获取我参与的项目ID（创建/负责/团队成员）
 func (s *ProjectWorkbenchService) getMyInvolvedProjectIDs(db *gorm.DB, userID uint) []uint {
 	var ids []uint
-	// 创建的 + 负责的
+	// 创建的 + 负责的（仅项目，排除 EPS 组织节点）
 	db.Model(&pmocker.PMEntity{}).
-		Where("entity_type = ? AND (created_by = ? OR owner_id = ?)", "eps_node", userID, userID).
+		Where("entity_type = ? AND (created_by = ? OR owner_id = ?) AND id IN (SELECT entity_id FROM pm_attrs WHERE field_key = ?)", "eps_node", userID, userID, "progress_algo").
 		Pluck("id", &ids)
 	// 团队成员参与的
 	var memberProjectIDs []uint

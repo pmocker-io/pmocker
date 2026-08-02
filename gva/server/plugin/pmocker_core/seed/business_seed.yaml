@@ -23,11 +23,11 @@ projects:
       - { username: proj_a_be, role: BE_DEV, hourly_rate: 137.50, allocation: 1.0 }
       - { username: proj_a_qa, role: QA, hourly_rate: 100.00, allocation: 1.0 }
     scope:
-      - code: S1, name: 1.项目管理, parent: ""
-      - code: S2, name: 2.需求调研, parent: S1
-      - code: S3, name: 3.系统设计, parent: S1
-      - code: S4, name: 4.开发实施, parent: S1
-      - code: S5, name: 5.测试验收, parent: S1
+      - { code: S1, name: "1.项目管理", parent: "" }
+      - { code: S2, name: "2.需求调研", parent: S1 }
+      - { code: S3, name: "3.系统设计", parent: S1 }
+      - { code: S4, name: "4.开发实施", parent: S1 }
+      - { code: S5, name: "5.测试验收", parent: S1 }
     schedule:
       # 按 task title 做唯一 key
       - { title: 需求调研, owner: proj_a_ba, start_date: "2026-01-06", end_date: "2026-01-20", estimated_hours: 80, status: done, progress: 100, priority: 2 }
@@ -141,12 +141,12 @@ projects:
       - { username: proj_b_safety, role: SAFETY, hourly_rate: 81.25, allocation: 1.0 }
       - { username: proj_b_qs, role: QS, hourly_rate: 93.75, allocation: 1.0 }
     scope:
-      - code: W1, name: 前期准备, parent: ""
-      - code: W2, name: 基础施工, parent: ""
-      - code: W3, name: 主体结构, parent: ""
-      - code: W4, name: 机电安装, parent: ""
-      - code: W5, name: 装饰装修, parent: ""
-      - code: W6, name: 验收交付, parent: ""
+      - { code: W1, name: "前期准备", parent: "" }
+      - { code: W2, name: "基础施工", parent: "" }
+      - { code: W3, name: "主体结构", parent: "" }
+      - { code: W4, name: "机电安装", parent: "" }
+      - { code: W5, name: "装饰装修", parent: "" }
+      - { code: W6, name: "验收交付", parent: "" }
     schedule:
       - { title: 地质勘察, owner: proj_b_civil, start_date: "2025-10-01", end_date: "2025-10-31", estimated_hours: 120, status: done, progress: 100, priority: 1 }
       - { title: 方案设计, owner: proj_b_pm, start_date: "2025-11-01", end_date: "2025-11-30", estimated_hours: 160, status: done, progress: 100, priority: 1, deps: [地质勘察] }
@@ -262,11 +262,11 @@ projects:
       - { username: proj_c_process, role: PROCESS_ENG, hourly_rate: 93.75, allocation: 1.0 }
       - { username: proj_c_test, role: TEST_ENG, hourly_rate: 87.50, allocation: 1.0 }
     scope:
-      - code: C1, name: 概念开发, parent: ""
-      - code: C2, name: 详细设计, parent: ""
-      - code: C3, name: 原型试制, parent: ""
-      - code: C4, name: 验证测试, parent: ""
-      - code: C5, name: 转产固化, parent: ""
+      - { code: C1, name: "概念开发", parent: "" }
+      - { code: C2, name: "详细设计", parent: "" }
+      - { code: C3, name: "原型试制", parent: "" }
+      - { code: C4, name: "验证测试", parent: "" }
+      - { code: C5, name: "转产固化", parent: "" }
     schedule:
       - { title: 市场调研, owner: proj_c_pm, start_date: "2025-12-01", end_date: "2025-12-20", estimated_hours: 60, status: done, progress: 100, priority: 2 }
       - { title: 概念设计, owner: proj_c_elec, start_date: "2025-12-20", end_date: "2026-01-15", estimated_hours: 80, status: done, progress: 100, priority: 1, deps: [市场调研] }

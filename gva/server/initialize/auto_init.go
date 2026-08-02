@@ -8,6 +8,7 @@ import (
 
 	adapter "github.com/casbin/gorm-adapter/v3"
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
+	pmockerInit "github.com/flipped-aurora/gin-vue-admin/server/plugin/pmocker_core/initialize"
 	sysModel "github.com/flipped-aurora/gin-vue-admin/server/model/system"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/system/request"
 	autoModel "github.com/flipped-aurora/gin-vue-admin/server/plugin/ai/model"
@@ -99,6 +100,16 @@ func AutoInitPostPlugins() {
 	if err := grantPMockerMenusToAdmin(); err != nil {
 		logger.Bg().Mod("auto-init").Err(err).Error("授予 PMocker 菜单权限失败")
 	}
+
+	// 加载 PMocker 业务种子数据（项目、任务、团队等）
+	if err := pmockerInit.SeedOrgData(); err != nil {
+		logger.Bg().Mod("auto-init").Err(err).Error("加载 PMocker 业务种子数据失败")
+	} else {
+		logger.Bg().Mod("auto-init").Info("PMocker 业务种子数据已加载")
+	}
+
+	// 注册 PMocker 工作流节点事件钩子
+	pmockerInit.RegisterHooks()
 
 	// 签发长期 API Token 供 MCP 使用
 	token, err := issueLongLivedToken()
@@ -233,7 +244,9 @@ func intToStr(n int) string {
 	return string(buf[i:])
 }
 
-// insertPMockerCasbinRules 为所有 PMocker API 创建 Casbin 权限规则（authorityId=888）。
+// insertPMockerCasbinRules 为所有 PMocker API 创建 Casbin 权限规则。
+// 为 admin(888) 及 PMocker 业务角色(9001 PMO管理员/9002 项目经理/9003 团队成员/9004 干系人)统一授权，
+// 否则非 admin 用户调用 PMocker API 返回"权限不足"。
 // 参考 log_viewer_seed.go 的模式：FirstOrCreate 确保规则幂等，FreshCasbin 使规则立即生效。
 func insertPMockerCasbinRules() error {
 	db := global.GVA_DB
@@ -241,10 +254,13 @@ func insertPMockerCasbinRules() error {
 	if err := db.Where("path LIKE ?", "/pmocker/%").Find(&apis).Error; err != nil {
 		return err
 	}
+	roleIDs := []string{"888", "9001", "9002", "9003", "9004"}
 	for _, api := range apis {
-		rule := adapter.CasbinRule{Ptype: "p", V0: "888", V1: api.Path, V2: api.Method}
-		if err := db.Where(rule).FirstOrCreate(&rule).Error; err != nil {
-			return err
+		for _, roleID := range roleIDs {
+			rule := adapter.CasbinRule{Ptype: "p", V0: roleID, V1: api.Path, V2: api.Method}
+			if err := db.Where(rule).FirstOrCreate(&rule).Error; err != nil {
+				return err
+			}
 		}
 	}
 	// 刷新 Casbin 使规则立即生效
@@ -252,7 +268,7 @@ func insertPMockerCasbinRules() error {
 	return casbinService.FreshCasbin()
 }
 
-// grantPMockerMenusToAdmin 将所有 PMocker 菜单授予管理员角色（authorityId=888）。
+// grantPMockerMenusToAdmin 将所有 PMocker 菜单授予 admin 及 PMocker 业务角色。
 // 解决实例模式下每次重新初始化后菜单默认不可见、需手动在后台「角色权限」勾选的问题。
 // 参考 log_viewer_seed.go 的 FirstOrCreate 幂等模式。
 func grantPMockerMenusToAdmin() error {
@@ -265,23 +281,26 @@ func grantPMockerMenusToAdmin() error {
 		logger.Bg().Mod("auto-init").Info("未找到 PMocker 菜单，跳过菜单授权")
 		return nil
 	}
+	roleIDs := []string{"888", "9001", "9002", "9003", "9004"}
 	granted := 0
 	for _, menu := range menus {
-		menuRole := sysModel.SysAuthorityMenu{
-			MenuId:      fmt.Sprint(menu.ID),
-			AuthorityId: "888",
-		}
-		// FirstOrCreate 幂等：已存在的关联不重复插入
-		result := db.Where(menuRole).FirstOrCreate(&menuRole)
-		if result.Error != nil {
-			logger.Bg().Mod("auto-init").Err(result.Error).Error("授予菜单权限失败: " + menu.Name)
-			continue
-		}
-		if result.RowsAffected > 0 {
-			granted++
+		for _, roleID := range roleIDs {
+			menuRole := sysModel.SysAuthorityMenu{
+				MenuId:      fmt.Sprint(menu.ID),
+				AuthorityId: roleID,
+			}
+			// FirstOrCreate 幂等：已存在的关联不重复插入
+			result := db.Where(menuRole).FirstOrCreate(&menuRole)
+			if result.Error != nil {
+				logger.Bg().Mod("auto-init").Err(result.Error).Error("授予菜单权限失败: " + menu.Name)
+				continue
+			}
+			if result.RowsAffected > 0 {
+				granted++
+			}
 		}
 	}
-	logger.Bg().Mod("auto-init").Info("PMocker 菜单授权完成: " + intToStr(granted) + " 新增, " + intToStr(len(menus)) + " 总计")
+	logger.Bg().Mod("auto-init").Info("PMocker 菜单授权完成: " + intToStr(granted) + " 新增, " + intToStr(len(menus)*len(roleIDs)) + " 总计")
 	return nil
 }
 

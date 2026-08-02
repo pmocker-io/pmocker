@@ -46,9 +46,9 @@ type PMODashboardService struct{}
 func (s *PMODashboardService) GetPMODashboard() (*PMODashboard, error) {
 	db := global.GVA_DB
 
-	// 查询所有项目（eps_node 顶层）
+	// 查询所有项目（eps_node 中带 progress_algo 属性的实体才是项目，EPS 组织节点不含此属性）
 	var projects []pmocker.PMEntity
-	db.Where("entity_type = ? AND status != ?", "eps_node", "archived").Find(&projects)
+	db.Where("entity_type = ? AND status != ? AND id IN (SELECT entity_id FROM pm_attrs WHERE field_key = ?)", "eps_node", "archived", "progress_algo").Find(&projects)
 
 	dash := &PMODashboard{
 		HealthDist:   map[string]int{"green": 0, "yellow": 0, "red": 0},
@@ -91,9 +91,16 @@ func (s *PMODashboardService) GetPMODashboard() (*PMODashboard, error) {
 }
 
 // GetProjectHealth 基于进度偏差、成本偏差、风险数计算红黄绿
+// 优先使用种子数据预设的 health 属性；无预设时用计算逻辑
 func (s *PMODashboardService) GetProjectHealth(projectID uint) string {
 	db := global.GVA_DB
 	ds := &DashboardService{}
+
+	// 优先读取预设的 health 属性（种子数据中已标注 green/yellow/red）
+	if h := getAttrString(db, projectID, "health"); h != "" {
+		return h
+	}
+
 	progress := ds.calcProgressByCount(db, projectID)
 	cs := ds.calcCostSummary(db, projectID)
 	rs := ds.calcRiskSummary(db, projectID)

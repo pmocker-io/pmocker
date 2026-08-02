@@ -86,9 +86,24 @@ const issueChart = ref(null)
 const riskChart = ref(null)
 let pChart, cChart, iChart, rChart
 
+const flattenTree = (nodes) => {
+  let result = []
+  for (const node of nodes) {
+    result.push(node)
+    if (node.children && node.children.length > 0) {
+      result = result.concat(flattenTree(node.children))
+    }
+  }
+  return result
+}
+
 const loadProjects = async () => {
   const res = await service({ url: '/pmocker/eps/tree', method: 'get' })
-  if (res.code === 0) projects.value = (res.data || []).filter(p => p.nodeType === 'project' || !p.nodeType)
+  if (res.code === 0) {
+    const treeData = res.data || []
+    const allNodes = flattenTree(treeData)
+    projects.value = allNodes.filter(p => p.type === 'project' || !p.type)
+  }
 }
 
 const loadData = async () => {

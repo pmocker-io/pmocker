@@ -99,8 +99,12 @@ func (s *DashboardService) GetProjectDashboard(projectID uint) (*ProjectDashboar
 	// 7. 里程碑（任务中标记为 milestone 的）
 	dash.Milestones = s.loadMilestones(db, projectID)
 
-	// 8. 健康度简单计算（基于进度/成本/风险）
-	dash.Health = s.calcHealthSimple(dash.Progress, dash.CostSummary, dash.RiskSummary)
+	// 8. 健康度：优先使用预设 health 属性，无预设时用计算逻辑
+	if h := getAttrString(db, projectID, "health"); h != "" {
+		dash.Health = h
+	} else {
+		dash.Health = s.calcHealthSimple(dash.Progress, dash.CostSummary, dash.RiskSummary)
+	}
 
 	return dash, nil
 }
@@ -120,14 +124,14 @@ func (s *DashboardService) calcProgressByCount(db *gorm.DB, projectID uint) floa
 	return float64(done) / float64(total) * 100
 }
 
-// calcCostSummary 成本汇总：预算来自 cost_item 实体的 budget attr，实际来自 pm_cost_actuals
+// calcCostSummary 成本汇总：预算来自 cost_item 实体的 planned_value attr，实际来自 pm_cost_actuals
 func (s *DashboardService) calcCostSummary(db *gorm.DB, projectID uint) CostSummary {
 	var cs CostSummary
-	// 预算：cost_item 实体的 budget attr 求和
+	// 预算：cost_item 实体的 planned_value attr 求和
 	var costItems []pmocker.PMEntity
 	db.Where("project_id = ? AND entity_type = ?", projectID, "cost_item").Find(&costItems)
 	for _, ci := range costItems {
-		cs.Budget += getAttrDecimal(db, ci.ID, "budget")
+		cs.Budget += getAttrDecimal(db, ci.ID, "planned_value")
 	}
 	// 实际：pm_cost_actuals 求和
 	var actualSum float64
@@ -149,7 +153,7 @@ func (s *DashboardService) calcRiskSummary(db *gorm.DB, projectID uint) RiskSumm
 	rs := RiskSummary{BySeverity: map[string]int{}}
 	for _, r := range risks {
 		rs.Total++
-		severity := getAttrString(db, r.ID, "severity")
+		severity := getAttrString(db, r.ID, "risk_level")
 		if severity == "" {
 			severity = "medium"
 		}

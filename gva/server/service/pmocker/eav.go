@@ -167,6 +167,40 @@ func (s *EAVService) ListEntities(ctx context.Context, projectID uint, typeCode 
 	if err := db.Offset(offset).Limit(limit).Order("seq, id").Find(&entities).Error; err != nil {
 		return nil, 0, err
 	}
+	// 批量加载属性，按 entityID 分组
+	entityIDs := make([]uint, len(entities))
+	for i, e := range entities {
+		entityIDs[i] = e.ID
+	}
+	attrMap := make(map[uint]map[string]interface{})
+	if len(entityIDs) > 0 {
+		var attrs []pmocker.PMAttr
+		if err := global.GVA_DB.WithContext(ctx).Where("entity_id IN ?", entityIDs).Find(&attrs).Error; err != nil {
+			return nil, 0, err
+		}
+		for _, a := range attrs {
+			if attrMap[a.EntityID] == nil {
+				attrMap[a.EntityID] = make(map[string]interface{})
+			}
+			if a.ValString != nil {
+				attrMap[a.EntityID][a.FieldKey] = *a.ValString
+			} else if a.ValInt != nil {
+				attrMap[a.EntityID][a.FieldKey] = *a.ValInt
+			} else if a.ValDecimal != nil {
+				attrMap[a.EntityID][a.FieldKey] = *a.ValDecimal
+			} else if a.ValBool != nil {
+				attrMap[a.EntityID][a.FieldKey] = *a.ValBool
+			} else if a.ValDate != nil {
+				attrMap[a.EntityID][a.FieldKey] = *a.ValDate
+			} else if a.ValDateTime != nil {
+				attrMap[a.EntityID][a.FieldKey] = *a.ValDateTime
+			} else if a.ValJSON != nil {
+				attrMap[a.EntityID][a.FieldKey] = *a.ValJSON
+			} else if a.ValRef != nil {
+				attrMap[a.EntityID][a.FieldKey] = *a.ValRef
+			}
+		}
+	}
 	result := make([]eavtypes.Entity, len(entities))
 	for i, e := range entities {
 		result[i] = eavtypes.Entity{
@@ -180,6 +214,7 @@ func (s *EAVService) ListEntities(ctx context.Context, projectID uint, typeCode 
 			Seq:        e.Seq,
 			CreatedAt:  e.CreatedAt,
 			UpdatedAt:  e.UpdatedAt,
+			Attrs:      attrMap[e.ID],
 		}
 	}
 	return result, total, nil

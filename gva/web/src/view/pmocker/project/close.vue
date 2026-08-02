@@ -78,8 +78,8 @@
           <template #header>资源统计</template>
           <el-descriptions :column="2" border size="small">
             <el-descriptions-item label="人数">{{ report.resourceStat.memberCount }}</el-descriptions-item>
-            <el-descriptions-item label="总工时">{{ report.resourceStat.totalHours.toFixed(1) }}</el-descriptions-item>
-            <el-descriptions-item label="人工成本">{{ report.resourceStat.totalCost.toFixed(2) }}</el-descriptions-item>
+            <el-descriptions-item label="总工时">{{ (report.resourceStat?.totalHours || 0).toFixed(1) }}</el-descriptions-item>
+            <el-descriptions-item label="人工成本">{{ (report.resourceStat?.totalCost || 0).toFixed(2) }}</el-descriptions-item>
           </el-descriptions>
         </el-card>
       </el-col>
@@ -88,10 +88,10 @@
     <el-card shadow="hover" style="margin-top: 12px" v-if="report">
       <template #header>成本统计</template>
       <el-descriptions :column="3" border>
-        <el-descriptions-item label="预算">{{ report.costStat.budget.toFixed(2) }}</el-descriptions-item>
-        <el-descriptions-item label="实际">{{ report.costStat.actual.toFixed(2) }}</el-descriptions-item>
+        <el-descriptions-item label="预算">{{ (report.costStat?.budget || 0).toFixed(2) }}</el-descriptions-item>
+        <el-descriptions-item label="实际">{{ (report.costStat?.actual || 0).toFixed(2) }}</el-descriptions-item>
         <el-descriptions-item label="偏差">
-          <span :class="report.costStat.variance > 0 ? 'red' : 'green'">{{ report.costStat.variance > 0 ? '+' : '' }}{{ report.costStat.variance.toFixed(2) }}</span>
+          <span :class="(report.costStat?.variance || 0) > 0 ? 'red' : 'green'">{{ (report.costStat?.variance || 0) > 0 ? '+' : '' }}{{ (report.costStat?.variance || 0).toFixed(2) }}</span>
         </el-descriptions-item>
       </el-descriptions>
     </el-card>
@@ -108,9 +108,23 @@ const projectId = ref('')
 const projects = ref([])
 const report = ref(null)
 
+const flattenTree = (nodes) => {
+  let result = []
+  for (const node of nodes) {
+    result.push(node)
+    if (node.children && node.children.length > 0) {
+      result = result.concat(flattenTree(node.children))
+    }
+  }
+  return result
+}
+
 const loadProjects = async () => {
   const res = await service({ url: '/pmocker/eps/tree', method: 'get' })
-  if (res.code === 0) projects.value = res.data || []
+  if (res.code === 0) {
+    const treeData = res.data || []
+    projects.value = flattenTree(treeData)
+  }
 }
 
 const loadData = async () => {

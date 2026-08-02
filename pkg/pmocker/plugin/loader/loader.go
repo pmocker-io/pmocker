@@ -103,10 +103,51 @@ func (l *Loader) LoadSeed(ctx context.Context, yamlBytes []byte) error {
 		}
 		l.DictReg(dicts...)
 	}
+	// 加载 EPS 种子数据（支持顶层 eps 和 entities.eps 两种格式）
+	// 幂等：按 name 去重，已存在的 eps_node 跳过，避免服务重启导致重复创建
+	epsNodes := seed.EPS
+	if len(epsNodes) == 0 {
+		epsNodes = seed.Entities.EPS
+	}
+	if l.EAV != nil && len(epsNodes) > 0 {
+		existing, _, err := l.EAV.ListEntities(ctx, 0, "eps_node", 0, 10000)
+		if err != nil {
+			return fmt.Errorf("list existing eps_node for idempotent check: %w", err)
+		}
+		existingNames := make(map[string]bool, len(existing))
+		for _, e := range existing {
+			if name, ok := e.Attrs["name"].(string); ok && name != "" {
+				existingNames[name] = true
+			}
+		}
+		for _, e := range epsNodes {
+			if existingNames[e.Name] {
+				continue
+			}
+			attrs := map[string]interface{}{
+				"parent_path": e.ParentPath,
+				"name":        e.Name,
+				"type":        e.Type,
+				"code":        e.Code,
+				"sort":        e.Sort,
+				"is_active":   e.IsActive,
+				"status":      e.Status,
+			}
+			if _, err := l.EAV.CreateEntity(ctx, eavtypes.Entity{
+				EntityType: "eps_node",
+				Title:      e.Name,
+				Status:     e.Status,
+				Attrs:      attrs,
+			}); err != nil {
+				return fmt.Errorf("create eps_node seed %q: %w", e.Name, err)
+			}
+		}
+	}
 	return nil
 }
 
 // LoadMenu 灌入 menu.yaml 到 gva sys_base_menus
+// 支持多顶级菜单：按 parent_name 分组，每组先注册父菜单再注册子菜单
 func (l *Loader) LoadMenu(yamlBytes []byte) error {
 	if l.MenuReg == nil {
 		return nil
@@ -115,18 +156,64 @@ func (l *Loader) LoadMenu(yamlBytes []byte) error {
 	if err := yaml.Unmarshal(yamlBytes, &m); err != nil {
 		return fmt.Errorf("parse menu.yaml: %w", err)
 	}
-	menus := make([]system.SysBaseMenu, 0, len(m.Menus))
+
+	// 按 parent_name 分组菜单
+	// 顶级菜单: ParentName 为空
+	// 子菜单: ParentName 指向父菜单的 Name
+	topMenus := make([]system.SysBaseMenu, 0)
+	childrenMap := make(map[string][]system.SysBaseMenu) // parent_name -> children
+
 	for _, me := range m.Menus {
-		menus = append(menus, system.SysBaseMenu{
+		menu := system.SysBaseMenu{
 			Path:      me.Path,
 			Name:      me.Name,
 			Hidden:    me.Hidden,
 			Component: me.Component,
 			Sort:      me.Sort,
 			Meta:      system.Meta{Title: me.Title, Icon: me.Icon},
-		})
+		}
+		if me.ParentName == "" {
+			// 顶级菜单
+			topMenus = append(topMenus, menu)
+		} else {
+			// 子菜单
+			childrenMap[me.ParentName] = append(childrenMap[me.ParentName], menu)
+		}
 	}
-	l.MenuReg(menus...)
+
+	// 对每个顶级菜单及其子菜单分组注册
+	// RegisterMenus 函数会自动将第一个菜单作为父菜单，其余作为子菜单
+	for _, topMenu := range topMenus {
+		group := []system.SysBaseMenu{topMenu}
+		// 添加该父菜单的子菜单
+		if children, ok := childrenMap[topMenu.Name]; ok {
+			group = append(group, children...)
+		}
+		l.MenuReg(group...)
+	}
+
+	// 处理跨插件的子菜单（parent_name 指向其他插件注册的菜单）
+	// 这些子菜单没有在当前分组中找到父菜单
+	for parentName, children := range childrenMap {
+		found := false
+		for _, topMenu := range topMenus {
+			if topMenu.Name == parentName {
+				found = true
+				break
+			}
+		}
+		if !found {
+			// 跨插件的子菜单：直接注册子菜单，不创建临时父菜单
+			// RegisterMenus 会根据 parentName 查找或创建父菜单
+			for _, child := range children {
+				// 查找已存在的父菜单（由其他插件注册），或创建临时引用
+				l.MenuReg(system.SysBaseMenu{
+					Name: parentName,
+				}, child)
+			}
+		}
+	}
+
 	return nil
 }
 

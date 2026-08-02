@@ -8,3 +8,53 @@ apis:
   # EAV Schema 管理
   - {path: /pmocker/eav/schema, description: 注册Schema, api_group: EAV核心, method: POST}
   - {path: /pmocker/eav/schema/:entityType, description: 获取Schema, api_group: EAV核心, method: GET}
+  # 仪表盘
+  - {path: /pmocker/dashboard/get, description: 获取项目仪表盘, api_group: 仪表盘, method: GET}
+  - {path: /pmocker/report/snapshot, description: 生成报告快照, api_group: 仪表盘, method: POST}
+  - {path: /pmocker/report/list, description: 报告快照列表, api_group: 仪表盘, method: GET}
+  # 任务中心
+  - {path: /pmocker/taskCenter/my, description: 我的任务, api_group: 任务中心, method: GET}
+  - {path: /pmocker/taskCenter/focused, description: 关注任务, api_group: 任务中心, method: GET}
+  - {path: /pmocker/taskCenter/stats, description: 任务统计, api_group: 任务中心, method: GET}
+  # 项目工作台
+  - {path: /pmocker/projectWorkbench/my, description: 我的项目, api_group: 项目工作台, method: GET}
+  - {path: /pmocker/projectWorkbench/focused, description: 关注项目, api_group: 项目工作台, method: GET}
+  # PMO管理
+  - {path: /pmocker/pmo/dashboard, description: PMO看板, api_group: PMO管理, method: GET}
+  # 项目结项
+  - {path: /pmocker/project/archive, description: 项目归档, api_group: 项目结项, method: POST}
+  - {path: /pmocker/project/closeReport, description: 结项报告, api_group: 项目结项, method: GET}
+  # 基线管理
+  - {path: /pmocker/baseline/create, description: 创建基线, api_group: 基线管理, method: POST}
+  - {path: /pmocker/baseline/list, description: 基线列表, api_group: 基线管理, method: GET}
+  - {path: /pmocker/baseline/compare, description: 基线对比, api_group: 基线管理, method: GET}
+  # 成本管理
+  - {path: /pmocker/costActual/create, description: 创建实际成本, api_group: 成本管理, method: POST}
+  - {path: /pmocker/costActual/update, description: 更新实际成本, api_group: 成本管理, method: PUT}
+  - {path: /pmocker/costActual/delete, description: 删除实际成本, api_group: 成本管理, method: DELETE}
+  - {path: /pmocker/costActual/confirm, description: 确认实际成本, api_group: 成本管理, method: POST}
+  - {path: /pmocker/costActual/find, description: 查询实际成本, api_group: 成本管理, method: GET}
+  - {path: /pmocker/costActual/list, description: 实际成本列表, api_group: 成本管理, method: GET}
+  # 进度管理
+  - {path: /pmocker/progress/get, description: 获取进度, api_group: 进度管理, method: GET}
+  # 关系管理
+  - {path: /pmocker/relation/create, description: 创建关系, api_group: 关系管理, method: POST}
+  - {path: /pmocker/relation/delete, description: 删除关系, api_group: 关系管理, method: DELETE}
+  - {path: /pmocker/relation/list, description: 关系列表, api_group: 关系管理, method: GET}
+  - {path: /pmocker/taskLink/create, description: 创建任务链接, api_group: 关系管理, method: POST}
+  - {path: /pmocker/taskLink/delete, description: 删除任务链接, api_group: 关系管理, method: DELETE}
+  - {path: /pmocker/taskLink/list, description: 任务链接列表, api_group: 关系管理, method: GET}
+  - {path: /pmocker/changeLog/list, description: 变更日志列表, api_group: 关系管理, method: GET}
+  # 工时管理
+  - {path: /pmocker/timeEntry/create, description: 创建工时, api_group: 工时管理, method: POST}
+  - {path: /pmocker/timeEntry/update, description: 更新工时, api_group: 工时管理, method: PUT}
+  - {path: /pmocker/timeEntry/delete, description: 删除工时, api_group: 工时管理, method: DELETE}
+  - {path: /pmocker/timeEntry/submit, description: 提交工时, api_group: 工时管理, method: POST}
+  - {path: /pmocker/timeEntry/approve, description: 审批工时, api_group: 工时管理, method: POST}
+  - {path: /pmocker/timeEntry/reject, description: 驳回工时, api_group: 工时管理, method: POST}
+  - {path: /pmocker/timeEntry/find, description: 查询工时, api_group: 工时管理, method: GET}
+  - {path: /pmocker/timeEntry/list, description: 工时列表, api_group: 工时管理, method: GET}
+  - {path: /pmocker/timeEntry/utilization, description: 工时利用率, api_group: 工时管理, method: GET}
+  # 偏差分析
+  - {path: /pmocker/variance/calc, description: 偏差计算, api_group: 偏差分析, method: GET}
+  - {path: /pmocker/variance/alerts, description: 偏差预警, api_group: 偏差分析, method: GET}

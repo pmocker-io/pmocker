@@ -70,16 +70,65 @@ func RegisterMenus(menus ...system.SysBaseMenu) {
 
 	parentMenu := menus[0]
 	otherMenus := menus[1:]
-	err := global.GVA_DB.Transaction(func(tx *gorm.DB) error {
-		err := tx.Model(system.SysBaseMenu{}).Where("name = ? ", parentMenu.Name).FirstOrCreate(&parentMenu).Error
+	var err error
+	err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
+		// 先查找父菜单是否存在
+		var existingMenu system.SysBaseMenu
+		result := tx.Where("name = ? ", parentMenu.Name).First(&existingMenu)
+		if result.Error == nil {
+			// 父菜单已存在，更新字段（保留已有 ID）
+			parentMenu.ID = existingMenu.ID
+			if parentMenu.Path != "" {
+				existingMenu.Path = parentMenu.Path
+			}
+			if parentMenu.Component != "" {
+				existingMenu.Component = parentMenu.Component
+			}
+			if parentMenu.Sort != 0 {
+				existingMenu.Sort = parentMenu.Sort
+			}
+			if parentMenu.Meta.Title != "" {
+				existingMenu.Meta.Title = parentMenu.Meta.Title
+			}
+			if parentMenu.Meta.Icon != "" {
+				existingMenu.Meta.Icon = parentMenu.Meta.Icon
+			}
+			if parentMenu.Hidden != existingMenu.Hidden {
+				existingMenu.Hidden = parentMenu.Hidden
+			}
+			err = tx.Save(&existingMenu).Error
+		} else {
+			// 父菜单不存在，创建新记录
+			err = tx.Create(&parentMenu).Error
+		}
 		if err != nil {
 			zap.L().Error("注册菜单失败", zap.Error(err))
 			return errors.Wrap(err, "注册菜单失败")
 		}
 		pid := parentMenu.ID
+		if result.Error == nil {
+			pid = existingMenu.ID
+		}
 		for i := range otherMenus {
 			otherMenus[i].ParentId = pid
-			err = tx.Model(system.SysBaseMenu{}).Where("name = ? ", otherMenus[i].Name).FirstOrCreate(&otherMenus[i]).Error
+			// 先查找子菜单是否存在
+			var existingChild system.SysBaseMenu
+			childResult := tx.Where("name = ? ", otherMenus[i].Name).First(&existingChild)
+			if childResult.Error == nil {
+				// 子菜单已存在，更新字段
+				existingChild.Path = otherMenus[i].Path
+				existingChild.Component = otherMenus[i].Component
+				if otherMenus[i].Sort != 0 {
+					existingChild.Sort = otherMenus[i].Sort
+				}
+				existingChild.ParentId = pid
+				existingChild.Meta = otherMenus[i].Meta
+				existingChild.Hidden = otherMenus[i].Hidden
+				err = tx.Save(&existingChild).Error
+			} else {
+				// 子菜单不存在，创建新记录
+				err = tx.Create(&otherMenus[i]).Error
+			}
 			if err != nil {
 				zap.L().Error("注册菜单失败", zap.Error(err))
 				return errors.Wrap(err, "注册菜单失败")

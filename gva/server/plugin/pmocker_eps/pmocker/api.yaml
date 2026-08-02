@@ -7,3 +7,4 @@ apis:
   - {path: /pmocker/eps/removeMember, description: 移除EPS成员, api_group: 组织EPS, method: DELETE}
   - {path: /pmocker/eps/listMembers, description: EPS成员列表, api_group: 组织EPS, method: GET}
   - {path: /pmocker/eps/moveNode, description: 移动EPS节点, api_group: 组织EPS, method: POST}
+  - {path: /pmocker/eps/tree, description: EPS树结构, api_group: 组织EPS, method: GET}

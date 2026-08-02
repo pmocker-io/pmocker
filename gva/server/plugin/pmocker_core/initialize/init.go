@@ -49,11 +49,12 @@ func SeedOrgData() error {
 
 // RegisterHooks 注册 PMocker 工作流节点事件钩子（NodeHook）。
 // 在 DB/服务初始化完成后调用一次即可。
+// Hook key = workflowCode.nodeName，fireOnLeave 时按此 key 查找。
 func RegisterHooks() {
 	wf := &pmockerSvc.ServiceGroupApp.WorkflowService
-	wf.RegisterNodeHook("plan_approval", "approve", &pmockerSvc.ScheduleBaselineHook{})
-	wf.RegisterNodeHook("cost_approval", "approve", &pmockerSvc.CostBaselineHook{})
-	wf.RegisterNodeHook("change_request", "review", &pmockerSvc.ChangeApplyHook{})
-	wf.RegisterNodeHook("task_workflow", "complete", &pmockerSvc.TaskCompleteHook{})
+	wf.RegisterNodeHook("schedule_baseline", "pm_approval", &pmockerSvc.ScheduleBaselineHook{})
+	wf.RegisterNodeHook("cost_baseline", "fm_approval", &pmockerSvc.CostBaselineHook{})
+	wf.RegisterNodeHook("change_request", "ccb", &pmockerSvc.ChangeApplyHook{})
+	wf.RegisterNodeHook("schedule_baseline", "progress_review", &pmockerSvc.TaskCompleteHook{})
 	global.GVA_LOG.Info("pmocker NodeHook 已注册")
 }

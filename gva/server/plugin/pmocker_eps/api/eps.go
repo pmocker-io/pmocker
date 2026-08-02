@@ -110,6 +110,18 @@ func (a *Api) ListMembers(c *gin.Context) {
 	response.OkWithDetailed(gin.H{"list": list, "total": total}, "查询成功", c)
 }
 
+// GetTree 获取 EPS 树结构（用于仪表盘等页面）
+// GET /pmocker/eps/tree?projectId=xxx
+func (a *Api) GetTree(c *gin.Context) {
+	projectID, _ := strconv.ParseUint(c.Query("projectId"), 10, 64)
+	tree, err := ServiceGroupApp.BuildEPSTree(c.Request.Context(), uint(projectID))
+	if err != nil {
+		response.FailWithMessage("获取EPS树失败: "+err.Error(), c)
+		return
+	}
+	response.OkWithData(tree, c)
+}
+
 func (a *Api) MoveNode(c *gin.Context) {
 	var req struct {
 		NodeID        uint   `json:"nodeId"`
