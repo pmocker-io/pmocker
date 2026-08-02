@@ -21,6 +21,7 @@ type RunOptions struct {
 	Name          string
 	Port          int
 	AdminPassword string
+	Force         bool // --force：同名实例存在时自动删除后重建
 }
 
 // Manager 实例生命周期管理器
@@ -64,6 +65,20 @@ func (m *Manager) Run(opts RunOptions) (*Instance, error) {
 		}
 	} else {
 		return nil, fmt.Errorf("image is required")
+	}
+
+	// 1.5 名称冲突检测：避免 UNIQUE constraint 报错
+	if opts.Name != "" {
+		if existing, err := m.store.GetByName(opts.Name); err == nil && existing != nil {
+			if opts.Force {
+				fmt.Printf("检测到同名实例 %q（状态: %s），--force 自动删除旧实例...\n", opts.Name, existing.Status)
+				if err := m.Remove(opts.Name, true); err != nil {
+					return nil, fmt.Errorf("force remove existing instance %q: %w", opts.Name, err)
+				}
+			} else {
+				return nil, fmt.Errorf("实例名称 %q 已被占用（状态: %s）\n请先执行 `pmocker rm %s -v` 删除后再运行；或者添加 --force 参数自动覆盖", opts.Name, existing.Status, opts.Name)
+			}
+		}
 	}
 
 	// 2. 创建数据卷

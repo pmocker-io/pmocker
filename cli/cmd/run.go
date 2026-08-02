@@ -32,6 +32,7 @@ func findProjectRoot() string {
 
 var runFollow bool
 var runRebuild bool
+var runForce bool
 
 var runCmd = &cobra.Command{
 	Use:   "run",
@@ -90,6 +91,7 @@ var runCmd = &cobra.Command{
 			Name:          name,
 			Port:          port,
 			AdminPassword: adminPwd,
+			Force:         runForce,
 		})
 		if err != nil {
 			return err
@@ -134,6 +136,7 @@ func init() {
 	runCmd.Flags().String("admin-password", "", "管理员密码")
 	runCmd.Flags().BoolVarP(&runFollow, "follow", "f", false, "启动后自动跟踪 gva-server 实时日志（Ctrl+C 退出，实例继续运行）")
 	runCmd.Flags().BoolVar(&runRebuild, "rebuild", false, "强制重建后端二进制和前端 dist，确保使用最新代码")
+	runCmd.Flags().BoolVar(&runForce, "force", false, "同名实例存在时自动删除后重建")
 }
 
 func findGVAServerDir() string {
