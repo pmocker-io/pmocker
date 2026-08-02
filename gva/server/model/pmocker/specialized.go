@@ -43,6 +43,7 @@ type PMBaseline struct {
 	ProjectID    uint   `json:"projectId" gorm:"index;comment:项目ID"`
 	Type         string `json:"type" gorm:"size:16;comment:scope/schedule/cost"`
 	SnapshotJSON string `json:"snapshotJson" gorm:"type:text;comment:快照JSON"`
+	ChangeReqID  *uint  `json:"changeReqId" gorm:"index;comment:变更请求ID"`
 }
 
 func (PMBaseline) TableName() string { return "pm_baselines" }

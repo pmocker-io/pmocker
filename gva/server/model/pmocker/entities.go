@@ -13,6 +13,7 @@ type PMEntity struct {
 	OwnerID    *uint  `json:"ownerId" gorm:"index;comment:责任人ID"`
 	BaselineID *uint  `json:"baselineId" gorm:"index;comment:当前基线ID"`
 	Seq        int    `json:"seq" gorm:"default:0;comment:排序"`
+	Priority   int    `json:"priority" gorm:"default:2;index;comment:优先级0紧急1高2中3低"`
 	CreatedBy  uint   `json:"createdBy" gorm:"comment:创建人"`
 }
 
