@@ -103,9 +103,33 @@ M12 让 10 模块从孤立 CRUD 升级为**真实业务流闭环**，达到商�
 └─────────────────────────────────────────────────────────┘
 ```
 
-### 3.2 新增表设计
+### 3.2 pm_entities 表字段增强（优先级）
 
-#### 3.2.1 pm\_time\_entries（工时登记表）— 新增
+在现有 `pm_entities` 表增加 `priority` 列（快速查询字段，不放入 attrs JSON），对标 MS Project 任务优先级、禅道项目/任务优先级：
+
+```sql
+ALTER TABLE pm_entities ADD COLUMN priority INT DEFAULT 2;
+-- priority: 0=紧急(P0) 1=高(P1) 2=中(P2) 3=低(P3)
+-- 项目(EPS node)和任务(task)均使用此字段
+-- 高优先级(P0/P1)的项目和任务进入"我关注"子视图
+```
+
+| 优先级 | 数值 | 说明 | "我关注"可见性 |
+|--------|------|------|---------------|
+| P0 紧急 | 0 | 公司级关键项目/阻塞性任务 | 决策/审批人员默认可见 |
+| P1 高 | 1 | 重要项目/关键路径任务 | 决策/审批人员默认可见 |
+| P2 中 | 2 | 常规项目/普通任务 | 仅分配人可见 |
+| P3 低 | 3 | 低优先级/可选任务 | 仅分配人可见 |
+
+**"我关注"子视图可见性规则**：
+- `PMO_ADMIN` 角色：可见所有 P0/P1 项目和任务
+- `DEPT_LEADER` 岗位：可见本部门及子级下 P0/P1 项目和任务
+- `CCB_MEMBER` 岗位：可见所有 P0/P1 变更相关任务
+- 其他角色：仅可见自己负责的 P0/P1 任务
+
+### 3.3 新增表设计
+
+#### 3.3.1 pm\_time\_entries（工时登记表）— 新增
 
 ```sql
 CREATE TABLE pm_time_entries (
@@ -126,7 +150,7 @@ CREATE TABLE pm_time_entries (
 );
 ```
 
-#### 3.2.2 pm\_cost\_actuals（实际成本执行表）— 新增
+#### 3.3.2 pm\_cost\_actuals（实际成本执行表）— 新增
 
 ```sql
 CREATE TABLE pm_cost_actuals (
@@ -143,7 +167,7 @@ CREATE TABLE pm_cost_actuals (
 );
 ```
 
-#### 3.2.3 pm\_approval\_records（审批签审记录表）— 新增
+#### 3.3.3 pm\_approval\_records（审批签审记录表）— 新增
 
 ```sql
 CREATE TABLE pm_approval_records (
@@ -158,7 +182,7 @@ CREATE TABLE pm_approval_records (
 );
 ```
 
-### 3.3 事件引擎架构
+### 3.4 事件引擎架构
 
 工作流节点 hook 机制：在现有 `WorkflowService.Execute` 基础上，增加节点进入/离开回调。
 
@@ -179,7 +203,7 @@ hooks map[string]NodeHook  // key: workflow_code + "." + node_code
 - "change_request.closed".OnLeave → 应用变更到目标实体+记录 change_logs
 ```
 
-### 3.4 基线快照机制
+### 3.5 基线快照机制
 
 ```go
 type Baseline struct {
@@ -208,9 +232,52 @@ func CalcVariance(ctx, projectID, baselineID) (*VarianceReport, error) {
 }
 ```
 
-### 3.6 模块数据流关系图
+### 3.6 项目完成度汇总算法（3 种可选）
 
-#### 3.6.1 10 模块业务关联矩阵
+用户决策：3 种算法全部提供，下拉可选。3 个测试项目各覆盖 1 种。
+
+```go
+// 算法1: 工时加权平均（项目A使用，对标 MS Project）
+func CalcByHours(ctx, projectID) (percent, error) {
+    tasks := ListTasksByProject(projectID)
+    totalHours, completedHours := 0, 0
+    for _, t := range tasks {
+        hours := t.attrs["estimated_hours"]
+        progress := t.attrs["progress"] // 0-100
+        totalHours += hours
+        completedHours += hours * progress / 100
+    }
+    return completedHours / totalHours * 100
+}
+
+// 算法2: WBS 层级加权（项目B使用，对标 PMBOK）
+func CalcByWBS(ctx, projectID) (percent, error) {
+    // 自底向上：叶子节点进度→父节点加权平均→项目根节点
+    wbsTree := LoadWBSTree(projectID)
+    return calcNodeProgress(wbsTree.Root)
+}
+
+// 算法3: 任务数简单平均（项目C使用）
+func CalcByCount(ctx, projectID) (percent, error) {
+    tasks := ListTasksByProject(projectID)
+    completed := countByStatus(tasks, "done")
+    return completed / len(tasks) * 100
+}
+
+// 统一入口：按项目配置的算法类型计算
+func CalcProjectProgress(ctx, projectID) (percent, error) {
+    algo := GetProjectAlgoConfig(projectID) // hours/wbs/count
+    switch algo {
+    case "hours": return CalcByHours(ctx, projectID)
+    case "wbs":   return CalcByWBS(ctx, projectID)
+    case "count": return CalcByCount(ctx, projectID)
+    }
+}
+```
+
+### 3.7 模块数据流关系图
+
+#### 3.7.1 10 模块业务关联矩阵
 
 | 源模块 | → 目标模块 | 关联字段/表 | 数据流说明 | 触发时机 |
 |--------|-----------|------------|-----------|----------|
@@ -313,7 +380,7 @@ func CalcVariance(ctx, projectID, baselineID) (*VarianceReport, error) {
 └─────────────────────────────────────────────────────┘
 ```
 
-### 3.7 项目管理业务模型（完整抽象）
+### 3.8 项目管理业务模型（完整抽象）
 
 #### 3.7.1 三层业务模型
 
@@ -371,7 +438,7 @@ func CalcVariance(ctx, projectID, baselineID) (*VarianceReport, error) {
 └─────────────────────────────────────────────────────────────┘
 ```
 
-#### 3.7.2 核心业务实体关系（ER 模型）
+#### 3.8.2 核心业务实体关系（ER 模型）
 
 ```
 sys_users ──┬── sys_user_departments ── sys_departments（组织树）
@@ -470,8 +537,8 @@ pm_cost_actuals ──→ cost_item    pm_task_links
 
 | Task | 内容 | 关键交付 |
 | ---- | ---- | ------ |
-| T15  | 任务管理（个人任务中心） | 聚合项目任务/问题任务/变更任务/交付物任务；按状态分组（待开始/进行中/已完成/已逾期）；任务处理进度+统计数据 |
-| T16  | 项目管理（项目工作台） | 我创建的/我负责的/我参与的项目；按状态分组（立项中/进行中/已归档/已暂停）；项目卡片（健康度/进度%/成本偏差/风险数） |
+| T15  | 任务管理（个人任务中心） | 聚合项目任务/问题任务/变更任务/交付物任务；按状态分组（待开始/进行中/已完成/已逾期）；**含"我关注的任务"子视图（高优先级任务，决策/审批人员默认可见）**；任务处理进度+统计数据 |
+| T16  | 项目管理（项目工作台） | 我创建的/我负责的/我参与的项目；**含"我关注的项目"子视图（高优先级项目，决策/审批人员默认可见）**；按状态分组（立项中/进行中/已归档/已暂停）；项目卡片（健康度/进度%/成本偏差/风险数/优先级） |
 
 ***
 
@@ -574,6 +641,7 @@ pm_cost_actuals ──→ cost_item    pm_task_links
 #### 项目 A：智能排产系统研发（软件研发，敏捷混合）
 
 * **健康度**：绿色（正常）
+* **优先级**：P1（高）— 重要项目，进入"我关注"
 
 * **周期**：2026-01-06 \~ 2026-06-30（6个月）
 
@@ -618,6 +686,7 @@ pm_cost_actuals ──→ cost_item    pm_task_links
 #### 项目 C：新型传感器研制（PLM 硬件研发）
 
 * **健康度**：黄色（有变更，可控）
+* **优先级**：P1（高）— 重要研制项目，进入"我关注"
 
 * **周期**：2026-02-01 \~ 2026-08-31（7个月）
 
@@ -834,7 +903,9 @@ Step 5: 批准项目结项（3个项目全部归档）
 | 14 | PMO 看板 | 跨项目组合视图，健康度 RAG                              |
 | 15 | 结项归档   | 归档状态机，结项报告生成                                 |
 | 16 | 个人任务中心 | 聚合项目/问题/变更/交付物任务，按状态分组（待开始/进行中/已完成/已逾期），统计任务总数/完成率/逾期数 |
-| 17 | 项目工作台 | 我创建的/我负责的/我参与的项目，按状态分组（立项中/进行中/已归档/已暂停），项目卡片含健康度/进度%/成本偏差/风险数 |
+| 17 | 项目工作台 | 我创建的/我负责的/我参与的项目，按状态分组（立项中/进行中/已归档/已暂停），项目卡片含健康度/进度%/成本偏差/风险数/优先级 |
+| 18 | 优先级字段 | 项目和任务均含 priority 字段（P0紧急/P1高/P2中/P3低），pm_entities 表独立列存储 |
+| 19 | 我关注的子视图 | 任务中心和项目工作台含"我关注的项目/任务"子视图，展示 P0/P1 高优先级项；PMO_ADMIN/DEPT_LEADER/CCB_MEMBER 默认可见 |
 
 ### 7.2 数据验收（3 项目全流程）
 
