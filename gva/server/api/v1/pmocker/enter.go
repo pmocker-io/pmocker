@@ -7,6 +7,7 @@ type ApiGroup struct {
 	EAVApi
 	RelationApi
 	TimeEntryApi
+	CostActualApi
 }
 
 // ApiGroupApp 全局 API 入口

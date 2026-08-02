@@ -9,6 +9,8 @@ type ServiceGroup struct {
 	TaskLinkService
 	ChangeLogService
 	TimeEntryService
+	CostLinkService
+	CostActualService
 }
 
 // ServiceGroupApp 全局 service 入口

@@ -7,6 +7,7 @@ type RouterGroup struct {
 	EAVRouter
 	RelationRouter
 	TimeEntryRouter
+	CostActualRouter
 }
 
 // RouterGroupApp 全局路由入口

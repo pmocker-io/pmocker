@@ -5,6 +5,7 @@ import (
 
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/pmocker"
+	"go.uber.org/zap"
 )
 
 type TimeEntryService struct{}
@@ -53,12 +54,21 @@ func (s *TimeEntryService) SubmitTimeEntry(id uint) error {
 
 func (s *TimeEntryService) ApproveTimeEntry(id uint, approverID uint) error {
 	now := time.Now().Format("2006-01-02 15:04:05")
-	return global.GVA_DB.Model(&pmocker.PMTimeEntry{}).Where("id = ?", id).
+	if err := global.GVA_DB.Model(&pmocker.PMTimeEntry{}).Where("id = ?", id).
 		Updates(map[string]interface{}{
 			"status":      "approved",
 			"approver_id": approverID,
 			"approved_at": now,
-		}).Error
+		}).Error; err != nil {
+		return err
+	}
+	var entry pmocker.PMTimeEntry
+	if getErr := global.GVA_DB.First(&entry, id).Error; getErr == nil {
+		if err := (&CostActualService{}).ApproveTimeEntryToCost(&entry); err != nil {
+			global.GVA_LOG.Error("工时转成本失败", zap.Error(err))
+		}
+	}
+	return nil
 }
 
 func (s *TimeEntryService) RejectTimeEntry(id uint, approverID uint) error {
