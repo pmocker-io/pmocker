@@ -220,20 +220,18 @@ func (s *DashboardService) calcResourceSummary(db *gorm.DB, projectID uint) Reso
 	return rs
 }
 
-// loadMilestones 里程碑（标记 milestone=1 的任务）
+// loadMilestones 里程碑（entity_type=milestone 的独立实体）
 func (s *DashboardService) loadMilestones(db *gorm.DB, projectID uint) []MilestoneItem {
-	var tasks []pmocker.PMEntity
-	db.Where("project_id = ? AND entity_type = ?", projectID, "task").Find(&tasks)
+	var milestones []pmocker.PMEntity
+	db.Where("project_id = ? AND entity_type = ?", projectID, "milestone").Find(&milestones)
 	var ms []MilestoneItem
-	for _, t := range tasks {
-		if getAttrInt(db, t.ID, "is_milestone") == 1 {
-			ms = append(ms, MilestoneItem{
-				ID:     t.ID,
-				Title:  t.Title,
-				Date:   getAttrString(db, t.ID, "end_date"),
-				Status: t.Status,
-			})
-		}
+	for _, m := range milestones {
+		ms = append(ms, MilestoneItem{
+			ID:     m.ID,
+			Title:  m.Title,
+			Date:   getAttrString(db, m.ID, "end_date"),
+			Status: m.Status,
+		})
 	}
 	return ms
 }

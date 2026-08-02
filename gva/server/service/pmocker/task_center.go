@@ -46,7 +46,7 @@ func (s *TaskCenterService) GetMyTasks(userID uint) ([]MyTaskItem, error) {
 	// 2. 问题任务：EAV attr assignee = userID
 	tasks = append(tasks, s.loadAttrAssignedTasks(db, userID, "issue", "issue_task", "assignee")...)
 	// 3. 变更任务：EAV attr assignee = userID
-	tasks = append(tasks, s.loadAttrAssignedTasks(db, userID, "change", "change_task", "assignee")...)
+	tasks = append(tasks, s.loadAttrAssignedTasks(db, userID, "change_request", "change_task", "assignee")...)
 	// 4. 交付物任务：EAV attr reviewer = userID
 	tasks = append(tasks, s.loadAttrAssignedTasks(db, userID, "deliverable", "deliverable_task", "reviewer")...)
 
@@ -85,18 +85,18 @@ func (s *TaskCenterService) GetMyFocusedTasks(userID uint) ([]MyTaskItem, error)
 		// 可见所有 P0/P1 任务（4 类来源）
 		tasks = append(tasks, s.loadProjectTasksByPriority(db, nil, 0, 1)...)
 		tasks = append(tasks, s.loadAttrAssignedTasksByPriority(db, nil, "issue", "issue_task", "assignee", 0, 1)...)
-		tasks = append(tasks, s.loadAttrAssignedTasksByPriority(db, nil, "change", "change_task", "assignee", 0, 1)...)
+		tasks = append(tasks, s.loadAttrAssignedTasksByPriority(db, nil, "change_request", "change_task", "assignee", 0, 1)...)
 		tasks = append(tasks, s.loadAttrAssignedTasksByPriority(db, nil, "deliverable", "deliverable_task", "reviewer", 0, 1)...)
 	} else {
 		// 自己负责的 P0/P1 任务（所有角色默认可见）
 		tasks = append(tasks, s.loadProjectTasksByPriority(db, &userID, 0, 1)...)
 		tasks = append(tasks, s.loadAttrAssignedTasksByPriority(db, &userID, "issue", "issue_task", "assignee", 0, 1)...)
-		tasks = append(tasks, s.loadAttrAssignedTasksByPriority(db, &userID, "change", "change_task", "assignee", 0, 1)...)
+		tasks = append(tasks, s.loadAttrAssignedTasksByPriority(db, &userID, "change_request", "change_task", "assignee", 0, 1)...)
 		tasks = append(tasks, s.loadAttrAssignedTasksByPriority(db, &userID, "deliverable", "deliverable_task", "reviewer", 0, 1)...)
 
 		// CCB_MEMBER: 可见所有 P0/P1 变更任务（在自负责之外补充）
 		if scope.IsCCBMember {
-			tasks = append(tasks, s.loadAttrAssignedTasksByPriority(db, nil, "change", "change_task", "assignee", 0, 1)...)
+			tasks = append(tasks, s.loadAttrAssignedTasksByPriority(db, nil, "change_request", "change_task", "assignee", 0, 1)...)
 		}
 
 		// DEPT_LEADER: 可见本部门及子级下 P0/P1 任务

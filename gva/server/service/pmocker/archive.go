@@ -73,7 +73,7 @@ func (s *ArchiveService) ArchiveProject(projectID uint, archivedBy uint) error {
 	}
 
 	// 4. 所有关联实体标记 archived（状态标记，不使用 gorm 软删除以保持报告可查）
-	entityTypes := []string{"task", "issue", "risk", "requirement", "change", "deliverable",
+	entityTypes := []string{"task", "issue", "risk", "requirement", "change_request", "deliverable",
 		"team_member", "cost_item", "scope_item"}
 	for _, et := range entityTypes {
 		db.Model(&pmocker.PMEntity{}).
@@ -133,7 +133,7 @@ func (s *ArchiveService) GetCloseReport(projectID uint) (*CloseReport, error) {
 	report.IssueStat = s.categoryStat(db, projectID, "issue", []string{"closed", "resolved"}, today)
 	report.RiskStat = s.categoryStat(db, projectID, "risk", []string{"closed"}, today)
 	report.ReqStat = s.categoryStat(db, projectID, "requirement", []string{"approved", "implemented"}, today)
-	report.ChangeStat = s.categoryStat(db, projectID, "change", []string{"approved", "closed"}, today)
+	report.ChangeStat = s.categoryStat(db, projectID, "change_request", []string{"approved", "closed"}, today)
 
 	// 资源统计
 	var memberCount int64
