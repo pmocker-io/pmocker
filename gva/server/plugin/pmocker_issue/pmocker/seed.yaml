@@ -20,4 +20,13 @@ dictionaries:
       - {label: 缺陷, value: bug}
       - {label: 性能, value: performance}
       - {label: 易用性, value: usability}
+      - {label: 流程, value: process}
+      - {label: 进度, value: schedule}
+      - {label: 资源, value: resource}
+      - {label: 沟通, value: communication}
       - {label: 其他, value: other}
+  - type: pm_resolution_type
+    name: 解决类型
+    details:
+      - {label: 临时方案, value: workaround}
+      - {label: 永久修复, value: permanent_fix}

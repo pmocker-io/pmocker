@@ -9,12 +9,24 @@ fields:
   - {field_key: description, field_label: 描述, data_type: text}
   - {field_key: priority, field_label: 优先级, data_type: enum, options_json: '["紧急","高","中","低"]'}
   - {field_key: severity, field_label: 严重程度, data_type: enum, options_json: '["fatal","critical","major","minor","trivial"]'}
-  - {field_key: category, field_label: 分类, data_type: enum, options_json: '["bug","performance","usability","other"]'}
+  - {field_key: category, field_label: 分类, data_type: enum, options_json: '["bug","performance","usability","process","schedule","resource","communication","other"]'}
   - {field_key: assigned_to, field_label: 指派给, data_type: ref}
   - {field_key: reported_by, field_label: 报告人, data_type: ref}
   - {field_key: due_date, field_label: 截止日期, data_type: date}
   - {field_key: resolution, field_label: 解决方案, data_type: text}
   - {field_key: root_cause, field_label: 根本原因, data_type: text}
   - {field_key: status, field_label: 状态, data_type: enum, options_json: '["open","assigned","in_progress","resolved","verified","closed","reopened"]'}
+  # --- 关闭条件 + 交付物关联 ---
+  - {field_key: closure_criteria, field_label: 关闭条件, data_type: text}
+  - {field_key: affected_scope, field_label: 影响范围, data_type: ref}
+  - {field_key: resolution_type, field_label: 解决类型, data_type: enum, options_json: '["workaround","permanent_fix"]'}
+  # --- 关联风险 + 时间/工时 ---
+  - {field_key: related_risk_id, field_label: 关联风险, data_type: ref}
+  - {field_key: resolved_date, field_label: 解决日期, data_type: date}
+  - {field_key: resolution_effort, field_label: 解决工时, data_type: decimal}
+  # --- 验证 ---
+  - {field_key: verified_by, field_label: 验证人, data_type: ref}
+  - {field_key: verified_date, field_label: 验证日期, data_type: date}
+  - {field_key: reopen_count, field_label: 重开次数, data_type: int, default_value: "0"}
 states: [open, assigned, in_progress, resolved, verified, closed, reopened]
 workflows: [issue_resolve]

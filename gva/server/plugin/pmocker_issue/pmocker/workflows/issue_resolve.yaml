@@ -9,7 +9,7 @@ nodes:
   - {code: verify, type: approval}
   - {code: end, type: end}
 transitions:
-  - {from: start, to: triage, on: submit}
+  - {from: start, to: triage, on: submit, status: open}
   - {from: triage, to: develop, on: approve_assign, status: assigned}
   - {from: triage, to: end, on: reject, status: open}
   - {from: develop, to: verify, on: start_dev, status: in_progress}
@@ -17,3 +17,5 @@ transitions:
   - {from: verify, to: develop, on: verify_fail, status: in_progress}
   - {from: verify, to: end, on: close, status: closed}
   - {from: develop, to: verify, on: submit_verify, status: resolved}
+  # --- reopened 闭环 ---
+  - {from: end, to: develop, on: reopen, status: reopened}
