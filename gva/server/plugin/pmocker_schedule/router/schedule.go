@@ -16,6 +16,7 @@ func (r *Schedule) Init(public, private *gin.RouterGroup) {
 		g.POST("updateTask", ApiGroupApp.UpdateTask)
 		g.POST("createMilestone", ApiGroupApp.CreateMilestone)
 		g.POST("baseline", ApiGroupApp.Baseline)
+		g.POST("transitionTask", ApiGroupApp.TransitionTask)
 	}
 	{
 		g := private.Group("schedule")

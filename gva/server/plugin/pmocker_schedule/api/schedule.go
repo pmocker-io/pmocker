@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/flipped-aurora/gin-vue-admin/server/model/common/response"
+	"github.com/flipped-aurora/gin-vue-admin/server/utils"
 	eavtypes "github.com/pmocker-io/pmocker/pkg/pmocker/eav"
 	"github.com/gin-gonic/gin"
 )
@@ -130,4 +131,29 @@ func (a *Api) Baseline(c *gin.Context) {
 		return
 	}
 	response.OkWithData(gin.H{"baselineId": id}, c)
+}
+
+// TransitionTask 任务状态流转（完成时后端自动触发关联交付物检入）
+func (a *Api) TransitionTask(c *gin.Context) {
+	var req struct {
+		ID         uint   `json:"id"`
+		Status     string `json:"status"`
+		OperatorID uint   `json:"operatorId"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.FailWithMessage("参数错误: "+err.Error(), c)
+		return
+	}
+	if req.ID == 0 || req.Status == "" {
+		response.FailWithMessage("参数错误: id 和 status 必填", c)
+		return
+	}
+	if req.OperatorID == 0 {
+		req.OperatorID = utils.GetUserID(c)
+	}
+	if err := service.Transition(c.Request.Context(), req.ID, req.Status, req.OperatorID); err != nil {
+		response.FailWithMessage("状态流转失败: "+err.Error(), c)
+		return
+	}
+	response.OkWithMessage("状态流转成功", c)
 }

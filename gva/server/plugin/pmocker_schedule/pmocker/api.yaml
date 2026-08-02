@@ -5,3 +5,4 @@ apis:
   - {path: /pmocker/schedule/createMilestone, description: 创建里程碑, api_group: 进度管理, method: POST}
   - {path: /pmocker/schedule/listMilestones, description: 里程碑列表, api_group: 进度管理, method: GET}
   - {path: /pmocker/schedule/baseline, description: 进度基线, api_group: 进度管理, method: POST}
+  - {path: /pmocker/schedule/transitionTask, description: 任务状态流转（完成自动检入关联交付物）, api_group: 进度管理, method: POST}
