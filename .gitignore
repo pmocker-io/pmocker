@@ -3,6 +3,7 @@
 
 # 安装的 skills
 .agents/
+.codegraph/
 .claude/
 skills-lock.json
 
