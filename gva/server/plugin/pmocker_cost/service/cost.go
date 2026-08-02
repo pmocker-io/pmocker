@@ -2,6 +2,7 @@ package cost
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/pmocker"
@@ -21,6 +22,31 @@ func (s *Service) CreateItem(ctx context.Context, projectID uint, title string, 
 
 func (s *Service) ListItems(ctx context.Context, projectID uint, offset, limit int) ([]eavtypes.Entity, int64, error) {
 	return pmservice.ServiceGroupApp.ListEntities(ctx, projectID, "cost_item", offset, limit)
+}
+
+// GetItem 获取成本项
+func (s *Service) GetItem(ctx context.Context, id uint) (*eavtypes.Entity, error) {
+	e, err := pmservice.ServiceGroupApp.GetEntity(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if e.EntityType != "cost_item" {
+		return nil, fmt.Errorf("entity %d is not a cost_item", id)
+	}
+	return e, nil
+}
+
+// UpdateItem 更新成本项
+func (s *Service) UpdateItem(ctx context.Context, e eavtypes.Entity) error {
+	if e.EntityType != "cost_item" {
+		return fmt.Errorf("not a cost_item")
+	}
+	return pmservice.ServiceGroupApp.UpdateEntity(ctx, e)
+}
+
+// DeleteItem 删除成本项
+func (s *Service) DeleteItem(ctx context.Context, id uint) error {
+	return pmservice.ServiceGroupApp.DeleteEntity(ctx, id)
 }
 
 // ComputeEVM 计算项目级 EVM（汇总所有成本项）

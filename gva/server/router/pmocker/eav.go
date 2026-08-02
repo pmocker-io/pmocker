@@ -13,5 +13,8 @@ func (r *EAVRouter) InitEAV(Router *gin.RouterGroup) {
 		eav.GET("entity/:id", apiGroup.EAVApi.GetEntity)
 		eav.GET("entities", apiGroup.EAVApi.ListEntities)
 		eav.POST("schema", apiGroup.EAVApi.RegisterSchema)
+		eav.GET("schema/:entityType", apiGroup.EAVApi.GetSchema)
+		eav.PUT("entity", apiGroup.EAVApi.UpdateEntity)
+		eav.DELETE("entity/:id", apiGroup.EAVApi.DeleteEntity)
 	}
 }

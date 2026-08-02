@@ -76,6 +76,46 @@ func (a *EAVApi) RegisterSchema(c *gin.Context) {
 	response.OkWithMessage("Schema 注册成功", c)
 }
 
+// GetSchema 获取实体类型的字段定义
+func (a *EAVApi) GetSchema(c *gin.Context) {
+	entityType := c.Param("entityType")
+	et, err := service.LoadEntityType(c.Request.Context(), entityType)
+	if err != nil {
+		response.FailWithMessage("实体类型不存在: "+err.Error(), c)
+		return
+	}
+	fields, err := service.LoadFieldDefs(c.Request.Context(), entityType)
+	if err != nil {
+		response.FailWithMessage("加载字段定义失败: "+err.Error(), c)
+		return
+	}
+	response.OkWithData(gin.H{"entity_type": et, "fields": fields}, c)
+}
+
+// UpdateEntity 更新实体
+func (a *EAVApi) UpdateEntity(c *gin.Context) {
+	var e eavtypes.Entity
+	if err := c.ShouldBindJSON(&e); err != nil {
+		response.FailWithMessage("参数错误: "+err.Error(), c)
+		return
+	}
+	if err := service.UpdateEntity(c.Request.Context(), e); err != nil {
+		response.FailWithMessage("更新失败: "+err.Error(), c)
+		return
+	}
+	response.OkWithMessage("更新成功", c)
+}
+
+// DeleteEntity 删除实体
+func (a *EAVApi) DeleteEntity(c *gin.Context) {
+	id := parseUint(c.Param("id"))
+	if err := service.DeleteEntity(c.Request.Context(), id); err != nil {
+		response.FailWithMessage("删除失败: "+err.Error(), c)
+		return
+	}
+	response.OkWithMessage("删除成功", c)
+}
+
 // parseUint 辅助函数：字符串转 uint
 func parseUint(s string) uint {
 	n, _ := strconv.ParseUint(s, 10, 64)

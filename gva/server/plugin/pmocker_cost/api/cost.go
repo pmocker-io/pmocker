@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/flipped-aurora/gin-vue-admin/server/model/common/response"
+	eavtypes "github.com/pmocker-io/pmocker/pkg/pmocker/eav"
 	"github.com/gin-gonic/gin"
 )
 
@@ -48,6 +49,38 @@ func (a *Api) EVM(c *gin.Context) {
 		return
 	}
 	response.OkWithData(res, c)
+}
+
+func (a *Api) UpdateItem(c *gin.Context) {
+	var e eavtypes.Entity
+	if err := c.ShouldBindJSON(&e); err != nil {
+		response.FailWithMessage("参数错误: "+err.Error(), c)
+		return
+	}
+	if err := ServiceGroupApp.UpdateItem(c.Request.Context(), e); err != nil {
+		response.FailWithMessage("更新失败: "+err.Error(), c)
+		return
+	}
+	response.OkWithMessage("更新成功", c)
+}
+
+func (a *Api) FindItem(c *gin.Context) {
+	id, _ := strconv.ParseUint(c.Query("id"), 10, 64)
+	e, err := ServiceGroupApp.GetItem(c.Request.Context(), uint(id))
+	if err != nil {
+		response.FailWithMessage("查询失败: "+err.Error(), c)
+		return
+	}
+	response.OkWithData(e, c)
+}
+
+func (a *Api) DeleteItem(c *gin.Context) {
+	id, _ := strconv.ParseUint(c.Query("id"), 10, 64)
+	if err := ServiceGroupApp.DeleteItem(c.Request.Context(), uint(id)); err != nil {
+		response.FailWithMessage("删除失败: "+err.Error(), c)
+		return
+	}
+	response.OkWithMessage("删除成功", c)
 }
 
 func (a *Api) Baseline(c *gin.Context) {

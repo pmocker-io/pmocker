@@ -3,6 +3,7 @@ package schedule
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/pmocker"
@@ -21,6 +22,31 @@ func (s *ScheduleService) CreateTask(ctx context.Context, projectID uint, title 
 
 func (s *ScheduleService) ListTasks(ctx context.Context, projectID uint, offset, limit int) ([]eavtypes.Entity, int64, error) {
 	return pmservice.ServiceGroupApp.ListEntities(ctx, projectID, "task", offset, limit)
+}
+
+// GetTask 获取任务
+func (s *ScheduleService) GetTask(ctx context.Context, id uint) (*eavtypes.Entity, error) {
+	e, err := pmservice.ServiceGroupApp.GetEntity(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if e.EntityType != "task" {
+		return nil, fmt.Errorf("entity %d is not a task", id)
+	}
+	return e, nil
+}
+
+// UpdateTask 更新任务
+func (s *ScheduleService) UpdateTask(ctx context.Context, e eavtypes.Entity) error {
+	if e.EntityType != "task" {
+		return fmt.Errorf("not a task")
+	}
+	return pmservice.ServiceGroupApp.UpdateEntity(ctx, e)
+}
+
+// DeleteTask 删除任务
+func (s *ScheduleService) DeleteTask(ctx context.Context, id uint) error {
+	return pmservice.ServiceGroupApp.DeleteEntity(ctx, id)
 }
 
 func (s *ScheduleService) CreateMilestone(ctx context.Context, projectID uint, title string, attrs map[string]interface{}, creatorID uint) (uint, error) {

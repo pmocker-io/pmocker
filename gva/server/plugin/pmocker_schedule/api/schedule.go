@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/flipped-aurora/gin-vue-admin/server/model/common/response"
+	eavtypes "github.com/pmocker-io/pmocker/pkg/pmocker/eav"
 	"github.com/gin-gonic/gin"
 )
 
@@ -39,6 +40,38 @@ func (a *Api) ListTasks(c *gin.Context) {
 		return
 	}
 	response.OkWithDetailed(gin.H{"list": list, "total": total}, "查询成功", c)
+}
+
+func (a *Api) UpdateTask(c *gin.Context) {
+	var e eavtypes.Entity
+	if err := c.ShouldBindJSON(&e); err != nil {
+		response.FailWithMessage("参数错误: "+err.Error(), c)
+		return
+	}
+	if err := service.UpdateTask(c.Request.Context(), e); err != nil {
+		response.FailWithMessage("更新失败: "+err.Error(), c)
+		return
+	}
+	response.OkWithMessage("更新成功", c)
+}
+
+func (a *Api) FindTask(c *gin.Context) {
+	id, _ := strconv.ParseUint(c.Query("id"), 10, 64)
+	e, err := service.GetTask(c.Request.Context(), uint(id))
+	if err != nil {
+		response.FailWithMessage("查询失败: "+err.Error(), c)
+		return
+	}
+	response.OkWithData(e, c)
+}
+
+func (a *Api) DeleteTask(c *gin.Context) {
+	id, _ := strconv.ParseUint(c.Query("id"), 10, 64)
+	if err := service.DeleteTask(c.Request.Context(), uint(id)); err != nil {
+		response.FailWithMessage("删除失败: "+err.Error(), c)
+		return
+	}
+	response.OkWithMessage("删除成功", c)
 }
 
 func (a *Api) CPM(c *gin.Context) {
