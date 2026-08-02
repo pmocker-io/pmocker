@@ -10,5 +10,7 @@ apis:
   - {path: /pmocker/deliverable/createVersion, description: 创建版本, api_group: 交付物管理, method: POST}
   - {path: /pmocker/deliverable/listVersions, description: 版本列表, api_group: 交付物管理, method: GET}
   - {path: /pmocker/deliverable/baseline, description: 基线化, api_group: 交付物管理, method: POST}
+  - {path: /pmocker/deliverable/checkOut, description: 检出交付物, api_group: 交付物管理, method: POST}
+  - {path: /pmocker/deliverable/checkIn, description: 检入交付物, api_group: 交付物管理, method: POST}
   - {path: /pmocker/deliverable/traceReport, description: 追溯报告, api_group: 交付物管理, method: GET}
   - {path: /pmocker/deliverable/stats, description: 交付物统计, api_group: 交付物管理, method: GET}

@@ -60,6 +60,18 @@ export const createDeliverableBaseline = (data) => {
   return service({ url: '/pmocker/deliverable/baseline', method: 'post', data })
 }
 
+// @Summary 检出交付物（排他锁定）
+// @Router /deliverable/checkOut [post]
+export const checkOutDeliverable = (data) => {
+  return service({ url: '/pmocker/deliverable/checkOut', method: 'post', data })
+}
+
+// @Summary 检入交付物（解锁并可选记录版本）
+// @Router /deliverable/checkIn [post]
+export const checkInDeliverable = (data) => {
+  return service({ url: '/pmocker/deliverable/checkIn', method: 'post', data })
+}
+
 // @Summary 获取版本列表
 // @Router /deliverable/listVersions [get]
 export const getDeliverableVersions = (params) => {

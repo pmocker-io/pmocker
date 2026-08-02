@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 
 	eavtypes "github.com/pmocker-io/pmocker/pkg/pmocker/eav"
 	pmservice "github.com/flipped-aurora/gin-vue-admin/server/service/pmocker"
@@ -44,6 +45,17 @@ const (
 	CategoryService  DeliverableCategory = "service"
 	CategoryTraining DeliverableCategory = "training"
 )
+
+// LockStatus 交付物检入检出锁定状态
+type LockStatus string
+
+const (
+	LockAvailable   LockStatus = "available"
+	LockCheckedOut LockStatus = "checked_out"
+)
+
+// SuperAdminAuthorityID 超级管理员角色ID（可强制检入他人锁定的交付物）
+const SuperAdminAuthorityID uint = 888
 
 type DeliverableStats struct {
 	ByStatus   map[string]int            `json:"byStatus"`
@@ -105,11 +117,106 @@ func (s *Service) ListDeliverables(ctx context.Context, projectID uint, offset, 
 	return pmservice.ServiceGroupApp.ListEntities(ctx, projectID, "deliverable", offset, limit)
 }
 
-func (s *Service) UpdateDeliverable(ctx context.Context, e eavtypes.Entity) error {
+func (s *Service) UpdateDeliverable(ctx context.Context, e eavtypes.Entity, userID uint) error {
 	if e.EntityType != "deliverable" {
 		return fmt.Errorf("not a deliverable")
 	}
+	// 锁定校验：若已被检出且检出人非当前用户，拒绝更新
+	if userID > 0 {
+		current, err := s.GetDeliverable(ctx, e.ID)
+		if err != nil {
+			return err
+		}
+		if status := s.lockStatusOf(current); status == LockCheckedOut {
+			lockedBy := toUint(current.Attrs["checked_out_by"])
+			if lockedBy != userID {
+				return fmt.Errorf("交付物已被用户 %d 检出，无法编辑", lockedBy)
+			}
+		}
+	}
 	return pmservice.ServiceGroupApp.UpdateEntity(ctx, e)
+}
+
+// CheckOut 检出交付物：锁定后仅当前用户可编辑，他人不可检出也不可更新
+func (s *Service) CheckOut(ctx context.Context, deliverableID, userID uint) error {
+	e, err := s.GetDeliverable(ctx, deliverableID)
+	if err != nil {
+		return err
+	}
+	if status := s.lockStatusOf(e); status == LockCheckedOut {
+		lockedBy := toUint(e.Attrs["checked_out_by"])
+		if lockedBy != userID {
+			return fmt.Errorf("交付物已被用户 %d 检出，无法编辑", lockedBy)
+		}
+		// 已被自己检出，幂等返回
+		return nil
+	}
+	if e.Attrs == nil {
+		e.Attrs = map[string]interface{}{}
+	}
+	e.Attrs["lock_status"] = string(LockCheckedOut)
+	e.Attrs["checked_out_by"] = userID
+	e.Attrs["checked_out_at"] = time.Now()
+	return pmservice.ServiceGroupApp.UpdateEntity(ctx, *e)
+}
+
+// CheckIn 检入交付物：校验检出人（管理员可强制检入），清除锁定；versionNote 非空则创建新版本
+func (s *Service) CheckIn(ctx context.Context, deliverableID, userID uint, versionNote, fileRef string, authorityID uint) error {
+	e, err := s.GetDeliverable(ctx, deliverableID)
+	if err != nil {
+		return err
+	}
+	if status := s.lockStatusOf(e); status != LockCheckedOut {
+		return fmt.Errorf("交付物未被检出，无需检入")
+	}
+	lockedBy := toUint(e.Attrs["checked_out_by"])
+	isAdmin := authorityID == SuperAdminAuthorityID
+	if lockedBy != userID && !isAdmin {
+		return fmt.Errorf("仅检出人或管理员可检入，当前用户无权限")
+	}
+	// 清除锁定
+	e.Attrs["lock_status"] = string(LockAvailable)
+	e.Attrs["checked_out_by"] = nil
+	e.Attrs["checked_out_at"] = nil
+	if err := pmservice.ServiceGroupApp.UpdateEntity(ctx, *e); err != nil {
+		return err
+	}
+	// 版本说明非空则创建新版本记录
+	if strings.TrimSpace(versionNote) != "" {
+		nextVer := s.nextVersion(e)
+		if _, err := s.CreateVersion(ctx, deliverableID, nextVer, versionNote, userID, fileRef); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// lockStatusOf 读取交付物锁定状态，缺省视为 available
+func (s *Service) lockStatusOf(e *eavtypes.Entity) LockStatus {
+	if e == nil || e.Attrs == nil {
+		return LockAvailable
+	}
+	if v, ok := e.Attrs["lock_status"].(string); ok && v == string(LockCheckedOut) {
+		return LockCheckedOut
+	}
+	return LockAvailable
+}
+
+// nextVersion 推导下一版本号：在当前版本末位自增
+func (s *Service) nextVersion(e *eavtypes.Entity) string {
+	cur := ""
+	if e != nil && e.Attrs != nil {
+		cur = toString(e.Attrs["version"])
+	}
+	cur = strings.TrimSpace(cur)
+	if cur == "" {
+		return "1.0"
+	}
+	parts := strings.Split(cur, ".")
+	n := 0
+	fmt.Sscanf(parts[len(parts)-1], "%d", &n)
+	parts[len(parts)-1] = fmt.Sprintf("%d", n+1)
+	return strings.Join(parts, ".")
 }
 
 func (s *Service) DeleteDeliverable(ctx context.Context, id uint) error {

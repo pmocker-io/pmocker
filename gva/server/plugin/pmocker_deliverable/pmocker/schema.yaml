@@ -26,6 +26,10 @@ entity_types:
       - {field_key: defect_count, field_label: 缺陷数, data_type: int, default_value: "0"}
       # --- 保密级别 ---
       - {field_key: security_classification, field_label: 保密级别, data_type: enum, options_json: '["public","internal","confidential","secret"]'}
+      # --- 检入检出排他编辑（Check-in/Out） ---
+      - {field_key: lock_status, field_label: 锁定状态, data_type: enum, options_json: '["available","checked_out"]', default_value: "available"}
+      - {field_key: checked_out_by, field_label: 检出人, data_type: ref}
+      - {field_key: checked_out_at, field_label: 检出时间, data_type: datetime}
     states: [draft, submitted, reviewing, accepted, rejected, baselined, obsolete]
     workflows: [deliverable_accept]
   - entity_type: deliverable_version

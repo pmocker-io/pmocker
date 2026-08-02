@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/flipped-aurora/gin-vue-admin/server/model/common/response"
+	"github.com/flipped-aurora/gin-vue-admin/server/utils"
 	eavtypes "github.com/pmocker-io/pmocker/pkg/pmocker/eav"
 	"github.com/gin-gonic/gin"
 )
@@ -48,11 +49,53 @@ func (a *Api) Update(c *gin.Context) {
 		response.FailWithMessage("参数错误: "+err.Error(), c)
 		return
 	}
-	if err := ServiceGroupApp.UpdateDeliverable(c.Request.Context(), e); err != nil {
+	if err := ServiceGroupApp.UpdateDeliverable(c.Request.Context(), e, utils.GetUserID(c)); err != nil {
 		response.FailWithMessage("更新失败: "+err.Error(), c)
 		return
 	}
 	response.OkWithMessage("更新成功", c)
+}
+
+// CheckOut 检出交付物（排他锁定）
+func (a *Api) CheckOut(c *gin.Context) {
+	var req struct {
+		ID uint `json:"id"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.FailWithMessage("参数错误: "+err.Error(), c)
+		return
+	}
+	if req.ID == 0 {
+		response.FailWithMessage("参数错误: id 必填", c)
+		return
+	}
+	if err := ServiceGroupApp.CheckOut(c.Request.Context(), req.ID, utils.GetUserID(c)); err != nil {
+		response.FailWithMessage("检出失败: "+err.Error(), c)
+		return
+	}
+	response.OkWithMessage("检出成功", c)
+}
+
+// CheckIn 检入交付物（解锁并可选记录版本）
+func (a *Api) CheckIn(c *gin.Context) {
+	var req struct {
+		ID          uint   `json:"id"`
+		VersionNote string `json:"versionNote"`
+		FileRef     string `json:"fileRef"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.FailWithMessage("参数错误: "+err.Error(), c)
+		return
+	}
+	if req.ID == 0 {
+		response.FailWithMessage("参数错误: id 必填", c)
+		return
+	}
+	if err := ServiceGroupApp.CheckIn(c.Request.Context(), req.ID, utils.GetUserID(c), req.VersionNote, req.FileRef, utils.GetUserAuthorityId(c)); err != nil {
+		response.FailWithMessage("检入失败: "+err.Error(), c)
+		return
+	}
+	response.OkWithMessage("检入成功", c)
 }
 
 func (a *Api) Find(c *gin.Context) {

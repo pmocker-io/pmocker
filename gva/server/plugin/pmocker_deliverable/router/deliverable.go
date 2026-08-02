@@ -18,6 +18,8 @@ func (r *Deliverable) Init(public, private *gin.RouterGroup) {
 		g.POST("reject", ApiGroupApp.Reject)
 		g.POST("createVersion", ApiGroupApp.CreateVersion)
 		g.POST("baseline", ApiGroupApp.Baseline)
+		g.POST("checkOut", ApiGroupApp.CheckOut)
+		g.POST("checkIn", ApiGroupApp.CheckIn)
 	}
 	{
 		g := private.Group("deliverable")
