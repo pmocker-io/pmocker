@@ -8,6 +8,7 @@ type ServiceGroup struct {
 	RelationService
 	TaskLinkService
 	ChangeLogService
+	TimeEntryService
 }
 
 // ServiceGroupApp 全局 service 入口

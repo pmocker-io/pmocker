@@ -6,6 +6,7 @@ import "github.com/flipped-aurora/gin-vue-admin/server/service/pmocker"
 type ApiGroup struct {
 	EAVApi
 	RelationApi
+	TimeEntryApi
 }
 
 // ApiGroupApp 全局 API 入口

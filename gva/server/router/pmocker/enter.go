@@ -6,6 +6,7 @@ import api "github.com/flipped-aurora/gin-vue-admin/server/api/v1/pmocker"
 type RouterGroup struct {
 	EAVRouter
 	RelationRouter
+	TimeEntryRouter
 }
 
 // RouterGroupApp 全局路由入口
