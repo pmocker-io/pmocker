@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sync"
 
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/pmocker"
@@ -11,7 +12,20 @@ import (
 )
 
 // WorkflowService 实现 workflow.Engine 接口
-type WorkflowService struct{}
+type WorkflowService struct {
+	mu       sync.RWMutex
+	handlers map[string]workflow.AutoHandler
+}
+
+// RegisterAutoHandler 注册 NodeAuto 节点处理器（幂等覆盖）。
+func (s *WorkflowService) RegisterAutoHandler(name string, h workflow.AutoHandler) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.handlers == nil {
+		s.handlers = make(map[string]workflow.AutoHandler)
+	}
+	s.handlers[name] = h
+}
 
 // LoadDefinition 加载工作流定义到 DB
 func (s *WorkflowService) LoadDefinition(ctx context.Context, def workflow.Definition) error {
@@ -55,10 +69,15 @@ func (s *WorkflowService) Start(ctx context.Context, entityID uint, defCode stri
 	if err := global.GVA_DB.WithContext(ctx).Create(&inst).Error; err != nil {
 		return 0, err
 	}
-	return inst.ID, nil
+	instID := inst.ID
+	// 若 start 之后立即进入 auto 节点（通过 action 空转移），尝试自动链式推进
+	if startNode.Type == workflow.NodeStart {
+		_ = s.tryAdvanceAuto(ctx, instID, &wf, 0)
+	}
+	return instID, nil
 }
 
-// Execute 执行转移
+// Execute 执行转移；若目标节点为 NodeAuto，则自动调度 Handler 并继续链式推进直到非 auto 节点。
 func (s *WorkflowService) Execute(ctx context.Context, instanceID uint, action string, userID uint) error {
 	var inst pmocker.PMWorkflowInstance
 	if err := global.GVA_DB.WithContext(ctx).First(&inst, instanceID).Error; err != nil {
@@ -75,23 +94,108 @@ func (s *WorkflowService) Execute(ctx context.Context, instanceID uint, action s
 	if err := json.Unmarshal([]byte(def.DefinitionJSON), &wf); err != nil {
 		return err
 	}
-	for _, t := range wf.Transitions {
+	// 1) 定位转移
+	var target *workflow.Transition
+	for i := range wf.Transitions {
+		t := &wf.Transitions[i]
 		if t.From == inst.CurrentNode && (t.On == "" || t.On == action) {
-			update := map[string]interface{}{"current_node": t.To}
-			if t.Status != "" {
-				update["status"] = t.Status
-			}
-			for _, n := range wf.Nodes {
-				if n.Code == t.To && n.Type == workflow.NodeEnd {
-					update["status"] = "completed"
-					break
-				}
-			}
-			return global.GVA_DB.WithContext(ctx).Model(&pmocker.PMWorkflowInstance{}).
-				Where("id = ?", instanceID).Updates(update).Error
+			target = t
+			break
 		}
 	}
-	return fmt.Errorf("no transition from %s on action %s", inst.CurrentNode, action)
+	if target == nil {
+		return fmt.Errorf("no transition from %s on action %s", inst.CurrentNode, action)
+	}
+	// 2) 应用状态转移
+	update := map[string]interface{}{"current_node": target.To}
+	if target.Status != "" {
+		update["status"] = target.Status
+	}
+	targetNode := findNode(&wf, target.To)
+	if targetNode != nil && targetNode.Type == workflow.NodeEnd {
+		update["status"] = "completed"
+	}
+	if err := global.GVA_DB.WithContext(ctx).Model(&pmocker.PMWorkflowInstance{}).
+		Where("id = ?", instanceID).Updates(update).Error; err != nil {
+		return err
+	}
+	// 3) 若目标节点是 auto，调度 handler 并继续链式推进
+	if targetNode != nil && targetNode.Type == workflow.NodeAuto {
+		return s.tryAdvanceAuto(ctx, instanceID, &wf, 0)
+	}
+	return nil
+}
+
+// tryAdvanceAuto 从当前实例节点出发：若当前节点为 NodeAuto 则执行 handler → 走首个 on=="" 或默认 on 转移 → 循环直到非 auto 节点。
+// depth 用于防止循环配置导致的死循环（上限 16）。
+func (s *WorkflowService) tryAdvanceAuto(ctx context.Context, instanceID uint, wf *workflow.Definition, depth int) error {
+	if depth > 16 {
+		return fmt.Errorf("auto node chain exceeded max depth 16 for instance %d", instanceID)
+	}
+	var inst pmocker.PMWorkflowInstance
+	if err := global.GVA_DB.WithContext(ctx).First(&inst, instanceID).Error; err != nil {
+		return err
+	}
+	if inst.Status != "running" {
+		return nil
+	}
+	node := findNode(wf, inst.CurrentNode)
+	if node == nil || node.Type != workflow.NodeAuto {
+		return nil
+	}
+	// A) 调度 handler（若配置）
+	if node.Handler != "" {
+		s.mu.RLock()
+		h, ok := s.handlers[node.Handler]
+		s.mu.RUnlock()
+		if !ok {
+			return fmt.Errorf("auto handler %q not registered (node=%s instance=%d)", node.Handler, node.Code, instanceID)
+		}
+		if err := h(ctx, inst.EntityID); err != nil {
+			return fmt.Errorf("auto handler %q failed: %w", node.Handler, err)
+		}
+	}
+	// B) 寻找出边：优先 on=="" 空转移；否则取该节点的第一条出边
+	var autoTrans *workflow.Transition
+	var firstTrans *workflow.Transition
+	for i := range wf.Transitions {
+		t := &wf.Transitions[i]
+		if t.From != node.Code {
+			continue
+		}
+		if firstTrans == nil {
+			firstTrans = t
+		}
+		if t.On == "" {
+			autoTrans = t
+			break
+		}
+	}
+	if autoTrans == nil {
+		// 空转移不存在时，使用第一条出边的 On 作为隐式 action（例如 "done" / "start_work"）
+		autoTrans = firstTrans
+	}
+	if autoTrans == nil {
+		return fmt.Errorf("no outgoing transition from auto node %s (instance=%d)", node.Code, instanceID)
+	}
+	// C) 应用下一次转移
+	update := map[string]interface{}{"current_node": autoTrans.To}
+	if autoTrans.Status != "" {
+		update["status"] = autoTrans.Status
+	}
+	next := findNode(wf, autoTrans.To)
+	if next != nil && next.Type == workflow.NodeEnd {
+		update["status"] = "completed"
+	}
+	if err := global.GVA_DB.WithContext(ctx).Model(&pmocker.PMWorkflowInstance{}).
+		Where("id = ?", instanceID).Updates(update).Error; err != nil {
+		return err
+	}
+	// D) 若下一个节点仍是 auto，递归推进
+	if next != nil && next.Type == workflow.NodeAuto {
+		return s.tryAdvanceAuto(ctx, instanceID, wf, depth+1)
+	}
+	return nil
 }
 
 // GetCurrentNode 获取当前节点
@@ -114,6 +218,15 @@ func (s *WorkflowService) GetCurrentNode(ctx context.Context, instanceID uint) (
 		}
 	}
 	return nil, fmt.Errorf("node %s not found", inst.CurrentNode)
+}
+
+func findNode(wf *workflow.Definition, code string) *workflow.Node {
+	for i := range wf.Nodes {
+		if wf.Nodes[i].Code == code {
+			return &wf.Nodes[i]
+		}
+	}
+	return nil
 }
 
 var _ workflow.Engine = (*WorkflowService)(nil)
