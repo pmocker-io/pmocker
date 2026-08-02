@@ -10,6 +10,8 @@ import (
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/plugin-tool/utils"
 	interfaces "github.com/flipped-aurora/gin-vue-admin/server/utils/plugin/v2"
 	pmockerplugin "github.com/pmocker-io/pmocker/pkg/pmocker/plugin"
+	"github.com/pmocker-io/pmocker/pkg/pmocker/plugin/loader"
+	pmsvc "github.com/flipped-aurora/gin-vue-admin/server/service/pmocker"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
@@ -17,7 +19,11 @@ import (
 //go:embed pmocker/api.yaml
 var apiBytes []byte
 
+//go:embed pmocker/menu.yaml
+var menuBytes []byte
+
 var _ interfaces.Plugin = (*plugin)(nil)
+var _ pmockerplugin.PMockerPlugin = (*plugin)(nil)
 var Plugin = new(plugin)
 
 type plugin struct{}
@@ -45,6 +51,19 @@ func (p *plugin) Register(group *gin.Engine) {
 	initialize.Router(group)
 }
 
+// InitPMocker 灌入 core 菜单（仪表盘/工作台/任务中心/PMO/基线/偏差）
+func (p *plugin) InitPMocker(ctx context.Context) error {
+	l := loader.NewFromGva(
+		&pmsvc.ServiceGroupApp.EAVService,
+		&pmsvc.ServiceGroupApp.WorkflowService,
+		utils.RegisterMenus, utils.RegisterApis, utils.RegisterDictionaries,
+	)
+	if err := l.LoadMenu(menuBytes); err != nil {
+		return err
+	}
+	return nil
+}
+
 // registerTables 注册 PMocker 的所有数据库表。
 func registerTables() {
 	if global.GVA_DB == nil {
@@ -66,6 +85,10 @@ func registerTables() {
 		pmocker.PMDeliverableFile{},
 		pmocker.PMWorkflowDef{},
 		pmocker.PMWorkflowInstance{},
+		pmocker.PMTimeEntry{},
+		pmocker.PMCostActual{},
+		pmocker.PMApprovalRecord{},
+		pmocker.PMReportSnapshot{},
 	}
 	global.GVA_DB.AutoMigrate(tables...)
 }

@@ -1,0 +1,58 @@
+menus:
+  # ===== 项目仪表盘 =====
+  - path: /pmocker/dashboard
+    name: pmockerDashboard
+    component: view/pmocker/dashboard/index.vue
+    sort: 5
+    title: 项目仪表盘
+    icon: odometer
+  # ===== 项目工作台 =====
+  - path: /pmocker/workbench
+    name: pmockerWorkbench
+    component: view/pmocker/workbench/index.vue
+    sort: 6
+    title: 项目工作台
+    icon: files
+  # ===== 个人任务中心 =====
+  - path: /pmocker/taskcenter
+    name: pmockerTaskCenter
+    component: view/pmocker/taskcenter/index.vue
+    sort: 7
+    title: 个人任务中心
+    icon: list-task
+  # ===== PMO看板 =====
+  - path: /pmocker/pmo
+    name: pmockerPMO
+    component: view/routerHolder.vue
+    sort: 95
+    title: PMO管理
+    icon: data-analysis
+  - path: board
+    name: pmockerPMOBoard
+    parent_name: pmockerPMO
+    component: view/pmocker/pmo/board.vue
+    sort: 1
+    title: PMO看板
+    icon: monitor
+  - path: close
+    name: pmockerProjectClose
+    parent_name: pmockerPMO
+    component: view/pmocker/project/close.vue
+    sort: 2
+    title: 结项归档
+    icon: folder-checked
+  # ===== 成本管理子页：基线+偏差 =====
+  - path: baseline
+    name: pmockerCostBaseline
+    parent_name: pmockerCost
+    component: view/pmocker/cost/baseline.vue
+    sort: 4
+    title: 基线管理
+    icon: copy-document
+  - path: variance
+    name: pmockerCostVariance
+    parent_name: pmockerCost
+    component: view/pmocker/cost/variance.vue
+    sort: 5
+    title: 偏差分析
+    icon: warning
