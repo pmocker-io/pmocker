@@ -32,5 +32,8 @@ func SeedOrgData() error {
 	if global.GVA_DB == nil {
 		return nil
 	}
-	return seed.SeedOrgStructure(context.Background())
+	if err := seed.SeedOrgStructure(context.Background()); err != nil {
+		return err
+	}
+	return seed.LoadBusinessSeed(context.Background())
 }
