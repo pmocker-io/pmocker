@@ -49,7 +49,7 @@
 <script setup>
 import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { listBaselines, createBaseline, compareBaseline } from '@/api/pmocker/baseline'
+import { listBaselines, createBaseline as createBaselineApi, compareBaseline } from '@/api/pmocker/baseline'
 const projectId = ref('')
 const baselineType = ref('')
 const baselines = ref([])
@@ -63,7 +63,7 @@ const loadList = async () => {
 }
 const createBaseline = async () => {
   if (!projectId.value || !baselineType.value) return ElMessage.warning('请输入项目ID并选择类型')
-  const res = await createBaseline({ projectId: Number(projectId.value), type: baselineType.value })
+  const res = await createBaselineApi({ projectId: Number(projectId.value), type: baselineType.value })
   if (res.code === 0) { ElMessage.success('基线已生成'); loadList() }
 }
 const selectBaseline = (row) => { compare(row) }
