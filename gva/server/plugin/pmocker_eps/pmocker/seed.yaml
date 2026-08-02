@@ -14,6 +14,38 @@ dictionaries:
       - {label: 经理, value: manager}
       - {label: 成员, value: member}
       - {label: 查看者, value: viewer}
+  - type: pm_governance_type
+    name: 治理类型
+    details:
+      - {label: 项目组合, value: portfolio}
+      - {label: 项目集, value: program}
+      - {label: 单项目, value: project}
+  - type: pm_lifecycle_phase
+    name: 生命周期阶段
+    details:
+      - {label: 启动, value: initiating}
+      - {label: 规划, value: planning}
+      - {label: 执行, value: executing}
+      - {label: 监控, value: monitoring}
+      - {label: 收尾, value: closing}
+  - type: pm_health_status
+    name: 项目健康度RAG
+    details:
+      - {label: 红, value: red}
+      - {label: 黄, value: amber}
+      - {label: 绿, value: green}
+  - type: pm_methodology
+    name: 方法论
+    details:
+      - {label: 敏捷, value: agile}
+      - {label: 瀑布, value: waterfall}
+      - {label: 混合, value: hybrid}
+  - type: pm_priority
+    name: 优先级
+    details:
+      - {label: 高, value: high}
+      - {label: 中, value: medium}
+      - {label: 低, value: low}
 
 entities:
   eps:

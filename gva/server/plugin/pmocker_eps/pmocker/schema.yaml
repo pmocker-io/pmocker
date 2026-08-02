@@ -13,6 +13,22 @@ entity_types:
       - {field_key: manager_id, field_label: 负责人, data_type: ref}
       - {field_key: description, field_label: 描述, data_type: text}
       - {field_key: is_active, field_label: 是否启用, data_type: bool, default_value: true}
+      # --- 治理类型 ---
+      - {field_key: governance_type, field_label: 治理类型, data_type: enum, options_json: '["portfolio","program","project"]'}
+      # --- 生命周期阶段 + 阶段门 ---
+      - {field_key: lifecycle_phase, field_label: 生命周期阶段, data_type: enum, options_json: '["initiating","planning","executing","monitoring","closing"]'}
+      - {field_key: phase_gate, field_label: 阶段-门定义, data_type: json}
+      # --- 优先级 + 时间 + 预算 ---
+      - {field_key: priority, field_label: 优先级, data_type: enum, options_json: '["high","medium","low"]'}
+      - {field_key: start_date, field_label: 开始日期, data_type: date}
+      - {field_key: end_date, field_label: 结束日期, data_type: date}
+      - {field_key: budget, field_label: 预算, data_type: decimal}
+      # --- 项目健康度 + 方法论 ---
+      - {field_key: health_status, field_label: 健康度, data_type: enum, options_json: '["red","amber","green"]'}
+      - {field_key: methodology, field_label: 方法论, data_type: enum, options_json: '["agile","waterfall","hybrid"]'}
+      # --- 发起人 + EPS层级 ---
+      - {field_key: sponsor_id, field_label: 发起人, data_type: ref}
+      - {field_key: level, field_label: EPS层级, data_type: int}
     states: [draft, active, inactive]
     workflows: [eps_node_approve]
 
@@ -27,4 +43,6 @@ entity_types:
       - {field_key: role, field_label: 角色, data_type: enum, options_json: '["owner","manager","member","viewer"]'}
       - {field_key: start_date, field_label: 开始日期, data_type: date}
       - {field_key: end_date, field_label: 结束日期, data_type: date}
+      # --- 投入度（多项目分摊）---
+      - {field_key: allocation_percent, field_label: 投入度%, data_type: decimal}
     states: [active, inactive]

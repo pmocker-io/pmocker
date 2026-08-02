@@ -4,9 +4,12 @@ entity_type: eps_node
 trigger: on_create
 nodes:
   - {code: start, type: start}
-  - {code: review, type: approval, approvers: "ceo,cfo", sla_hours: 72, quorum: 1}
+  - {code: pmo_review, type: approval, approvers: "pmo", sla_hours: 72, quorum: 1}
+  - {code: monitoring, type: approval, approvers: "pmo", sla_hours: 720, quorum: 1}
   - {code: end, type: end}
 transitions:
-  - {from: start, to: review, on: submit}
-  - {from: review, to: end, on: approve, status: active}
-  - {from: review, to: end, on: reject, status: draft}
+  - {from: start, to: pmo_review, on: submit, status: draft}
+  - {from: pmo_review, to: monitoring, on: approve, status: active}
+  - {from: pmo_review, to: end, on: reject, status: draft}
+  - {from: monitoring, to: end, on: deactivate, status: inactive}
+  - {from: monitoring, to: monitoring, on: refresh, status: active}
