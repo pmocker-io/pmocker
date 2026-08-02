@@ -14,3 +14,24 @@ dictionaries:
       - {label: 转移, value: transfer}
       - {label: 接受, value: accept}
       - {label: 上报, value: escalate}
+  - type: pm_opportunity_strategy
+    name: 机会应对策略
+    details:
+      - {label: 开拓, value: exploit}
+      - {label: 分享, value: share}
+      - {label: 提高, value: enhance}
+      - {label: 接受, value: accept}
+      - {label: 上报, value: escalate}
+  - type: pm_analysis_type
+    name: 分析类型
+    details:
+      - {label: 定性分析, value: qualitative}
+      - {label: 定量分析, value: quantitative}
+  - type: pm_risk_pi_matrix
+    name: 概率影响矩阵5x5
+    details:
+      - {label: 可忽略, value: negligible}
+      - {label: 低, value: low}
+      - {label: 中, value: medium}
+      - {label: 高, value: high}
+      - {label: 极高, value: extreme}

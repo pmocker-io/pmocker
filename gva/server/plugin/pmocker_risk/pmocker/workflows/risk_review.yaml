@@ -4,9 +4,15 @@ entity_type: risk
 trigger: on_identify
 nodes:
   - {code: start, type: start}
+  - {code: score_calc, type: auto, handler: pmocker.risk.score}
   - {code: rm_review, type: approval, approvers: "rm,pm", sla_hours: 24, quorum: 1}
+  - {code: response_exec, type: task}
   - {code: end, type: end}
 transitions:
-  - {from: start, to: rm_review, on: submit}
-  - {from: rm_review, to: end, on: approve, status: assessed}
+  - {from: start, to: score_calc, on: submit, status: identified}
+  - {from: score_calc, to: rm_review, on: done, status: assessed}
+  - {from: rm_review, to: response_exec, on: approve, status: responding}
   - {from: rm_review, to: end, on: reject, status: identified}
+  - {from: response_exec, to: end, on: close, status: closed}
+  - {from: response_exec, to: end, on: realize, status: realized}
+  - {from: response_exec, to: rm_review, on: reassess, status: assessed}

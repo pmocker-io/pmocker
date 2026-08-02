@@ -11,11 +11,26 @@ fields:
   - {field_key: impact, field_label: 影响程度(1-5), data_type: int}
   - {field_key: risk_score, field_label: 风险分值, data_type: int}
   - {field_key: risk_level, field_label: 风险等级, data_type: enum, options_json: '["low","medium","high","critical"]'}
-  - {field_key: response_strategy, field_label: 应对策略, data_type: enum, options_json: '["avoid","mitigate","transfer","accept","escalate"]'}
+  - {field_key: response_strategy, field_label: 负面风险应对策略, data_type: enum, options_json: '["avoid","mitigate","transfer","accept","escalate"]'}
   - {field_key: response_plan, field_label: 应对计划, data_type: text}
   - {field_key: trigger_condition, field_label: 触发条件, data_type: text}
   - {field_key: owner_id, field_label: 责任人, data_type: ref}
   - {field_key: due_date, field_label: 应对截止日, data_type: date}
   - {field_key: status, field_label: 状态, data_type: enum, options_json: '["identified","assessed","responding","closed","realized"]'}
+  # --- 正面风险（机会）策略 ---
+  - {field_key: opportunity_strategy, field_label: 机会应对策略, data_type: enum, options_json: '["exploit","share","enhance","accept","escalate"]'}
+  # --- 定量分析：EMV + 影响金额 + 储备 ---
+  - {field_key: expected_monetary_value, field_label: EMV预期货币值, data_type: decimal}
+  - {field_key: impact_amount, field_label: 影响金额, data_type: decimal}
+  - {field_key: contingency_reserve, field_label: 应急储备, data_type: decimal}
+  # --- 次生/残余风险 ---
+  - {field_key: secondary_risk_id, field_label: 次生风险, data_type: ref}
+  - {field_key: residual_risk, field_label: 残余风险描述, data_type: text}
+  # --- 时间节点 ---
+  - {field_key: identified_date, field_label: 识别日期, data_type: date}
+  - {field_key: reassessment_date, field_label: 再评估日期, data_type: date}
+  # --- 分析类型 + 应对成本 ---
+  - {field_key: analysis_type, field_label: 分析类型, data_type: enum, options_json: '["qualitative","quantitative"]'}
+  - {field_key: response_cost, field_label: 应对成本, data_type: decimal}
 states: [identified, assessed, responding, closed, realized]
 workflows: [risk_review]
