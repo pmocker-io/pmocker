@@ -133,6 +133,7 @@ const handleSave = async () => {
     if (editingId.value) {
       await updateMember({ id: editingId.value, title: form.title, status: form.status, entity_type: 'team_member', attrs: form.attrs })
     } else {
+      // status 由后端 service 默认值处理（member→candidate）
       await createMember({ title: form.title, attrs: form.attrs })
     }
     ElMessage.success('保存成功')

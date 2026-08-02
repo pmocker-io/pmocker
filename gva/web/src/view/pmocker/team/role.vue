@@ -82,7 +82,7 @@ const formRef = ref(null)
 const saving = ref(false)
 const editingId = ref(null)
 
-const form = reactive({ title: '', status: '', attrs: {} })
+const form = reactive({ title: '', status: 'active', attrs: {} })
 
 const getTableData = async () => {
   const res = await listRole({ page: page.value, pageSize: pageSize.value })
@@ -100,14 +100,14 @@ const openDialog = (row) => {
   } else {
     editingId.value = null
     dialogTitle.value = '新增角色'
-    Object.assign(form, { title: '', status: '', attrs: {} })
+    Object.assign(form, { title: '', status: 'active', attrs: {} })
   }
   dialogVisible.value = true
 }
 
 const resetForm = () => {
   formRef.value?.resetFields()
-  Object.assign(form, { title: '', status: '', attrs: {} })
+  Object.assign(form, { title: '', status: 'active', attrs: {} })
 }
 
 const handleSave = async () => {
@@ -116,6 +116,7 @@ const handleSave = async () => {
     if (editingId.value) {
       await updateRole({ id: editingId.value, title: form.title, status: form.status, entity_type: 'team_role', attrs: form.attrs })
     } else {
+      // status 由后端 service 默认值处理（role→active）
       await createRole({ title: form.title, attrs: form.attrs })
     }
     ElMessage.success('保存成功')
