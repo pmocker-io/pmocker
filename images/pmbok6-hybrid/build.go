@@ -1,8 +1,10 @@
 // build.go 构建默认的 PMBOK6-Hybrid 镜像。
-// 从 gva/server/plugin/pmocker_*/pmocker/ 目录收集元数据，
+// 自动扫描 gva/server/plugin/pmocker_* 目录收集元数据，
 // 组装成 .pmi 镜像文件（manifest.json + config.json + 3 层 tar）。
 //
 // 运行方式：在 images/pmbok6-hybrid 目录下执行 `go run .`
+//
+// 新增 PMocker 插件无需修改本文件——会自动发现 pmocker_* 目录（pmocker_core 除外）。
 package main
 
 import (
@@ -10,20 +12,24 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
+	"strings"
 
 	"github.com/pmocker-io/pmocker/pkg/pmocker/oci"
 )
 
+// pmockerCore 是核心插件（不参与 schema 聚合，无业务实体）
+const pmockerCore = "pmocker_core"
+
 func main() {
-	pluginDirs := []string{
-		"requirement", "scope", "schedule", "cost", "risk",
-		"issue", "eps", "deliverable", "change", "team",
-	}
+	gvaPluginBase := filepath.Join("..", "..", "gva", "server", "plugin")
+
+	// 自动发现所有 pmocker_* 业务插件目录（排除 pmocker_core）
+	pluginDirs := discoverPlugins(gvaPluginBase)
 
 	schemaFiles := make(map[string][]byte)
 	pluginFiles := make(map[string][]byte)
 
-	gvaPluginBase := filepath.Join("..", "..", "gva", "server", "plugin")
 	for _, mod := range pluginDirs {
 		pmockerDir := filepath.Join(gvaPluginBase, "pmocker_"+mod, "pmocker")
 
@@ -89,4 +95,43 @@ func main() {
 	fmt.Printf("已生成镜像: %s\n", outPath)
 	fmt.Printf("  - schema 文件数: %d\n", len(schemaFiles))
 	fmt.Printf("  - plugin 文件数: %d\n", len(pluginFiles))
+	fmt.Printf("  - 发现插件: %v\n", pluginDirs)
+}
+
+// discoverPlugins 扫描 gva/server/plugin/ 目录，自动发现所有 pmocker_* 业务插件。
+// 排除 pmocker_core（核心包，无业务实体，不参与 schema 聚合）。
+// 要求每个业务插件目录下存在 pmocker/schema.yaml（确保是完整插件而非空目录）。
+func discoverPlugins(gvaPluginBase string) []string {
+	entries, err := os.ReadDir(gvaPluginBase)
+	if err != nil {
+		log.Fatalf("扫描插件目录失败 %s: %v", gvaPluginBase, err)
+	}
+
+	var mods []string
+	for _, e := range entries {
+		if !e.IsDir() {
+			continue
+		}
+		name := e.Name()
+		if !strings.HasPrefix(name, "pmocker_") {
+			continue
+		}
+		if name == pmockerCore {
+			continue
+		}
+		// 验证是完整插件：pmocker 子目录 + schema.yaml 存在
+		mod := strings.TrimPrefix(name, "pmocker_")
+		schemaPath := filepath.Join(gvaPluginBase, name, "pmocker", "schema.yaml")
+		if _, err := os.Stat(schemaPath); err != nil {
+			fmt.Fprintf(os.Stderr, "warn: 跳过 %s（缺少 pmocker/schema.yaml）: %v\n", name, err)
+			continue
+		}
+		mods = append(mods, mod)
+	}
+
+	sort.Strings(mods)
+	if len(mods) == 0 {
+		log.Fatal("未发现任何 pmocker_* 业务插件")
+	}
+	return mods
 }
