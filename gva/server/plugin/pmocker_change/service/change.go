@@ -2,8 +2,10 @@ package change
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -38,6 +40,15 @@ type CCBStatsResult struct {
 	Matrix   map[string]map[string]int `json:"matrix"`
 	Total    int                       `json:"total"`
 	Pending  int                       `json:"pending"`
+}
+
+// FieldDiff 变更前后字段级差异
+type FieldDiff struct {
+	FieldKey   string `json:"fieldKey"`
+	FieldLabel string `json:"fieldLabel"`
+	OldValue   string `json:"oldValue"`
+	NewValue   string `json:"newValue"`
+	Changed    bool   `json:"changed"`
 }
 
 func (s *Service) CreateChangeRequest(ctx context.Context, projectID uint, title string, attrs map[string]interface{}, creatorID uint) (uint, error) {
@@ -196,6 +207,10 @@ func (s *Service) SubmitToCCB(ctx context.Context, id, userID uint) (uint, error
 	if err != nil {
 		return 0, err
 	}
+	// 提交评审时冻结基线快照，作为变更前后 diff 的对比基准
+	if err := s.snapshotBaseline(cr); err != nil {
+		return 0, err
+	}
 	cr.Status = "submitted"
 	if err := pmservice.ServiceGroupApp.UpdateEntity(ctx, *cr); err != nil {
 		return 0, err
@@ -209,6 +224,138 @@ func (s *Service) SubmitToCCB(ctx context.Context, id, userID uint) (uint, error
 		return instID, updateErr
 	}
 	return instID, nil
+}
+
+// snapshotBaseline 将当前 attrs（排除 baseline_snapshot 自身）序列化为 JSON 存入 baseline_snapshot 字段。
+// 在提交评审时调用，冻结变更请求的基线状态用于后续 diff 对比。
+func (s *Service) snapshotBaseline(cr *eavtypes.Entity) error {
+	if cr.Attrs == nil {
+		cr.Attrs = map[string]interface{}{}
+	}
+	snap := make(map[string]interface{}, len(cr.Attrs))
+	for k, v := range cr.Attrs {
+		if k == "baseline_snapshot" {
+			continue
+		}
+		snap[k] = v
+	}
+	b, err := json.Marshal(snap)
+	if err != nil {
+		return fmt.Errorf("marshal baseline snapshot: %w", err)
+	}
+	cr.Attrs["baseline_snapshot"] = string(b)
+	return nil
+}
+
+// GetDiff 对比 change_request 的基线快照(baseline_snapshot)与当前 attrs，返回字段级差异列表。
+// old_value 为空表示新增字段，new_value 为空表示删除字段，changed=true 表示值发生变化。
+// ref 字段暂以 ID 形式返回（解析显示名需跨模块查询，此处保持轻量）。
+func (s *Service) GetDiff(ctx context.Context, changeID uint) ([]FieldDiff, error) {
+	cr, err := s.GetChangeRequest(ctx, changeID)
+	if err != nil {
+		return nil, err
+	}
+
+	// 加载字段定义，用于字段标签与排序（加载失败时降级为以字段键作为标签）
+	defs, _ := pmservice.ServiceGroupApp.LoadFieldDefs(ctx, "change_request")
+	labelMap := make(map[string]string, len(defs))
+	defOrder := make([]string, 0, len(defs))
+	for _, d := range defs {
+		labelMap[d.FieldKey] = d.FieldLabel
+		defOrder = append(defOrder, d.FieldKey)
+	}
+
+	// 解析基线快照（存储为 JSON 字符串）
+	baseline := map[string]interface{}{}
+	if cr.Attrs != nil {
+		if snap, ok := cr.Attrs["baseline_snapshot"].(string); ok && snap != "" {
+			_ = json.Unmarshal([]byte(snap), &baseline)
+		}
+	}
+	current := cr.Attrs
+	if current == nil {
+		current = map[string]interface{}{}
+	}
+
+	// 收集所有字段键（排除 baseline_snapshot 自身）
+	keySet := make(map[string]bool)
+	for k := range baseline {
+		if k != "baseline_snapshot" {
+			keySet[k] = true
+		}
+	}
+	for k := range current {
+		if k != "baseline_snapshot" {
+			keySet[k] = true
+		}
+	}
+
+	// 按 schema 定义顺序排列，未定义字段追加在末尾（按字母序）
+	ordered := make([]string, 0, len(keySet))
+	for _, k := range defOrder {
+		if keySet[k] {
+			ordered = append(ordered, k)
+			delete(keySet, k)
+		}
+	}
+	extras := make([]string, 0, len(keySet))
+	for k := range keySet {
+		extras = append(extras, k)
+	}
+	sort.Strings(extras)
+	ordered = append(ordered, extras...)
+
+	diffs := make([]FieldDiff, 0, len(ordered))
+	for _, k := range ordered {
+		oldV := formatDiffValue(baseline[k])
+		newV := formatDiffValue(current[k])
+		diffs = append(diffs, FieldDiff{
+			FieldKey:   k,
+			FieldLabel: labelOf(labelMap, k),
+			OldValue:   oldV,
+			NewValue:   newV,
+			Changed:    oldV != newV,
+		})
+	}
+	return diffs, nil
+}
+
+// labelOf 取字段标签，缺省回退为字段键
+func labelOf(labelMap map[string]string, key string) string {
+	if l, ok := labelMap[key]; ok && l != "" {
+		return l
+	}
+	return key
+}
+
+// formatDiffValue 将任意属性值格式化为可读字符串，nil/空值统一为空串以便 diff 比较
+func formatDiffValue(v interface{}) string {
+	if v == nil {
+		return ""
+	}
+	switch val := v.(type) {
+	case string:
+		return val
+	case bool:
+		if val {
+			return "true"
+		}
+		return "false"
+	case map[string]interface{}:
+		b, err := json.Marshal(val)
+		if err != nil {
+			return fmt.Sprintf("%v", val)
+		}
+		return string(b)
+	case []interface{}:
+		b, err := json.Marshal(val)
+		if err != nil {
+			return fmt.Sprintf("%v", val)
+		}
+		return string(b)
+	default:
+		return fmt.Sprintf("%v", val)
+	}
 }
 
 func (s *Service) ApproveChange(ctx context.Context, id uint, decision string, userID uint) error {

@@ -221,6 +221,21 @@ func (a *Api) ImpactReport(c *gin.Context) {
 	response.OkWithData(report, c)
 }
 
+// GetDiff 变更前后字段级 diff 对比
+func (a *Api) GetDiff(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil || id == 0 {
+		response.FailWithMessage("参数错误: id 必填", c)
+		return
+	}
+	diffs, err := ServiceGroupApp.GetDiff(c.Request.Context(), uint(id))
+	if err != nil {
+		response.FailWithMessage("diff 查询失败: "+err.Error(), c)
+		return
+	}
+	response.OkWithData(diffs, c)
+}
+
 func (a *Api) CCBStats(c *gin.Context) {
 	projectID, _ := strconv.ParseUint(c.Query("projectId"), 10, 64)
 	stats, err := ServiceGroupApp.CCBStats(c.Request.Context(), uint(projectID))

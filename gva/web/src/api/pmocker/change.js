@@ -89,3 +89,9 @@ export const getChangeImpactReport = (params) => {
 export const getChangeCCBStats = (params) => {
   return service({ url: '/pmocker/change/ccbStats', method: 'get', params })
 }
+
+// @Summary 获取变更前后字段级 diff 对比
+// @Router /change/diff/:id [get]
+export const getChangeDiff = (params) => {
+  return service({ url: '/pmocker/change/diff/' + params.id, method: 'get' })
+}

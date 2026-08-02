@@ -28,5 +28,6 @@ func (r *Change) Init(public, private *gin.RouterGroup) {
 		g.GET("listLogs", ApiGroupApp.ListLogs)
 		g.GET("impactReport", ApiGroupApp.ImpactReport)
 		g.GET("ccbStats", ApiGroupApp.CCBStats)
+		g.GET("diff/:id", ApiGroupApp.GetDiff)
 	}
 }

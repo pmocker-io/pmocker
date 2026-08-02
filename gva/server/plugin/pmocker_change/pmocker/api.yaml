@@ -14,3 +14,4 @@ apis:
   - {path: /pmocker/change/listLogs, description: 变更日志列表, api_group: 变更管理, method: GET}
   - {path: /pmocker/change/impactReport, description: 影响分析报告, api_group: 变更管理, method: GET}
   - {path: /pmocker/change/ccbStats, description: CCB统计, api_group: 变更管理, method: GET}
+  - {path: /pmocker/change/diff/:id, description: 变更前后字段级 diff 对比, api_group: 变更管理, method: GET}

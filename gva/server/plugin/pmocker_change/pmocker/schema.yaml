@@ -31,6 +31,8 @@ entity_types:
       # --- 紧急标识 + 受影响基线 ---
       - {field_key: is_emergency, field_label: 是否紧急变更, data_type: bool, default_value: "false"}
       - {field_key: affected_baselines, field_label: 受影响基线, data_type: json}
+      # --- 基线快照（提交评审时自动生成，用于变更前后 diff 对比）---
+      - {field_key: baseline_snapshot, field_label: 基线快照, data_type: json}
     states: [draft, submitted, analyzing, ccb_review, approved, rejected, implementing, verified, closed, cancelled]
     workflows: [change_request]
 
