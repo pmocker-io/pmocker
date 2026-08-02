@@ -5,6 +5,7 @@ import "github.com/flipped-aurora/gin-vue-admin/server/service/pmocker"
 // ApiGroup 聚合所有 PMocker API
 type ApiGroup struct {
 	EAVApi
+	RelationApi
 }
 
 // ApiGroupApp 全局 API 入口

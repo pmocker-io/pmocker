@@ -5,6 +5,7 @@ type ServiceGroup struct {
 	EAVService
 	WorkflowService
 	RBACService
+	RelationService
 }
 
 // ServiceGroupApp 全局 service 入口
