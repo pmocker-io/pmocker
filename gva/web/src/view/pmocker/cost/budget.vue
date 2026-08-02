@@ -39,6 +39,45 @@
       </el-table>
     </div>
 
+    <el-card shadow="never" style="margin-top: 16px">
+      <template #header>
+        <div style="display: flex; align-items: center; justify-content: space-between">
+          <span>成员成本分摊（基于团队投入度核算）</span>
+          <span style="font-size: 12px; color: #909399">
+            月度合计：¥{{ formatNum(memberCostTotal) }}　|　公式：时薪 × 投入度% × {{ MONTHLY_HOURS }}h/月
+          </span>
+        </div>
+      </template>
+      <el-table :data="memberList" row-key="id">
+        <el-table-column label="姓名" min-width="120">
+          <template #default="{ row }">{{ row.attrs?.full_name || row.title }}</template>
+        </el-table-column>
+        <el-table-column label="角色" width="100">
+          <template #default="{ row }">
+            <el-tag>{{ row.attrs?.role }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="时薪" width="110">
+          <template #default="{ row }">¥{{ formatNum(row.attrs?.hourly_rate) }}</template>
+        </el-table-column>
+        <el-table-column label="投入度" width="100">
+          <template #default="{ row }">{{ row.attrs?.allocation_percent }}%</template>
+        </el-table-column>
+        <el-table-column label="估算工时(h/月)" width="140">
+          <template #default="{ row }">{{ formatNum(estimatedHours(row)) }}</template>
+        </el-table-column>
+        <el-table-column label="成本贡献" width="140">
+          <template #default="{ row }">¥{{ formatNum(memberCost(row)) }}</template>
+        </el-table-column>
+        <el-table-column label="占比" min-width="180">
+          <template #default="{ row }">
+            <el-progress :percentage="memberCostPercent(row)" :stroke-width="14" :text-inside="true" />
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-empty v-if="!memberList.length" description="暂无团队成员数据" />
+    </el-card>
+
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="800px">
       <el-form ref="formRef" :model="form" label-width="100px">
         <el-form-item label="名称" prop="title" :rules="[{ required: true, message: '请输入名称', trigger: 'blur' }]">
@@ -55,7 +94,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   getCostItems,
@@ -64,6 +103,7 @@ import {
   deleteCostItem,
   createCostBaseline
 } from '@/api/pmocker/cost'
+import { listMember } from '@/api/pmocker/team'
 import DynamicForm from '../components/DynamicForm.vue'
 
 defineOptions({ name: 'PmockerCostBudget' })
@@ -98,6 +138,40 @@ const costStatusType = (status) => {
 const costStatusLabel = (status) => {
   const map = { planned: '计划中', in_progress: '进行中', completed: '已完成', closed: '已关闭' }
   return map[status] || status
+}
+
+// ---- 成员成本分摊（投入度→成本核算联动）----
+// 月度基准工时：8 小时/天 × 22 工作日
+const MONTHLY_HOURS = 160
+const memberList = ref([])
+
+// 估算工时 = 投入度% × 月度基准工时
+const estimatedHours = (row) => {
+  const alloc = Number(row.attrs?.allocation_percent) || 0
+  return (alloc / 100) * MONTHLY_HOURS
+}
+
+// 成本贡献 = 时薪 × 估算工时
+const memberCost = (row) => {
+  const rate = Number(row.attrs?.hourly_rate) || 0
+  return rate * estimatedHours(row)
+}
+
+const memberCostTotal = computed(() =>
+  memberList.value.reduce((sum, row) => sum + memberCost(row), 0)
+)
+
+const memberCostPercent = (row) => {
+  const total = memberCostTotal.value
+  if (!total) return 0
+  return Number(((memberCost(row) / total) * 100).toFixed(1))
+}
+
+const loadMembers = async () => {
+  const res = await listMember({ page: 1, pageSize: 1000 })
+  if (res.code === 0) {
+    memberList.value = res.data.list || []
+  }
 }
 
 const loadData = async () => {
@@ -171,4 +245,5 @@ const handleCreateBaseline = async () => {
 }
 
 loadData()
+loadMembers()
 </script>

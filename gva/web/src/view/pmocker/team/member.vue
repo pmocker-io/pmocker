@@ -24,6 +24,14 @@
         <el-table-column label="投入度" width="100">
           <template #default="{ row }">{{ row.attrs?.allocation_percent }}%</template>
         </el-table-column>
+        <el-table-column label="成本贡献" width="140">
+          <template #header>
+            <el-tooltip content="成本贡献 = 时薪 × 投入度% × 160小时/月" placement="top">
+              <span>成本贡献(月)</span>
+            </el-tooltip>
+          </template>
+          <template #default="{ row }">¥{{ formatCost(costContribution(row)) }}</template>
+        </el-table-column>
         <el-table-column label="技能等级" width="100">
           <template #default="{ row }">
             <el-tag :type="skillLevelType(row.attrs?.skill_level)">{{ row.attrs?.skill_level }}</el-tag>
@@ -100,6 +108,21 @@ const memberStatusType = (s) => memberStatusMap[s]?.type || 'info'
 
 const skillLevelMap = { junior: 'info', mid: '', senior: 'success', expert: 'danger' }
 const skillLevelType = (s) => skillLevelMap[s] || 'info'
+
+// 月度基准工时：8 小时/天 × 22 工作日
+const MONTHLY_HOURS = 160
+
+// 成本贡献 = 时薪 × 投入度% × 月度基准工时
+const costContribution = (row) => {
+  const rate = Number(row.attrs?.hourly_rate) || 0
+  const alloc = Number(row.attrs?.allocation_percent) || 0
+  return rate * (alloc / 100) * MONTHLY_HOURS
+}
+
+const formatCost = (val) => {
+  const num = Number(val)
+  return isNaN(num) ? '0.00' : num.toFixed(2)
+}
 
 const getTableData = async () => {
   const res = await listMember({ page: page.value, pageSize: pageSize.value })
