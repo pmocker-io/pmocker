@@ -17,7 +17,7 @@ import (
 func main() {
 	pluginDirs := []string{
 		"requirement", "scope", "schedule", "cost", "risk",
-		"issue", "eps", "deliverable", "change",
+		"issue", "eps", "deliverable", "change", "team",
 	}
 
 	schemaFiles := make(map[string][]byte)
@@ -35,11 +35,24 @@ func main() {
 			fmt.Fprintf(os.Stderr, "warn: 跳过 %s schema: %v\n", mod, err)
 		}
 
-		// plugins 层：保留原始路径结构
+		// plugins 层：保留原始路径结构（manifest/seed/menu/api + workflows 目录）
 		for _, name := range []string{"manifest.yaml", "seed.yaml", "menu.yaml", "api.yaml"} {
 			p := filepath.Join(pmockerDir, name)
 			if data, err := os.ReadFile(p); err == nil {
 				pluginFiles["pmocker_"+mod+"/pmocker/"+name] = data
+			}
+		}
+		// workflows 目录（递归收集 *.yaml）
+		workflowsDir := filepath.Join(pmockerDir, "workflows")
+		if entries, err := os.ReadDir(workflowsDir); err == nil {
+			for _, e := range entries {
+				if e.IsDir() || filepath.Ext(e.Name()) != ".yaml" {
+					continue
+				}
+				p := filepath.Join(workflowsDir, e.Name())
+				if data, err := os.ReadFile(p); err == nil {
+					pluginFiles["pmocker_"+mod+"/pmocker/workflows/"+e.Name()] = data
+				}
 			}
 		}
 	}
