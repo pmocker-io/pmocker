@@ -31,6 +31,7 @@ func findProjectRoot() string {
 }
 
 var runFollow bool
+var runRebuild bool
 
 var runCmd = &cobra.Command{
 	Use:   "run",
@@ -49,13 +50,19 @@ var runCmd = &cobra.Command{
 			return fmt.Errorf("invalid port: %s", portStr)
 		}
 
-		// 1. 确保二进制存在
+		// 1. 确保二进制存在（--rebuild 时强制重建前后端，确保使用最新代码）
 		pmockerHome, _ := instance.DefaultPMockerHome()
 	gvaServerDir := findGVAServerDir()
 		gvaWebDir := findGVAWebDir()
 		b := builder.NewBuilder(pmockerHome, gvaServerDir, gvaWebDir)
-		if err := b.Ensure(); err != nil {
-			return fmt.Errorf("ensure binary: %w", err)
+		if runRebuild {
+			if err := b.Rebuild(); err != nil {
+				return fmt.Errorf("rebuild binary: %w", err)
+			}
+		} else {
+			if err := b.Ensure(); err != nil {
+				return fmt.Errorf("ensure binary: %w", err)
+			}
 		}
 
 		// 2. 初始化存储
@@ -126,6 +133,7 @@ func init() {
 	runCmd.Flags().StringP("volume", "v", "", "数据卷路径")
 	runCmd.Flags().String("admin-password", "", "管理员密码")
 	runCmd.Flags().BoolVarP(&runFollow, "follow", "f", false, "启动后自动跟踪 gva-server 实时日志（Ctrl+C 退出，实例继续运行）")
+	runCmd.Flags().BoolVar(&runRebuild, "rebuild", false, "强制重建后端二进制和前端 dist，确保使用最新代码")
 }
 
 func findGVAServerDir() string {

@@ -54,3 +54,6 @@ gva/server/bin/
 
 # 临时文件
 /tmp/
+
+# PMocker 实例运行时生成的 MCP Token 文件
+mcp_token.txt

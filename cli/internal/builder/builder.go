@@ -63,6 +63,24 @@ func (b *Builder) Ensure() error {
 	return nil
 }
 
+// Rebuild 强制重建后端二进制和前端 dist，确保使用最新代码
+func (b *Builder) Rebuild() error {
+	fmt.Println("强制重建 gva 二进制和前端...")
+	os.Remove(b.binPath)
+	os.Remove(b.mcpBinPath)
+	if err := b.buildServer(); err != nil {
+		return fmt.Errorf("build gva server: %w", err)
+	}
+	if err := b.buildMCPServer(); err != nil {
+		return fmt.Errorf("build gva mcp: %w", err)
+	}
+	if err := b.buildWeb(); err != nil {
+		return fmt.Errorf("build gva web: %w", err)
+	}
+	fmt.Println("重建完成")
+	return nil
+}
+
 // BinPath 返回二进制路径
 func (b *Builder) BinPath() string {
 	return b.binPath

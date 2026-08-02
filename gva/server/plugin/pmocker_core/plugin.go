@@ -2,15 +2,20 @@ package pmocker_core
 
 import (
 	"context"
+	_ "embed"
 
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
-	pmockerRouter "github.com/flipped-aurora/gin-vue-admin/server/router/pmocker"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/pmocker"
+	"github.com/flipped-aurora/gin-vue-admin/server/plugin/pmocker_core/initialize"
+	"github.com/flipped-aurora/gin-vue-admin/server/plugin/plugin-tool/utils"
 	interfaces "github.com/flipped-aurora/gin-vue-admin/server/utils/plugin/v2"
 	pmockerplugin "github.com/pmocker-io/pmocker/pkg/pmocker/plugin"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
+
+//go:embed pmocker/api.yaml
+var apiBytes []byte
 
 var _ interfaces.Plugin = (*plugin)(nil)
 var Plugin = new(plugin)
@@ -25,6 +30,8 @@ func init() {
 // gva 在启动时调用所有已注册插件的 Register，此时 GVA_DB 已初始化。
 func (p *plugin) Register(group *gin.Engine) {
 	registerTables()
+	// 注册 EAV API 到 sys_apis 表，供 Casbin 权限校验使用（auto_init.go 会自动插入规则）
+	utils.RegisterApis(parseApiYaml(apiBytes)...)
 	// ★ 调用所有已注册 PMocker 业务插件的 InitPMocker 钩子，灌入 schema/seed/menu/workflow
 	ctx := context.Background()
 	plugins := make([]interface{}, 0, len(interfaces.Registered()))
@@ -34,8 +41,8 @@ func (p *plugin) Register(group *gin.Engine) {
 	if errs := pmockerplugin.InitAllPMockerPlugins(ctx, plugins); len(errs) > 0 {
 		global.GVA_LOG.Error("PMocker plugin init errors", zap.Any("errors", errs))
 	}
-	// 注册 PMocker 路由（与其他 pmocker 插件路由一致，均在 /pmocker/ 下）
-	pmockerRouter.RouterGroupApp.InitEAV(group.Group("pmocker"))
+	// 注册 PMocker 核心路由（EAV），风格与其他 pmocker 业务插件一致
+	initialize.Router(group)
 }
 
 // registerTables 注册 PMocker 的所有数据库表。

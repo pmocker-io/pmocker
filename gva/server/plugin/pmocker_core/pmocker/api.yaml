@@ -1,0 +1,10 @@
+apis:
+  # EAV 实体 CRUD
+  - {path: /pmocker/eav/entity, description: 创建实体, api_group: EAV核心, method: POST}
+  - {path: /pmocker/eav/entity, description: 更新实体, api_group: EAV核心, method: PUT}
+  - {path: /pmocker/eav/entity/:id, description: 获取实体, api_group: EAV核心, method: GET}
+  - {path: /pmocker/eav/entity/:id, description: 删除实体, api_group: EAV核心, method: DELETE}
+  - {path: /pmocker/eav/entities, description: 实体列表, api_group: EAV核心, method: GET}
+  # EAV Schema 管理
+  - {path: /pmocker/eav/schema, description: 注册Schema, api_group: EAV核心, method: POST}
+  - {path: /pmocker/eav/schema/:entityType, description: 获取Schema, api_group: EAV核心, method: GET}
