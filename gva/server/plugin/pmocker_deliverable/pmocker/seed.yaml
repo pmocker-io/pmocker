@@ -16,3 +16,17 @@ dictionaries:
       - {label: SourceCode, value: SourceCode}
       - {label: Zip, value: Zip}
       - {label: Other, value: Other}
+  - type: pm_review_status
+    name: 评审状态
+    details:
+      - {label: 未开始, value: not_started}
+      - {label: 评审中, value: in_review}
+      - {label: 已通过, value: approved}
+      - {label: 需修改, value: changes_requested}
+  - type: pm_security_classification
+    name: 保密级别
+    details:
+      - {label: 公开, value: public}
+      - {label: 内部, value: internal}
+      - {label: 机密, value: confidential}
+      - {label: 绝密, value: secret}

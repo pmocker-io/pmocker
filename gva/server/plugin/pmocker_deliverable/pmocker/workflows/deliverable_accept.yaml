@@ -6,10 +6,13 @@ nodes:
   - {code: start, type: start}
   - {code: submit, type: task}
   - {code: qa_review, type: approval, approvers: "qa,pm", sla_hours: 72, quorum: 1}
+  - {code: baseline, type: approval, approvers: "pmo", sla_hours: 48, quorum: 1}
   - {code: end, type: end}
 transitions:
-  - {from: start, to: submit, on: submit}
-  - {from: submit, to: qa_review, on: submit}
-  - {from: qa_review, to: end, on: approve, status: accepted}
+  - {from: start, to: submit, on: submit, status: draft}
+  - {from: submit, to: qa_review, on: submit, status: submitted}
+  - {from: qa_review, to: baseline, on: approve, status: accepted}
   - {from: qa_review, to: submit, on: reject, status: rejected}
-  - {from: qa_review, to: submit, on: rework, status: submitted}
+  - {from: qa_review, to: submit, on: rework, status: reviewing}
+  - {from: baseline, to: end, on: lock, status: baselined}
+  - {from: baseline, to: end, on: obsolete, status: obsolete}

@@ -17,7 +17,15 @@ entity_types:
       - {field_key: reviewer_id, field_label: 验收人, data_type: ref}
       - {field_key: acceptance_criteria, field_label: 验收标准, data_type: text}
       - {field_key: file_ref, field_label: 附件引用, data_type: string}
-      - {field_key: related_requirements, field_label: 关联需求ID列表, data_type: string}
+      - {field_key: related_requirements, field_label: 关联需求, data_type: json}
+      # --- 配置管理 + 评审状态独立化 ---
+      - {field_key: config_item_id, field_label: 配置项ID, data_type: string}
+      - {field_key: review_status, field_label: 评审状态, data_type: enum, options_json: '["not_started","in_review","approved","changes_requested"]'}
+      # --- WBS 关联 + 质量 ---
+      - {field_key: wbs_node_id, field_label: 关联WBS节点, data_type: ref}
+      - {field_key: defect_count, field_label: 缺陷数, data_type: int, default_value: "0"}
+      # --- 保密级别 ---
+      - {field_key: security_classification, field_label: 保密级别, data_type: enum, options_json: '["public","internal","confidential","secret"]'}
     states: [draft, submitted, reviewing, accepted, rejected, baselined, obsolete]
     workflows: [deliverable_accept]
   - entity_type: deliverable_version
