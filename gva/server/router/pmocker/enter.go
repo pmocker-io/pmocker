@@ -10,6 +10,7 @@ type RouterGroup struct {
 	CostActualRouter
 	BaselineRouter
 	VarianceRouter
+	ProgressRouter
 }
 
 // RouterGroupApp 全局路由入口

@@ -7,6 +7,7 @@ import (
 	"github.com/flipped-aurora/gin-vue-admin/server/middleware"
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/pmocker_core/seed"
 	pmockerRouter "github.com/flipped-aurora/gin-vue-admin/server/router/pmocker"
+	pmockerSvc "github.com/flipped-aurora/gin-vue-admin/server/service/pmocker"
 	"github.com/gin-gonic/gin"
 )
 
@@ -26,6 +27,7 @@ func Router(engine *gin.Engine) {
 	pmockerRouter.RouterGroupApp.InitCostActual(public, private)
 	pmockerRouter.RouterGroupApp.InitBaseline(public, private)
 	pmockerRouter.RouterGroupApp.InitVariance(public, private)
+	pmockerRouter.RouterGroupApp.InitProgress(public, private)
 }
 
 // SeedOrgData 组织架构种子数据调用框架（供启动流程或初始化脚本调用）。
@@ -38,4 +40,15 @@ func SeedOrgData() error {
 		return err
 	}
 	return seed.LoadBusinessSeed(context.Background())
+}
+
+// RegisterHooks 注册 PMocker 工作流节点事件钩子（NodeHook）。
+// 在 DB/服务初始化完成后调用一次即可。
+func RegisterHooks() {
+	wf := &pmockerSvc.ServiceGroupApp.WorkflowService
+	wf.RegisterNodeHook("plan_approval", "approve", &pmockerSvc.ScheduleBaselineHook{})
+	wf.RegisterNodeHook("cost_approval", "approve", &pmockerSvc.CostBaselineHook{})
+	wf.RegisterNodeHook("change_request", "review", &pmockerSvc.ChangeApplyHook{})
+	wf.RegisterNodeHook("task_workflow", "complete", &pmockerSvc.TaskCompleteHook{})
+	global.GVA_LOG.Info("pmocker NodeHook 已注册")
 }

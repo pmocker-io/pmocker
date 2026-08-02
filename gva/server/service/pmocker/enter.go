@@ -13,6 +13,7 @@ type ServiceGroup struct {
 	CostActualService
 	BaselineService
 	VarianceService
+	ProgressService
 }
 
 // ServiceGroupApp 全局 service 入口

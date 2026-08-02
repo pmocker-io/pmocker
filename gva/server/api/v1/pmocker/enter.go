@@ -10,6 +10,7 @@ type ApiGroup struct {
 	CostActualApi
 	BaselineApi
 	VarianceApi
+	ProgressApi
 }
 
 // ApiGroupApp 全局 API 入口

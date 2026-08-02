@@ -11,10 +11,28 @@ import (
 	"github.com/pmocker-io/pmocker/pkg/pmocker/workflow"
 )
 
+// NodeHook 节点事件钩子
+type NodeHook interface {
+	OnEnter(ctx context.Context, entityID uint, nodeName string) error
+	OnLeave(ctx context.Context, entityID uint, nodeName string, action string) error
+}
+
+type hookCtxKey string
+
+const hookUserIDKey hookCtxKey = "pmocker.hook.userID"
+
+func userIDFromCtx(ctx context.Context) uint {
+	if v, ok := ctx.Value(hookUserIDKey).(uint); ok {
+		return v
+	}
+	return 0
+}
+
 // WorkflowService 实现 workflow.Engine 接口
 type WorkflowService struct {
 	mu       sync.RWMutex
 	handlers map[string]workflow.AutoHandler
+	hooks    map[string]NodeHook
 }
 
 // RegisterAutoHandler 注册 NodeAuto 节点处理器（幂等覆盖）。
@@ -25,6 +43,36 @@ func (s *WorkflowService) RegisterAutoHandler(name string, h workflow.AutoHandle
 		s.handlers = make(map[string]workflow.AutoHandler)
 	}
 	s.handlers[name] = h
+}
+
+// RegisterNodeHook 注册节点事件钩子（按 workflowCode.nodeName 索引，幂等覆盖）。
+func (s *WorkflowService) RegisterNodeHook(workflowCode, nodeName string, hook NodeHook) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.hooks == nil {
+		s.hooks = make(map[string]NodeHook)
+	}
+	s.hooks[workflowCode+"."+nodeName] = hook
+}
+
+func (s *WorkflowService) fireOnLeave(ctx context.Context, workflowCode, nodeName, action string, entityID uint) error {
+	s.mu.RLock()
+	h, ok := s.hooks[workflowCode+"."+nodeName]
+	s.mu.RUnlock()
+	if !ok {
+		return nil
+	}
+	return h.OnLeave(ctx, entityID, nodeName, action)
+}
+
+func (s *WorkflowService) fireOnEnter(ctx context.Context, workflowCode, nodeName string, entityID uint) error {
+	s.mu.RLock()
+	h, ok := s.hooks[workflowCode+"."+nodeName]
+	s.mu.RUnlock()
+	if !ok {
+		return nil
+	}
+	return h.OnEnter(ctx, entityID, nodeName)
 }
 
 // LoadDefinition 加载工作流定义到 DB
@@ -119,9 +167,18 @@ func (s *WorkflowService) Execute(ctx context.Context, instanceID uint, action s
 		Where("id = ?", instanceID).Updates(update).Error; err != nil {
 		return err
 	}
-	// 3) 若目标节点是 auto，调度 handler 并继续链式推进
+	// 3) 触发 NodeHook
+	hookCtx := context.WithValue(ctx, hookUserIDKey, userID)
+	fromNode := inst.CurrentNode
+	if err := s.fireOnLeave(hookCtx, inst.WorkflowCode, fromNode, action, inst.EntityID); err != nil {
+		return fmt.Errorf("onLeave hook failed on node %s: %w", fromNode, err)
+	}
+	if err := s.fireOnEnter(hookCtx, inst.WorkflowCode, target.To, inst.EntityID); err != nil {
+		return fmt.Errorf("onEnter hook failed on node %s: %w", target.To, err)
+	}
+	// 4) 若目标节点是 auto，调度 handler 并继续链式推进
 	if targetNode != nil && targetNode.Type == workflow.NodeAuto {
-		return s.tryAdvanceAuto(ctx, instanceID, &wf, 0)
+		return s.tryAdvanceAuto(hookCtx, instanceID, &wf, 0)
 	}
 	return nil
 }
@@ -191,7 +248,20 @@ func (s *WorkflowService) tryAdvanceAuto(ctx context.Context, instanceID uint, w
 		Where("id = ?", instanceID).Updates(update).Error; err != nil {
 		return err
 	}
-	// D) 若下一个节点仍是 auto，递归推进
+	// D) 触发 NodeHook
+	leaveAction := autoTrans.On
+	if leaveAction == "" {
+		leaveAction = "done"
+	}
+	if err := s.fireOnLeave(ctx, inst.WorkflowCode, node.Code, leaveAction, inst.EntityID); err != nil {
+		return fmt.Errorf("onLeave hook failed on auto node %s: %w", node.Code, err)
+	}
+	if next != nil {
+		if err := s.fireOnEnter(ctx, inst.WorkflowCode, next.Code, inst.EntityID); err != nil {
+			return fmt.Errorf("onEnter hook failed on node %s: %w", next.Code, err)
+		}
+	}
+	// E) 若下一个节点仍是 auto，递归推进
 	if next != nil && next.Type == workflow.NodeAuto {
 		return s.tryAdvanceAuto(ctx, instanceID, wf, depth+1)
 	}
