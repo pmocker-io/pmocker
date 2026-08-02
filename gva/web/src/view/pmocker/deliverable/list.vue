@@ -21,17 +21,38 @@
     </div>
     <div class="gva-table-box">
       <div class="gva-btn-list">
-        <el-button type="primary" @click="openDialog">
+        <el-button type="primary" @click="openDialog()">
           <svg-icon icon="lucide:plus" /> 新增交付物
         </el-button>
       </div>
       <el-table :data="tableData" row-key="ID">
         <el-table-column label="ID" prop="ID" width="80" />
         <el-table-column label="交付物名称" prop="title" min-width="200" />
-        <el-table-column label="类型" prop="type" width="120">
-          <template #default="{ row }"><el-tag>{{ typeLabel(row.type) }}</el-tag></template>
+        <el-table-column label="类型" width="100">
+          <template #default="{ row }">
+            <el-tag>{{ typeLabel(getAttr(row, 'type') || row.type) }}</el-tag>
+          </template>
         </el-table-column>
-        <el-table-column label="版本" prop="version" width="80" />
+        <el-table-column label="版本" width="80">
+          <template #default="{ row }">
+            {{ getAttr(row, 'version') || row.version }}
+          </template>
+        </el-table-column>
+        <el-table-column label="评审状态" width="110">
+          <template #default="{ row }">
+            <el-tag :type="reviewStatusType(getAttr(row, 'review_status'))">{{ getAttr(row, 'review_status') }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="保密级别" width="120">
+          <template #default="{ row }">
+            <el-tag :type="securityType(getAttr(row, 'security_classification'))">{{ getAttr(row, 'security_classification') }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="缺陷数" width="90">
+          <template #default="{ row }">
+            {{ getAttr(row, 'defect_count') }}
+          </template>
+        </el-table-column>
         <el-table-column label="状态" prop="status" width="100">
           <template #default="{ row }">
             <el-tag :type="statusType(row.status)">{{ statusLabel(row.status) }}</el-tag>
@@ -60,22 +81,12 @@
       />
     </div>
 
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="600px">
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
-        <el-form-item label="名称" prop="title">
+    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="800px">
+      <el-form ref="formRef" :model="form" label-width="100px">
+        <el-form-item label="名称" prop="title" :rules="[{ required: true, message: '请输入名称', trigger: 'blur' }]">
           <el-input v-model="form.title" />
         </el-form-item>
-        <el-form-item label="类型" prop="type">
-          <el-select v-model="form.type">
-            <el-option label="文档" value="document" />
-            <el-option label="代码" value="code" />
-            <el-option label="设计稿" value="design" />
-            <el-option label="其他" value="other" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="描述" prop="description">
-          <el-input v-model="form.description" type="textarea" :rows="4" />
-        </el-form-item>
+        <DynamicForm v-model="form" entity-type="deliverable" />
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
@@ -88,7 +99,8 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getDeliverableList, createDeliverable, deleteDeliverable, submitDeliverableReview, acceptDeliverable, rejectDeliverable } from '@/api/pmocker/deliverable'
+import { getDeliverableList, createDeliverable, updateDeliverable, deleteDeliverable, submitDeliverableReview, acceptDeliverable, rejectDeliverable } from '@/api/pmocker/deliverable'
+import DynamicForm from '../components/DynamicForm.vue'
 
 defineOptions({ name: 'PmockerDeliverableList' })
 
@@ -102,15 +114,15 @@ const dialogTitle = ref('')
 const formRef = ref(null)
 const dialogType = ref('add')
 
-const form = reactive({ ID: null, title: '', type: 'document', description: '' })
-const rules = {
-  title: [{ required: true, message: '请输入名称', trigger: 'blur' }],
-  type: [{ required: true, message: '请选择类型', trigger: 'change' }]
-}
+const form = reactive({ ID: null, title: '', status: 'draft', attrs: {} })
 
-const typeLabel = (t) => ({ document: '文档', code: '代码', design: '设计稿', other: '其他' }[t] || t)
+const getAttr = (row, key) => (row.attrs && row.attrs[key] !== undefined ? row.attrs[key] : (row[key] || ''))
+
+const typeLabel = (t) => ({ document: '文档', code: '代码', design: '设计稿', other: '其他' }[t] || t || '')
 const statusType = (s) => ({ draft: 'info', reviewing: 'warning', accepted: 'success', rejected: 'danger' }[s] || 'info')
 const statusLabel = (s) => ({ draft: '草稿', reviewing: '评审中', accepted: '已接收', rejected: '已驳回' }[s] || s)
+const reviewStatusType = (s) => ({ pending: 'info', in_review: 'warning', approved: 'success', rejected: 'danger' }[s] || 'info')
+const securityType = (s) => ({ public: 'info', internal: '', confidential: 'warning', secret: 'danger' }[s] || 'info')
 
 const getTableData = async () => {
   const params = { page: page.value, pageSize: pageSize.value, ...searchInfo.value }
@@ -124,13 +136,26 @@ const getTableData = async () => {
 const onSubmit = () => { page.value = 1; getTableData() }
 const onReset = () => { searchInfo.value = {}; page.value = 1; getTableData() }
 
+const resetForm = () => {
+  Object.assign(form, { ID: null, title: '', status: 'draft', attrs: {} })
+}
+
 const openDialog = (row) => {
-  dialogType.value = row ? 'edit' : 'add'
-  dialogTitle.value = row ? '编辑交付物' : '新增交付物'
+  resetForm()
   if (row) {
-    Object.assign(form, row)
+    dialogType.value = 'edit'
+    dialogTitle.value = '编辑交付物'
+    form.ID = row.ID
+    form.title = row.title
+    form.status = row.status || 'draft'
+    form.attrs = row.attrs ? { ...row.attrs } : {}
+    // 兼容旧数据：把顶层字段合并到 attrs
+    if (row.type && form.attrs.type === undefined) form.attrs.type = row.type
+    if (row.version && form.attrs.version === undefined) form.attrs.version = row.version
+    if (row.description && form.attrs.description === undefined) form.attrs.description = row.description
   } else {
-    Object.assign(form, { ID: null, title: '', type: 'document', description: '' })
+    dialogType.value = 'add'
+    dialogTitle.value = '新增交付物'
   }
   dialogVisible.value = true
 }
@@ -139,9 +164,10 @@ const handleSave = async () => {
   if (!formRef.value) return
   await formRef.value.validate(async (valid) => {
     if (!valid) return
-    const res = await createDeliverable(form)
+    const api = dialogType.value === 'add' ? createDeliverable : updateDeliverable
+    const res = await api(form)
     if (res.code === 0) {
-      ElMessage.success('保存成功')
+      ElMessage.success(dialogType.value === 'add' ? '添加成功' : '更新成功')
       dialogVisible.value = false
       getTableData()
     }
@@ -176,7 +202,7 @@ const handleAccept = async (row) => {
   }
 }
 
-const handleReject = async (row) => {
+const handleReject = (row) => {
   ElMessageBox.prompt('请输入驳回原因', '驳回', { type: 'warning' })
     .then(async ({ value }) => {
       const res = await rejectDeliverable({ ID: row.ID, reason: value })

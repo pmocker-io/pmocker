@@ -23,3 +23,18 @@ export const getCostItems = (params) => {
 export const analyzeCostEVM = (data) => {
   return service({ url: '/pmocker/cost/evm', method: 'post', data })
 }
+
+// @Summary 更新成本项
+export const updateCostItem = (data) => {
+  return service({ url: '/pmocker/cost/updateItem', method: 'post', data })
+}
+
+// @Summary 查询成本项详情
+export const findCostItem = (params) => {
+  return service({ url: '/pmocker/cost/findItem', method: 'get', params })
+}
+
+// @Summary 删除成本项
+export const deleteCostItem = (params) => {
+  return service({ url: '/pmocker/cost/deleteItem', method: 'delete', params })
+}

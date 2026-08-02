@@ -33,16 +33,32 @@
     </div>
     <div class="gva-table-box">
       <div class="gva-btn-list">
-        <el-button type="primary" @click="openDialog">
+        <el-button type="primary" @click="openDialog()">
           <svg-icon icon="lucide:plus" /> 新增变更请求
         </el-button>
       </div>
       <el-table :data="tableData" row-key="ID">
         <el-table-column label="ID" prop="ID" width="80" />
         <el-table-column label="变更标题" prop="title" min-width="200" />
-        <el-table-column label="优先级" prop="priority" width="80">
+        <el-table-column label="优先级" width="80">
           <template #default="{ row }">
-            <el-tag :type="priorityType(row.priority)">{{ priorityLabel(row.priority) }}</el-tag>
+            <el-tag :type="priorityType(getAttr(row, 'priority'))">{{ priorityLabel(getAttr(row, 'priority')) }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="变更性质" width="110">
+          <template #default="{ row }">
+            {{ getAttr(row, 'change_nature') }}
+          </template>
+        </el-table-column>
+        <el-table-column label="紧急变更" width="100">
+          <template #default="{ row }">
+            <el-tag v-if="getAttr(row, 'is_emergency')" type="danger">紧急</el-tag>
+            <el-tag v-else type="info">否</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="受影响基线" width="160">
+          <template #default="{ row }">
+            {{ formatBaselines(getAttr(row, 'affected_baselines')) }}
           </template>
         </el-table-column>
         <el-table-column label="状态" prop="status" width="120">
@@ -74,25 +90,12 @@
       />
     </div>
 
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="600px">
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
-        <el-form-item label="标题" prop="title">
+    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="800px">
+      <el-form ref="formRef" :model="form" label-width="100px">
+        <el-form-item label="名称" prop="title" :rules="[{ required: true, message: '请输入名称', trigger: 'blur' }]">
           <el-input v-model="form.title" />
         </el-form-item>
-        <el-form-item label="优先级" prop="priority">
-          <el-select v-model="form.priority">
-            <el-option label="紧急" value="urgent" />
-            <el-option label="高" value="high" />
-            <el-option label="中" value="medium" />
-            <el-option label="低" value="low" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="变更内容" prop="content">
-          <el-input v-model="form.content" type="textarea" :rows="4" />
-        </el-form-item>
-        <el-form-item label="变更原因" prop="reason">
-          <el-input v-model="form.reason" type="textarea" :rows="3" />
-        </el-form-item>
+        <DynamicForm v-model="form" entity-type="change_request" />
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
@@ -105,7 +108,8 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getChangeList, createChange, deleteChange, analyzeChange } from '@/api/pmocker/change'
+import { getChangeList, createChange, updateChange, deleteChange, analyzeChange } from '@/api/pmocker/change'
+import DynamicForm from '../components/DynamicForm.vue'
 
 defineOptions({ name: 'PmockerChangeList' })
 
@@ -119,12 +123,9 @@ const dialogTitle = ref('')
 const formRef = ref(null)
 const dialogType = ref('add')
 
-const form = reactive({ ID: null, title: '', priority: 'medium', content: '', reason: '' })
-const rules = {
-  title: [{ required: true, message: '请输入标题', trigger: 'blur' }],
-  priority: [{ required: true, message: '请选择优先级', trigger: 'change' }],
-  content: [{ required: true, message: '请输入变更内容', trigger: 'blur' }]
-}
+const form = reactive({ ID: null, title: '', status: 'submitted', attrs: {} })
+
+const getAttr = (row, key) => (row.attrs && row.attrs[key] !== undefined ? row.attrs[key] : (row[key] || ''))
 
 const formatDate = (dateStr) => dateStr ? new Date(dateStr).toLocaleString('zh-CN') : ''
 const priorityType = (p) => ({ urgent: 'danger', high: 'warning', medium: 'info', low: 'info' }[p] || 'info')
@@ -140,6 +141,13 @@ const changeStatusLabel = (s) => ({
   verifying: '验证中', closed: '已关闭'
 }[s] || s)
 
+const formatBaselines = (val) => {
+  if (!val) return ''
+  if (Array.isArray(val)) return val.join(', ')
+  if (typeof val === 'object') return JSON.stringify(val)
+  return val
+}
+
 const getTableData = async () => {
   const params = { page: page.value, pageSize: pageSize.value, ...searchInfo.value }
   const res = await getChangeList(params)
@@ -152,13 +160,26 @@ const getTableData = async () => {
 const onSubmit = () => { page.value = 1; getTableData() }
 const onReset = () => { searchInfo.value = {}; page.value = 1; getTableData() }
 
+const resetForm = () => {
+  Object.assign(form, { ID: null, title: '', status: 'submitted', attrs: {} })
+}
+
 const openDialog = (row) => {
-  dialogType.value = row ? 'edit' : 'add'
-  dialogTitle.value = row ? '编辑变更请求' : '新增变更请求'
+  resetForm()
   if (row) {
-    Object.assign(form, row)
+    dialogType.value = 'edit'
+    dialogTitle.value = '编辑变更请求'
+    form.ID = row.ID
+    form.title = row.title
+    form.status = row.status || 'submitted'
+    form.attrs = row.attrs ? { ...row.attrs } : {}
+    // 兼容旧数据：把顶层字段合并到 attrs
+    if (row.priority && form.attrs.priority === undefined) form.attrs.priority = row.priority
+    if (row.content && form.attrs.content === undefined) form.attrs.content = row.content
+    if (row.reason && form.attrs.reason === undefined) form.attrs.reason = row.reason
   } else {
-    Object.assign(form, { ID: null, title: '', priority: 'medium', content: '', reason: '' })
+    dialogType.value = 'add'
+    dialogTitle.value = '新增变更请求'
   }
   dialogVisible.value = true
 }
@@ -167,9 +188,10 @@ const handleSave = async () => {
   if (!formRef.value) return
   await formRef.value.validate(async (valid) => {
     if (!valid) return
-    const res = await createChange(form)
+    const api = dialogType.value === 'add' ? createChange : updateChange
+    const res = await api(form)
     if (res.code === 0) {
-      ElMessage.success('保存成功')
+      ElMessage.success(dialogType.value === 'add' ? '添加成功' : '更新成功')
       dialogVisible.value = false
       getTableData()
     }

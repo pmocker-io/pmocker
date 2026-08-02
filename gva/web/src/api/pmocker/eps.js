@@ -47,3 +47,9 @@ export const getEPSNodes = (params) => {
 export const getEPSMembers = (params) => {
   return service({ url: '/pmocker/eps/listMembers', method: 'get', params })
 }
+
+// @Summary 查询 EPS 节点详情
+// @Router /eps/find [get]
+export const findEPSNode = (params) => {
+  return service({ url: '/pmocker/eps/find', method: 'get', params })
+}

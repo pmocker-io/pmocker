@@ -29,16 +29,31 @@
     </div>
     <div class="gva-table-box">
       <div class="gva-btn-list">
-        <el-button type="primary" @click="openDialog">
+        <el-button type="primary" @click="openDialog()">
           <svg-icon icon="lucide:plus" /> 新增问题
         </el-button>
       </div>
       <el-table :data="tableData" row-key="ID">
         <el-table-column label="ID" prop="ID" width="80" />
         <el-table-column label="问题标题" prop="title" min-width="200" />
-        <el-table-column label="优先级" prop="priority" width="100">
+        <el-table-column label="优先级" width="100">
           <template #default="{ row }">
-            <el-tag :type="priorityType(row.priority)">{{ priorityLabel(row.priority) }}</el-tag>
+            <el-tag :type="priorityType(getAttr(row, 'priority'))">{{ priorityLabel(getAttr(row, 'priority')) }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="严重性" width="100">
+          <template #default="{ row }">
+            <el-tag :type="severityType(getAttr(row, 'severity'))">{{ getAttr(row, 'severity') }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="分类" width="120">
+          <template #default="{ row }">
+            {{ getAttr(row, 'category') }}
+          </template>
+        </el-table-column>
+        <el-table-column label="解决类型" width="120">
+          <template #default="{ row }">
+            {{ getAttr(row, 'resolution_type') }}
           </template>
         </el-table-column>
         <el-table-column label="状态" prop="status" width="100">
@@ -70,22 +85,12 @@
       />
     </div>
 
-    <el-dialog v-model="dialogVisible" title="问题" width="600px">
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
-        <el-form-item label="标题" prop="title">
+    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="800px">
+      <el-form ref="formRef" :model="form" label-width="100px">
+        <el-form-item label="名称" prop="title" :rules="[{ required: true, message: '请输入名称', trigger: 'blur' }]">
           <el-input v-model="form.title" />
         </el-form-item>
-        <el-form-item label="优先级" prop="priority">
-          <el-select v-model="form.priority">
-            <el-option label="紧急" value="urgent" />
-            <el-option label="高" value="high" />
-            <el-option label="中" value="medium" />
-            <el-option label="低" value="low" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="描述" prop="description">
-          <el-input v-model="form.description" type="textarea" :rows="4" />
-        </el-form-item>
+        <DynamicForm v-model="form" entity-type="issue" />
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
@@ -98,7 +103,8 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getIssueList, createIssue, deleteIssue, assignIssue, resolveIssue, closeIssue, reopenIssue } from '@/api/pmocker/issue'
+import { getIssueList, createIssue, updateIssue, deleteIssue, assignIssue, resolveIssue, closeIssue, reopenIssue } from '@/api/pmocker/issue'
+import DynamicForm from '../components/DynamicForm.vue'
 
 defineOptions({ name: 'PmockerIssueList' })
 
@@ -108,16 +114,17 @@ const page = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
 const dialogVisible = ref(false)
+const dialogTitle = ref('')
 const formRef = ref(null)
+const dialogType = ref('add')
 
-const form = reactive({ ID: null, title: '', priority: 'medium', description: '' })
-const rules = {
-  title: [{ required: true, message: '请输入标题', trigger: 'blur' }],
-  priority: [{ required: true, message: '请选择优先级', trigger: 'change' }]
-}
+const form = reactive({ ID: null, title: '', status: 'open', attrs: {} })
+
+const getAttr = (row, key) => (row.attrs && row.attrs[key] !== undefined ? row.attrs[key] : (row[key] || ''))
 
 const priorityType = (p) => ({ urgent: 'danger', high: 'warning', medium: 'info', low: 'info' }[p] || 'info')
 const priorityLabel = (p) => ({ urgent: '紧急', high: '高', medium: '中', low: '低' }[p] || p)
+const severityType = (s) => ({ fatal: 'danger', critical: 'danger', major: 'warning', minor: 'info', trivial: 'info' }[s] || 'info')
 const statusType = (s) => ({ open: 'info', in_progress: 'warning', resolved: 'success', closed: '' }[s] || 'info')
 const statusLabel = (s) => ({ open: '待处理', in_progress: '处理中', resolved: '已解决', closed: '已关闭' }[s] || s)
 
@@ -133,11 +140,22 @@ const getTableData = async () => {
 const onSubmit = () => { page.value = 1; getTableData() }
 const onReset = () => { searchInfo.value = {}; page.value = 1; getTableData() }
 
+const resetForm = () => {
+  Object.assign(form, { ID: null, title: '', status: 'open', attrs: {} })
+}
+
 const openDialog = (row) => {
+  resetForm()
   if (row) {
-    Object.assign(form, row)
+    dialogType.value = 'edit'
+    dialogTitle.value = '编辑问题'
+    form.ID = row.ID
+    form.title = row.title
+    form.status = row.status || 'open'
+    form.attrs = row.attrs ? { ...row.attrs } : {}
   } else {
-    Object.assign(form, { ID: null, title: '', priority: 'medium', description: '' })
+    dialogType.value = 'add'
+    dialogTitle.value = '新增问题'
   }
   dialogVisible.value = true
 }
@@ -146,9 +164,10 @@ const handleSave = async () => {
   if (!formRef.value) return
   await formRef.value.validate(async (valid) => {
     if (!valid) return
-    const res = await createIssue(form)
+    const api = dialogType.value === 'add' ? createIssue : updateIssue
+    const res = await api(form)
     if (res.code === 0) {
-      ElMessage.success('保存成功')
+      ElMessage.success(dialogType.value === 'add' ? '添加成功' : '更新成功')
       dialogVisible.value = false
       getTableData()
     }

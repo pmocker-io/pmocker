@@ -28,9 +28,24 @@
       <el-table :data="tableData" row-key="ID">
         <el-table-column label="ID" prop="ID" width="80" />
         <el-table-column label="需求名称" prop="title" min-width="200" />
-        <el-table-column label="优先级" prop="priority" width="100">
+        <el-table-column label="优先级" width="100">
           <template #default="{ row }">
-            <el-tag :type="priorityType(row.priority)">{{ row.priority }}</el-tag>
+            <el-tag :type="priorityType(getAttr(row, 'priority'))">{{ getAttr(row, 'priority') }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="MoSCoW" width="120">
+          <template #default="{ row }">
+            {{ getAttr(row, 'moscow_priority') }}
+          </template>
+        </el-table-column>
+        <el-table-column label="需求类型" width="120">
+          <template #default="{ row }">
+            {{ getAttr(row, 'requirement_type') }}
+          </template>
+        </el-table-column>
+        <el-table-column label="故事点" width="100">
+          <template #default="{ row }">
+            {{ getAttr(row, 'story_points') }}
           </template>
         </el-table-column>
         <el-table-column label="状态" prop="status" width="120">
@@ -66,21 +81,12 @@
       />
     </div>
 
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="600px">
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
-        <el-form-item label="需求名称" prop="title">
-          <el-input v-model="form.title" placeholder="请输入需求名称" />
+    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="800px">
+      <el-form ref="formRef" :model="form" label-width="100px">
+        <el-form-item label="名称" prop="title" :rules="[{ required: true, message: '请输入名称', trigger: 'blur' }]">
+          <el-input v-model="form.title" />
         </el-form-item>
-        <el-form-item label="需求描述" prop="description">
-          <el-input v-model="form.description" type="textarea" :rows="4" placeholder="请输入需求描述" />
-        </el-form-item>
-        <el-form-item label="优先级" prop="priority">
-          <el-select v-model="form.priority" placeholder="请选择优先级">
-            <el-option label="高" value="high" />
-            <el-option label="中" value="medium" />
-            <el-option label="低" value="low" />
-          </el-select>
-        </el-form-item>
+        <DynamicForm v-model="form" entity-type="requirement" />
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
@@ -102,6 +108,7 @@ import {
   approveRequirement,
   rejectRequirement
 } from '@/api/pmocker/requirement'
+import DynamicForm from '../components/DynamicForm.vue'
 
 defineOptions({ name: 'PmockerRequirementList' })
 
@@ -118,14 +125,11 @@ const dialogType = ref('add')
 const form = reactive({
   ID: null,
   title: '',
-  description: '',
-  priority: 'medium'
+  status: 'draft',
+  attrs: {}
 })
 
-const rules = {
-  title: [{ required: true, message: '请输入需求名称', trigger: 'blur' }],
-  priority: [{ required: true, message: '请选择优先级', trigger: 'change' }]
-}
+const getAttr = (row, key) => (row.attrs && row.attrs[key] !== undefined ? row.attrs[key] : (row[key] || ''))
 
 const formatDate = (dateStr) => {
   if (!dateStr) return ''
@@ -167,13 +171,19 @@ const onReset = () => {
   getTableData()
 }
 
+const resetForm = () => {
+  Object.assign(form, { ID: null, title: '', status: 'draft', attrs: {} })
+}
+
 const openDialog = (type, row) => {
   dialogType.value = type
   dialogTitle.value = type === 'add' ? '新增需求' : '编辑需求'
+  resetForm()
   if (type === 'edit' && row) {
-    Object.assign(form, row)
-  } else {
-    Object.assign(form, { ID: null, title: '', description: '', priority: 'medium' })
+    form.ID = row.ID
+    form.title = row.title
+    form.status = row.status || 'draft'
+    form.attrs = row.attrs ? { ...row.attrs } : {}
   }
   dialogVisible.value = true
 }

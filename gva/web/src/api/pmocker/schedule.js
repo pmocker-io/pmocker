@@ -35,3 +35,18 @@ export const getScheduleMilestones = (params) => {
 export const analyzeScheduleCPM = (data) => {
   return service({ url: '/pmocker/schedule/cpm', method: 'post', data })
 }
+
+// @Summary 更新任务
+export const updateTask = (data) => {
+  return service({ url: '/pmocker/schedule/updateTask', method: 'post', data })
+}
+
+// @Summary 查询任务详情
+export const findTask = (params) => {
+  return service({ url: '/pmocker/schedule/findTask', method: 'get', params })
+}
+
+// @Summary 删除任务
+export const deleteTask = (params) => {
+  return service({ url: '/pmocker/schedule/deleteTask', method: 'delete', params })
+}

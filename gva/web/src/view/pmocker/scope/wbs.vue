@@ -18,6 +18,9 @@
             <span class="flex items-center gap-2">
               <svg-icon :icon="nodeIcon(data)" />
               {{ data.title }}
+              <el-tag v-if="getAttr(data, 'wbs_code')" size="small" type="info">{{ getAttr(data, 'wbs_code') }}</el-tag>
+              <el-tag v-if="getAttr(data, 'is_work_package')" size="small" type="success">工作包</el-tag>
+              <el-tag v-if="getAttr(data, 'acceptance_status')" size="small" :type="acceptanceType(getAttr(data, 'acceptance_status'))">{{ getAttr(data, 'acceptance_status') }}</el-tag>
               <el-tag v-if="data.isBaseline" size="small" type="success">基线</el-tag>
             </span>
             <span class="flex gap-1">
@@ -30,17 +33,12 @@
       </el-tree>
     </div>
 
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="500px">
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
-        <el-form-item label="名称" prop="title">
-          <el-input v-model="form.title" placeholder="请输入范围项名称" />
+    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="800px">
+      <el-form ref="formRef" :model="form" label-width="100px">
+        <el-form-item label="名称" prop="title" :rules="[{ required: true, message: '请输入名称', trigger: 'blur' }]">
+          <el-input v-model="form.title" />
         </el-form-item>
-        <el-form-item label="描述" prop="description">
-          <el-input v-model="form.description" type="textarea" :rows="3" />
-        </el-form-item>
-        <el-form-item label="工作量" prop="effort">
-          <el-input-number v-model="form.effort" :min="0" :step="0.5" />
-        </el-form-item>
+        <DynamicForm v-model="form" entity-type="scope_item" />
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
@@ -53,7 +51,8 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getScopeWBS, createScopeItem, buildScopeWBS } from '@/api/pmocker/scope'
+import { getScopeWBS, createScopeItem, updateScopeItem, deleteScopeItem } from '@/api/pmocker/scope'
+import DynamicForm from '../components/DynamicForm.vue'
 
 defineOptions({ name: 'PmockerScopeWBS' })
 
@@ -68,17 +67,20 @@ const form = reactive({
   ID: null,
   parentId: null,
   title: '',
-  description: '',
-  effort: 0
+  status: 'draft',
+  attrs: {}
 })
 
-const rules = {
-  title: [{ required: true, message: '请输入名称', trigger: 'blur' }]
-}
+const getAttr = (row, key) => (row.attrs && row.attrs[key] !== undefined ? row.attrs[key] : (row[key] || ''))
 
 const nodeIcon = (data) => {
   if (data.children && data.children.length > 0) return 'lucide:folder'
   return 'lucide:file'
+}
+
+const acceptanceType = (status) => {
+  const map = { pending: 'info', accepted: 'success', rejected: 'danger' }
+  return map[status] || 'info'
 }
 
 const loadWBS = async () => {
@@ -88,18 +90,27 @@ const loadWBS = async () => {
   }
 }
 
+const resetForm = (parentId) => {
+  Object.assign(form, { ID: null, parentId: parentId || null, title: '', status: 'draft', attrs: {} })
+}
+
 const openAddDialog = (parent) => {
   dialogType.value = 'add'
   parentNode.value = parent
   dialogTitle.value = parent ? '新增子项' : '新增根节点'
-  Object.assign(form, { ID: null, parentId: parent?.ID || null, title: '', description: '', effort: 0 })
+  resetForm(parent?.ID)
   dialogVisible.value = true
 }
 
 const openEditDialog = (data) => {
   dialogType.value = 'edit'
   dialogTitle.value = '编辑范围项'
-  Object.assign(form, data)
+  resetForm()
+  form.ID = data.ID
+  form.parentId = data.parentId || null
+  form.title = data.title
+  form.status = data.status || 'draft'
+  form.attrs = data.attrs ? { ...data.attrs } : {}
   dialogVisible.value = true
 }
 
@@ -107,9 +118,10 @@ const handleSave = async () => {
   if (!formRef.value) return
   await formRef.value.validate(async (valid) => {
     if (!valid) return
-    const res = await createScopeItem(form)
+    const api = dialogType.value === 'add' ? createScopeItem : updateScopeItem
+    const res = await api(form)
     if (res.code === 0) {
-      ElMessage.success('保存成功')
+      ElMessage.success(dialogType.value === 'add' ? '添加成功' : '更新成功')
       dialogVisible.value = false
       loadWBS()
     }
@@ -119,7 +131,7 @@ const handleSave = async () => {
 const handleDelete = (data) => {
   ElMessageBox.confirm(`确认删除「${data.title}」及其子项吗？`, '提示', { type: 'warning' })
     .then(async () => {
-      const res = await buildScopeWBS({ action: 'delete', ID: data.ID })
+      const res = await deleteScopeItem({ ID: data.ID })
       if (res.code === 0) {
         ElMessage.success('删除成功')
         loadWBS()
