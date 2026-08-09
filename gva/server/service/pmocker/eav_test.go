@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
+	"github.com/flipped-aurora/gin-vue-admin/server/internal/testutil"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/pmocker"
 	eavtypes "github.com/pmocker-io/pmocker/pkg/pmocker/eav"
 	"github.com/glebarez/sqlite"
@@ -85,4 +86,43 @@ func TestEAVCreateAndGet(t *testing.T) {
 
 	// 清理
 	svc.DeleteEntity(ctx, id)
+}
+
+func TestLoadEntityTypeFiltersStatus(t *testing.T) {
+	db := testutil.NewMemoryDB(t, &pmocker.PMEntityType{}, &pmocker.PMFieldDef{})
+	db.Create(&pmocker.PMEntityType{TypeCode: "p", ModuleCode: "m", Name: "P", Status: "published"})
+	db.Create(&pmocker.PMEntityType{TypeCode: "d", ModuleCode: "m", Name: "D", Status: "draft"})
+
+	s := &EAVService{}
+	if _, err := s.LoadEntityType(context.Background(), "d", false); err == nil {
+		t.Fatal("includeDraft=false 应过滤 draft 实体类型")
+	}
+	if _, err := s.LoadEntityType(context.Background(), "d", true); err != nil {
+		t.Fatalf("includeDraft=true 应返回 draft: %v", err)
+	}
+	if _, err := s.LoadEntityType(context.Background(), "p", false); err != nil {
+		t.Fatalf("published 实体类型应正常返回: %v", err)
+	}
+}
+
+func TestLoadFieldDefsFiltersStatus(t *testing.T) {
+	db := testutil.NewMemoryDB(t, &pmocker.PMEntityType{}, &pmocker.PMFieldDef{})
+	db.Create(&pmocker.PMFieldDef{EntityType: "task", FieldKey: "code", FieldLabel: "编码", DataType: "string", Status: "published"})
+	db.Create(&pmocker.PMFieldDef{EntityType: "task", FieldKey: "secret", FieldLabel: "草稿字段", DataType: "string", Status: "draft"})
+
+	s := &EAVService{}
+	pub, err := s.LoadFieldDefs(context.Background(), "task", false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(pub) != 1 {
+		t.Fatalf("includeDraft=false 应返回 1 个 published 字段，got %d", len(pub))
+	}
+	all, err := s.LoadFieldDefs(context.Background(), "task", true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(all) != 2 {
+		t.Fatalf("includeDraft=true 应返回 2 个字段，got %d", len(all))
+	}
 }

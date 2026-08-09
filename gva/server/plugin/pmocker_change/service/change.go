@@ -257,7 +257,7 @@ func (s *Service) GetDiff(ctx context.Context, changeID uint) ([]FieldDiff, erro
 	}
 
 	// 加载字段定义，用于字段标签与排序（加载失败时降级为以字段键作为标签）
-	defs, _ := pmservice.ServiceGroupApp.LoadFieldDefs(ctx, "change_request")
+	defs, _ := pmservice.ServiceGroupApp.LoadFieldDefs(ctx, "change_request", true)
 	labelMap := make(map[string]string, len(defs))
 	defOrder := make([]string, 0, len(defs))
 	for _, d := range defs {

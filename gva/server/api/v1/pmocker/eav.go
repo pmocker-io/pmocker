@@ -86,12 +86,12 @@ func (a *EAVApi) RegisterSchema(c *gin.Context) {
 // GetSchema 获取实体类型的字段定义
 func (a *EAVApi) GetSchema(c *gin.Context) {
 	entityType := c.Param("entityType")
-	et, err := service.LoadEntityType(c.Request.Context(), entityType)
+	et, err := service.LoadEntityType(c.Request.Context(), entityType, true)
 	if err != nil {
 		response.FailWithMessage("实体类型不存在: "+err.Error(), c)
 		return
 	}
-	fields, err := service.LoadFieldDefs(c.Request.Context(), entityType)
+	fields, err := service.LoadFieldDefs(c.Request.Context(), entityType, true)
 	if err != nil {
 		response.FailWithMessage("加载字段定义失败: "+err.Error(), c)
 		return

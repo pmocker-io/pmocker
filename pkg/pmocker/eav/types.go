@@ -27,6 +27,7 @@ type EntityType struct {
 	Name       string `json:"name" yaml:"name"`
 	Icon       string `json:"icon" yaml:"icon"`
 	IconColor  string `json:"icon_color" yaml:"icon_color"`
+	Status     string `json:"status" yaml:"status"`
 }
 
 // FieldDef 字段定义（对应 pm_field_defs 表）
@@ -38,6 +39,7 @@ type FieldDef struct {
 	OptionsJSON   string   `json:"options_json,omitempty" yaml:"options_json,omitempty"`
 	DefaultValue  string   `json:"default_value,omitempty" yaml:"default_value,omitempty"`
 	Validators    string   `json:"validators,omitempty" yaml:"validators,omitempty"`
+	Status        string   `json:"status" yaml:"status"`
 }
 
 // RelationType 关系类型定义（对应 pm_relation_types 表）

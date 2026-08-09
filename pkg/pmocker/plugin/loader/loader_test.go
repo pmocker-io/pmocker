@@ -15,10 +15,10 @@ type stubEAV struct {
 	fields      []eavtypes.FieldDef
 }
 
-func (s *stubEAV) LoadEntityType(ctx context.Context, t string) (*eavtypes.EntityType, error) {
+func (s *stubEAV) LoadEntityType(ctx context.Context, t string, includeDraft bool) (*eavtypes.EntityType, error) {
 	return nil, nil
 }
-func (s *stubEAV) LoadFieldDefs(ctx context.Context, t string) ([]eavtypes.FieldDef, error) {
+func (s *stubEAV) LoadFieldDefs(ctx context.Context, t string, includeDraft bool) ([]eavtypes.FieldDef, error) {
 	return nil, nil
 }
 func (s *stubEAV) RegisterEntityType(ctx context.Context, et eavtypes.EntityType) error {

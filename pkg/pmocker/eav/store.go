@@ -6,8 +6,10 @@ import "context"
 // gva 层实现此接口（用 GORM 操作 pm_entities/pm_attrs 等表）。
 type EAVStore interface {
 	// 元数据
-	LoadEntityType(ctx context.Context, typeCode string) (*EntityType, error)
-	LoadFieldDefs(ctx context.Context, typeCode string) ([]FieldDef, error)
+	// LoadEntityType 加载实体类型；includeDraft=false 仅返回 published
+	LoadEntityType(ctx context.Context, typeCode string, includeDraft bool) (*EntityType, error)
+	// LoadFieldDefs 加载字段定义；includeDraft=false 仅返回 published
+	LoadFieldDefs(ctx context.Context, typeCode string, includeDraft bool) ([]FieldDef, error)
 	RegisterEntityType(ctx context.Context, et EntityType) error
 	RegisterFieldDef(ctx context.Context, fd FieldDef) error
 

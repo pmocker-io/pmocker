@@ -13,10 +13,14 @@ import (
 // EAVService 实现 eav.EAVStore 接口
 type EAVService struct{}
 
-// LoadEntityType 加载实体类型
-func (s *EAVService) LoadEntityType(ctx context.Context, typeCode string) (*eavtypes.EntityType, error) {
+// LoadEntityType 加载实体类型；includeDraft=false 仅返回 published
+func (s *EAVService) LoadEntityType(ctx context.Context, typeCode string, includeDraft bool) (*eavtypes.EntityType, error) {
+	db := global.GVA_DB.WithContext(ctx).Where("type_code = ?", typeCode)
+	if !includeDraft {
+		db = db.Where("status = ?", "published")
+	}
 	var et pmocker.PMEntityType
-	if err := global.GVA_DB.WithContext(ctx).Where("type_code = ?", typeCode).First(&et).Error; err != nil {
+	if err := db.First(&et).Error; err != nil {
 		return nil, err
 	}
 	return &eavtypes.EntityType{
@@ -25,13 +29,18 @@ func (s *EAVService) LoadEntityType(ctx context.Context, typeCode string) (*eavt
 		Name:       et.Name,
 		Icon:       et.Icon,
 		IconColor:  et.IconColor,
+		Status:     et.Status,
 	}, nil
 }
 
-// LoadFieldDefs 加载字段定义
-func (s *EAVService) LoadFieldDefs(ctx context.Context, typeCode string) ([]eavtypes.FieldDef, error) {
+// LoadFieldDefs 加载字段定义；includeDraft=false 仅返回 published
+func (s *EAVService) LoadFieldDefs(ctx context.Context, typeCode string, includeDraft bool) ([]eavtypes.FieldDef, error) {
+	db := global.GVA_DB.WithContext(ctx).Where("entity_type = ?", typeCode)
+	if !includeDraft {
+		db = db.Where("status = ?", "published")
+	}
 	var defs []pmocker.PMFieldDef
-	if err := global.GVA_DB.WithContext(ctx).Where("entity_type = ?", typeCode).Find(&defs).Error; err != nil {
+	if err := db.Find(&defs).Error; err != nil {
 		return nil, err
 	}
 	result := make([]eavtypes.FieldDef, len(defs))
@@ -44,6 +53,7 @@ func (s *EAVService) LoadFieldDefs(ctx context.Context, typeCode string) ([]eavt
 			OptionsJSON:  d.OptionsJSON,
 			DefaultValue: d.DefaultValue,
 			Validators:   d.Validators,
+			Status:       d.Status,
 		}
 	}
 	return result, nil
@@ -58,6 +68,7 @@ func (s *EAVService) RegisterEntityType(ctx context.Context, et eavtypes.EntityT
 			Name:       et.Name,
 			Icon:       et.Icon,
 			IconColor:  et.IconColor,
+			Status:     "published",
 		}).FirstOrCreate(&pmocker.PMEntityType{TypeCode: et.TypeCode}).Error
 }
 
@@ -71,6 +82,7 @@ func (s *EAVService) RegisterFieldDef(ctx context.Context, fd eavtypes.FieldDef)
 			OptionsJSON:  fd.OptionsJSON,
 			DefaultValue: fd.DefaultValue,
 			Validators:   fd.Validators,
+			Status:       "published",
 		}).FirstOrCreate(&pmocker.PMFieldDef{
 			EntityType: fd.EntityType,
 			FieldKey:   fd.FieldKey,
