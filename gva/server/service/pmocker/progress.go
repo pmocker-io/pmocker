@@ -102,7 +102,7 @@ func (s *ProgressService) CalcByCount(projectID uint) (float64, error) {
 	}
 	done := 0
 	for _, t := range tasks {
-		if t.Status == "done" {
+		if t.Status == "completed" || t.Status == "done" {
 			done++
 		}
 	}

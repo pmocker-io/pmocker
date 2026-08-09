@@ -31,6 +31,10 @@ func readAttrDecimal(entityID uint, key string) float64 {
 	if attr.ValDecimal != nil {
 		return *attr.ValDecimal
 	}
+	// 兼容整数存储：progress 等整数值由 writeAttrValue/seed 写入 val_int
+	if attr.ValInt != nil {
+		return float64(*attr.ValInt)
+	}
 	return 0
 }
 
