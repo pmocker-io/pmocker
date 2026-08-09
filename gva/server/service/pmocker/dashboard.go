@@ -119,7 +119,7 @@ func (s *DashboardService) calcProgressByCount(db *gorm.DB, projectID uint) floa
 		return 0
 	}
 	db.Model(&pmocker.PMEntity{}).
-		Where("project_id = ? AND entity_type = ? AND status = ?", projectID, "task", "done").
+		Where("project_id = ? AND entity_type = ? AND status IN ?", projectID, "task", []string{"done", "completed"}).
 		Count(&done)
 	return float64(done) / float64(total) * 100
 }

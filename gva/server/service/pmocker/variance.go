@@ -76,7 +76,7 @@ func (s *VarianceService) GetAlerts(projectID uint) ([]VarianceAlert, error) {
 	var tasks []pmocker.PMEntity
 	global.GVA_DB.Where("project_id = ? AND entity_type = ?", projectID, "task").Find(&tasks)
 	for _, t := range tasks {
-		if t.Status == "done" {
+		if t.Status == "done" || t.Status == "completed" {
 			continue
 		}
 		end := readAttrString(t.ID, "end_date")
