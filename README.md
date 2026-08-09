@@ -6,7 +6,7 @@ PMocker 把不同方法论（PMBOK 第六版 / PRINCE2 / ISO 21502 / 敏捷）�
 
 ## 当前状态
 
-v1.0 MVP 已达成，M1-M12 里程碑全部完成（M1-M8 已推送 `origin/main`，M9-M12 已实现）：
+v1.0 MVP 已达成，M1-M13 里程碑全部完成（M1-M8 已推送 `origin/main`，M9-M13 已实现）：
 
 | 里程碑 | 交付内容 | 状态 |
 |------|------|------|
@@ -22,6 +22,7 @@ v1.0 MVP 已达成，M1-M12 里程碑全部完成（M1-M8 已推送 `origin/main
 | M10 · 表单适配 | 前端 DynamicForm 动态表单 + Schema API | 已完成 |
 | M11 · 可视化 | 甘特图 / 检入检出 / 变更 diff / 跨模块联动 | 已完成 |
 | M12 · 业务闭环 | 基线 / 偏差 / 事件引擎 / 完成度 / 仪表盘 / PMO / 结项 / 任务中心 / 项目工作台 | 已完成 |
+| M13 · 初始配置管理 | 配置 CRUD + 状态机(草稿/评审/发布/归档) + 导出YAML + 前端配置页 | 已完成 |
 
 > 完整设计见 [需求文档.MD](需求文档.MD)，实现计划见 [docs/superpowers/plans/](docs/superpowers/plans/)。
 
