@@ -106,7 +106,7 @@ func (s *SeedSyncService) SyncStates(ctx context.Context, db *gorm.DB, seed *Con
 }
 
 // SyncProjectEntities 同步项目实体种子（pm_entities + pm_attrs）
-// EPS 配置包的 projects 为树层级（仅建 EPS 节点）；业务配置包通过 project_id + entities 建业务实体。
+// EPS 配置包的 projects 为树层级（仅建 EPS 节点）；业务配置包通过 project_id/project_code + entities 建业务实体。
 func (s *SeedSyncService) SyncProjectEntities(ctx context.Context, db *gorm.DB, seed *ConfigPackageSeed) error {
 	for _, p := range seed.Projects {
 		if seed.EntityType == "eps_node" {
@@ -115,15 +115,36 @@ func (s *SeedSyncService) SyncProjectEntities(ctx context.Context, db *gorm.DB, 
 			}
 			continue
 		}
+		// 解析项目 ID：优先 project_code（查 eps_node 的 code attr），回退 project_id
+		projectID := p.ProjectID
+		if p.ProjectCode != "" {
+			pid, err := resolveProjectID(db, p.ProjectCode)
+			if err != nil {
+				return err
+			}
+			projectID = pid
+		}
 		for _, entities := range p.Entities {
 			for _, ent := range entities {
-				if err := s.syncEntity(ctx, db, seed.EntityType, p.ProjectID, ent); err != nil {
+				if err := s.syncEntity(ctx, db, seed.EntityType, projectID, ent); err != nil {
 					return err
 				}
 			}
 		}
 	}
 	return nil
+}
+
+// resolveProjectID 按项目编码查询 EPS 项目实体 ID
+func resolveProjectID(db *gorm.DB, code string) (uint, error) {
+	var node pmocker.PMEntity
+	err := db.Table("pm_entities").Joins("JOIN pm_attrs ON pm_attrs.entity_id = pm_entities.id").
+		Where("pm_entities.entity_type = ? AND pm_attrs.field_key = ? AND pm_attrs.val_string = ?", "eps_node", "code", code).
+		First(&node).Error
+	if err != nil {
+		return 0, fmt.Errorf("项目编码 %s 未找到对应 EPS 项目: %w", code, err)
+	}
+	return node.ID, nil
 }
 
 // syncEPSTree 递归创建 EPS 树节点

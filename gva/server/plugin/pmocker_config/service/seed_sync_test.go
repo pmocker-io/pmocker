@@ -109,6 +109,47 @@ func TestSyncProjectEntities(t *testing.T) {
 	}
 }
 
+func TestSyncProjectByCode(t *testing.T) {
+	ctx := context.Background()
+	db := testutil.NewMemoryDB(t, &pmocker.PMEntityType{}, &pmocker.PMFieldDef{}, &pmocker.PMStateDef{}, &pmocker.PMEntity{}, &pmocker.PMAttr{})
+	// 先建 EPS 项目（code=PROJ_X）
+	pid := uint(0)
+	e := pmocker.PMEntity{ProjectID: 0, EntityType: "eps_node", Title: "项目X", Status: "active"}
+	if err := db.Create(&e).Error; err != nil {
+		t.Fatal(err)
+	}
+	pid = e.ID
+	if err := setAttr(db, pid, "code", "PROJ_X"); err != nil {
+		t.Fatal(err)
+	}
+
+	seedYAML := `
+entity_type: task
+module: schedule
+name: 进度管理
+fields: []
+states: []
+transitions: []
+projects:
+  - project_code: PROJ_X
+    entities:
+      task:
+        - {title: 任务1, status: planned}
+`
+	seed, err := ParseSeedYAML([]byte(seedYAML))
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := &SeedSyncService{}
+	if err := s.Sync(ctx, db, seed); err != nil {
+		t.Fatalf("Sync: %v", err)
+	}
+	var ent pmocker.PMEntity
+	if err := db.Where("project_id = ? AND entity_type = ? AND title = ?", pid, "task", "任务1").First(&ent).Error; err != nil {
+		t.Fatalf("project_code 未解析: %v", err)
+	}
+}
+
 func TestPublishPackageSyncsDB(t *testing.T) {
 	ctx := context.Background()
 	db := testutil.NewMemoryDB(t, &pmocker.PMConfigPackage{}, &pmocker.PMConfigVersion{}, &pmocker.PMEntityType{}, &pmocker.PMFieldDef{}, &pmocker.PMStateDef{}, &pmocker.PMEntity{}, &pmocker.PMAttr{})
