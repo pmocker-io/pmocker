@@ -7,6 +7,7 @@ import (
 
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/pmocker"
+	"github.com/flipped-aurora/gin-vue-admin/server/utils/datascope"
 	"gorm.io/gorm"
 )
 
@@ -95,9 +96,11 @@ func (s *ConfigPackageService) Publish(ctx context.Context, id uint) error {
 		return fmt.Errorf("seed_yaml 解析失败: %w", err)
 	}
 	// 事务：同步运行表 + 状态流转 + 版本递增 + 版本快照
+	// 同步是系统级操作（配置包发布灌入运行表），用 WithSystem 绕过数据权限过滤
+	syncCtx := datascope.WithSystem(ctx)
 	return db.Transaction(func(tx *gorm.DB) error {
 		syncSvc := &SeedSyncService{}
-		if err := syncSvc.Sync(ctx, tx, seed); err != nil {
+		if err := syncSvc.Sync(syncCtx, tx, seed); err != nil {
 			return fmt.Errorf("同步运行表失败: %w", err)
 		}
 		if err := tx.Model(&pkg).Update("status", "published").Error; err != nil {

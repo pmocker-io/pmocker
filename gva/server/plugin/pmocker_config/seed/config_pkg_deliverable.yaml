@@ -121,7 +121,8 @@ transitions:
       action: reject
       rollback: true
 projects:
-    - code: PROJ_A
+    - code: ""
+      project_code: PROJ_A
       name: 智能排产系统研发
       type: project
       status: active
@@ -228,7 +229,8 @@ projects:
               priority: 1
               status: draft
               title: 结项报告
-    - code: PROJ_B
+    - code: ""
+      project_code: PROJ_B
       name: 新建厂房工程
       type: project
       status: active
@@ -335,7 +337,8 @@ projects:
               priority: 1
               status: draft
               title: 结项报告
-    - code: PROJ_C
+    - code: ""
+      project_code: PROJ_C
       name: 高精度温度传感器研发
       type: project
       status: active

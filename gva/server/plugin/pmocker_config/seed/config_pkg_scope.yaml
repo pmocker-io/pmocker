@@ -71,7 +71,8 @@ states:
       tag_type: info
 transitions: []
 projects:
-    - code: PROJ_A
+    - code: ""
+      project_code: PROJ_A
       name: 智能排产系统研发
       type: project
       status: active
@@ -93,7 +94,8 @@ projects:
             - code: S5
               name: 5.测试验收
               parent: S1
-    - code: PROJ_B
+    - code: ""
+      project_code: PROJ_B
       name: 新建厂房工程
       type: project
       status: active
@@ -118,7 +120,8 @@ projects:
             - code: W6
               name: 验收交付
               parent: ""
-    - code: PROJ_C
+    - code: ""
+      project_code: PROJ_C
       name: 高精度温度传感器研发
       type: project
       status: active

@@ -41,16 +41,19 @@ states:
 transitions: []
 projects:
     - code: PROJ_A
+      project_code: ""
       name: 智能排产系统研发
       type: project
       status: active
       priority: 1
     - code: PROJ_B
+      project_code: ""
       name: 新建厂房工程
       type: project
       status: active
       priority: 0
     - code: PROJ_C
+      project_code: ""
       name: 高精度温度传感器研发
       type: project
       status: active

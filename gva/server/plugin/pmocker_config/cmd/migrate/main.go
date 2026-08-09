@@ -76,6 +76,7 @@ type TransitionSeed struct {
 
 type ProjectSeed struct {
 	Code        string                                `yaml:"code" json:"code"`
+	ProjectCode string                                `yaml:"project_code" json:"project_code"`
 	Name        string                                `yaml:"name" json:"name"`
 	Type        string                                `yaml:"type" json:"type"`
 	Status      string                                `yaml:"status" json:"status"`
@@ -270,7 +271,7 @@ func buildModuleConfig(module, entityType string, schema *SchemaYaml, projects [
 	cfg.Transitions = buildDefaultTransitions(schema.States)
 	// 项目实体种子
 	for _, p := range projects {
-		ps := ProjectSeed{Code: p.Code, Name: p.Name, Type: "project", Status: p.Status, Priority: p.Priority, Entities: map[string][]map[string]interface{}{}}
+		ps := ProjectSeed{ProjectCode: p.Code, Name: p.Name, Type: "project", Status: p.Status, Priority: p.Priority, Entities: map[string][]map[string]interface{}{}}
 		ps.Entities[entityType] = extractEntities(module, p)
 		cfg.Projects = append(cfg.Projects, ps)
 	}
