@@ -46,12 +46,13 @@
 - 2026-08-09：端到端验证通过（创建→发布→DB同步→版本v2→回滚→归档→恢复 + EPS新增项目显示在树）
 - 2026-08-09：**3项目业务种子完整迁移为配置包**——cmd/migrate 脚本从 business_seed.yaml + 各模块 schema.yaml 生成 10 个配置包（EPS树 + 9业务模块：字段/状态/简化流转/项目实体种子），启动自动导入 + 全部发布成功，各模块实体正确归属 3 项目
 - 2026-08-09：修复配置包发布数据权限（WithSystem）+ project_code 引用 + name/username 兼容
+- 2026-08-09：**配置包模型纠正——改为聚合配置包**：一个配置包记录 = 所有模块的完整种子数据集合（modules map），而非每模块一包。重构 seed_parser/seed_sync/migrate/export，生成单一 `pmbok6-hybrid` 聚合配置包（10 模块），发布验证全部模块正确同步 3 项目
 
 ## 后续待办
 
 - [ ] 更新 README 里程碑（M13 聚合配置包模型）
 - [ ] 用户基于配置包编辑页调整种子 → 发布同步 → 导出 → v1.1 升级
-- [ ] 清理历史重复组织节点（eps_node project_id=0 的 group/division 35 个，seed 多次重建累积）
+- [ ] 清理历史重复组织节点（eps_node project_id=0 的 group/division 41 个，seed 多次重建累积）
 
 ## 更新规则
 
