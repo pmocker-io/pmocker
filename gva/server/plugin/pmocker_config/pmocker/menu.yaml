@@ -12,17 +12,10 @@ menus:
     sort: 1
     title: 配置包
     icon: box
-  - path: packageEditor
-    name: pmockerConfigPackageEditor
-    parent_name: pmockerConfig
-    component: view/pmocker/config/packageEditor.vue
-    sort: 2
-    title: 配置编辑
-    icon: edit
   - path: org
     name: pmockerConfigOrg
     parent_name: pmockerConfig
     component: view/pmocker/config/orgEntry.vue
-    sort: 3
+    sort: 2
     title: 组织权限
     icon: user
