@@ -1,6 +1,7 @@
 package api
 
 import (
+	"os"
 	"strconv"
 
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
@@ -174,9 +175,13 @@ func (a *ConfigApi) ListSeedEntities(c *gin.Context) {
 // @Success   200  {object}  response.Response{msg=string}  "导出成功"
 // @Router    /pmocker/config/export [post]
 func (a *ConfigApi) Export(c *gin.Context) {
-	if err := exportSvc.Export(c.Request.Context(), "images/pmbok6-hybrid"); err != nil {
+	destDir := os.Getenv("PMOCKER_EXPORT_DIR")
+	if destDir == "" {
+		destDir = "images/pmbok6-hybrid"
+	}
+	if err := exportSvc.Export(c.Request.Context(), destDir); err != nil {
 		response.FailWithMessage("导出失败: "+err.Error(), c)
 		return
 	}
-	response.OkWithMessage("导出成功", c)
+	response.OkWithMessage("导出成功: "+destDir, c)
 }
