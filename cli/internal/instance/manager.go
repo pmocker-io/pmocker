@@ -212,12 +212,24 @@ func (m *Manager) Remove(idOrName string, removeVolume bool) error {
 		if err := m.Stop(idOrName); err != nil {
 			return err
 		}
+		// Windows 上 taskkill /F 后文件句柄可能未立即释放，等待短暂时间
+		time.Sleep(500 * time.Millisecond)
 	}
 	if err := m.store.Delete(inst.ID); err != nil {
 		return err
 	}
 	if removeVolume {
-		return m.volumes.Remove(inst.VolumeID)
+		// 重试删除数据卷：Windows 上文件句柄释放可能延迟
+		var lastErr error
+		for i := 0; i < 5; i++ {
+			if err := m.volumes.Remove(inst.VolumeID); err != nil {
+				lastErr = err
+				time.Sleep(time.Duration(500*(i+1)) * time.Millisecond)
+				continue
+			}
+			return nil
+		}
+		return fmt.Errorf("删除数据卷失败（可能文件被锁定）: %w", lastErr)
 	}
 	return nil
 }

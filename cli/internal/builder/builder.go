@@ -136,6 +136,11 @@ func (b *Builder) buildWeb() error {
 	// 复制 dist 到 binPath 同级目录
 	srcDist := filepath.Join(b.gvaWebDir, "dist")
 	dstDist := filepath.Join(filepath.Dir(b.binPath), "dist")
+	// 先清理目标目录：Vite 每次构建生成新的 content-hash 文件名，
+	// 若不清理旧文件，bin/dist/assets 会累积大量不再被 index.html 引用的孤儿 js/css
+	if err := os.RemoveAll(dstDist); err != nil {
+		return fmt.Errorf("clean dst dist dir: %w", err)
+	}
 	fmt.Println("复制前端 dist 到", dstDist)
 	return copyDir(srcDist, dstDist)
 }

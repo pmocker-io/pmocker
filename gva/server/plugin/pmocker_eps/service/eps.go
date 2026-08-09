@@ -54,16 +54,24 @@ func (s *Service) DeleteEPSNode(ctx context.Context, id uint) error {
 }
 
 func (s *Service) BuildEPSTree(ctx context.Context, projectID uint) ([]TreeNode, error) {
+	// EPS 只显示项目节点（带 progress_algo 属性的 eps_node）
+	// 组织架构由 GVA 内置部门管理负责，不应出现在 EPS 中
 	entities, _, err := pmservice.ServiceGroupApp.ListEntities(ctx, projectID, "eps_node", 0, 10000)
 	if err != nil {
 		return nil, err
 	}
-	return buildTreeFromEntities(entities), nil
+	// 过滤：只保留带 progress_algo 属性的项目节点
+	var projects []eavtypes.Entity
+	for _, e := range entities {
+		if _, ok := e.Attrs["progress_algo"]; ok {
+			projects = append(projects, e)
+		}
+	}
+	return buildTreeFromEntities(projects), nil
 }
 
 func buildTreeFromEntities(entities []eavtypes.Entity) []TreeNode {
 	nodeMap := make(map[string]*TreeNode)
-
 	for _, e := range entities {
 		pp := normalizePath(getStrAttr(e.Attrs, "parent_path"))
 		name := getStrAttr(e.Attrs, "name")
@@ -72,41 +80,52 @@ func buildTreeFromEntities(entities []eavtypes.Entity) []TreeNode {
 		}
 		fullPath := joinPath(pp, name)
 		nodeMap[fullPath] = &TreeNode{
-			ID:       e.ID,
-			Name:     name,
-			Code:     getStrAttr(e.Attrs, "code"),
-			Type:     getStrAttr(e.Attrs, "type"),
-			Children: nil, // 下面统一 append，避免再分配
+			ID:   e.ID,
+			Name: name,
+			Code: getStrAttr(e.Attrs, "code"),
+			Type: getStrAttr(e.Attrs, "type"),
 		}
 	}
 
-	// 第一遍：用指针把父→子挂到 parentNode.Children（全程指针，避免遍历顺序导致的拷贝丢失）
-	// 创建 childrenMap[parentFullPath] = [childNodePointer...]
-	childrenMap := make(map[string][]*TreeNode)
+	// 构建 ptrChildren[parentFullPath] = [childPtr...]：全程指针，不做值拷贝
+	ptrChildren := make(map[string][]*TreeNode)
 	for fullPath, node := range nodeMap {
 		parentPath := parentOf(fullPath)
 		if _, ok := nodeMap[parentPath]; ok {
-			childrenMap[parentPath] = append(childrenMap[parentPath], node)
-		}
-	}
-	// 把挂好的子节点再塞回父节点指针的 Children（转 value 切片）
-	for parentFull, children := range childrenMap {
-		if pn, ok := nodeMap[parentFull]; ok {
-			for _, cn := range children {
-				pn.Children = append(pn.Children, *cn)
-			}
+			ptrChildren[parentPath] = append(ptrChildren[parentPath], node)
 		}
 	}
 
-	// 第二遍：收集根节点（父节点不在 nodeMap 中的），此时根指针的Children已全部就绪
+	// 反向指针 -> fullPath，供 clone 递归使用
+	ptrToPath := make(map[*TreeNode]string, len(nodeMap))
+	for fp, ptr := range nodeMap {
+		ptrToPath[ptr] = fp
+	}
+
+	// 递归深拷贝：后序顺序天然保证"子节点的Children值切片已完整"后，才被值拷贝到父节点
+	// 避免了之前分两步"先把父值拷贝快照，再更新子指针Children造成不同步"的Bug。
+	var clone func(fullPath string) TreeNode
+	clone = func(fullPath string) TreeNode {
+		src := nodeMap[fullPath]
+		out := TreeNode{
+			ID:   src.ID,
+			Name: src.Name,
+			Code: src.Code,
+			Type: src.Type,
+		}
+		for _, childPtr := range ptrChildren[fullPath] {
+			out.Children = append(out.Children, clone(ptrToPath[childPtr]))
+		}
+		return out
+	}
+
 	var roots []TreeNode
-	for fullPath, node := range nodeMap {
+	for fullPath := range nodeMap {
 		parentPath := parentOf(fullPath)
 		if _, ok := nodeMap[parentPath]; !ok {
-			roots = append(roots, *node)
+			roots = append(roots, clone(fullPath))
 		}
 	}
-
 	return roots
 }
 
