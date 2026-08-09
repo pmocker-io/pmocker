@@ -99,26 +99,27 @@ export const transitions = {
     { status: 'cancelled', label: '已取消', tagType: '', actions: [] },
   ],
 
-  // 风险管理
+  // 风险管理 - 状态对齐 schema: identified, assessed, responding, closed, realized
   risk: [
     { status: 'identified', label: '已识别', tagType: 'info', actions: [
-      { label: '分析', target: 'analyzed', apiFn: 'updateRisk', type: 'primary' },
+      { label: '评估', target: 'assessed', apiFn: 'updateRisk', type: 'primary' },
       { label: '关闭', target: 'closed', apiFn: 'updateRisk', type: 'success' },
     ]},
-    { status: 'analyzed', label: '已分析', tagType: 'warning', actions: [
-      { label: '响应', target: 'responded', apiFn: 'updateRisk', type: 'primary' },
+    { status: 'assessed', label: '已评估', tagType: 'warning', actions: [
+      { label: '响应', target: 'responding', apiFn: 'updateRisk', type: 'primary' },
       { label: '关闭', target: 'closed', apiFn: 'updateRisk', type: 'success' },
     ]},
-    { status: 'responded', label: '已响应', tagType: 'primary', actions: [
+    { status: 'responding', label: '响应中', tagType: 'primary', actions: [
       { label: '关闭', target: 'closed', apiFn: 'updateRisk', type: 'success' },
+      { label: '已发生', target: 'realized', apiFn: 'updateRisk', type: 'danger' },
     ]},
     { status: 'closed', label: '已关闭', tagType: 'success', actions: [] },
-    { status: 'opportunity', label: '机会', tagType: 'success', actions: [
-      { label: '分析', target: 'analyzed', apiFn: 'updateRisk', type: 'primary' },
+    { status: 'realized', label: '已发生', tagType: 'danger', actions: [
+      { label: '关闭', target: 'closed', apiFn: 'updateRisk', type: 'success' },
     ]},
   ],
 
-  // 需求管理
+  // 需求管理 - 状态对齐 schema: draft, reviewing, approved, rejected, fulfilled
   requirement: [
     { status: 'draft', label: '草稿', tagType: 'info', actions: [
       { label: '提交评审', target: 'reviewing', apiFn: 'submitRequirementReview', type: 'primary' },
@@ -128,18 +129,21 @@ export const transitions = {
       { label: '驳回', target: 'rejected', apiFn: 'rejectRequirement', type: 'danger' },
     ]},
     { status: 'approved', label: '已批准', tagType: 'success', actions: [
-      { label: '标记实现', target: 'implemented', apiFn: 'updateRequirement', type: 'primary' },
+      { label: '标记实现', target: 'fulfilled', apiFn: 'updateRequirement', type: 'primary' },
     ]},
     { status: 'rejected', label: '已驳回', tagType: 'danger', actions: [
       { label: '重新提交', target: 'reviewing', apiFn: 'submitRequirementReview', type: 'warning' },
     ]},
-    { status: 'implemented', label: '已实现', tagType: 'success', actions: [] },
+    { status: 'fulfilled', label: '已实现', tagType: 'success', actions: [] },
   ],
 
-  // 交付物管理
+  // 交付物管理 - 状态对齐 schema: draft, submitted, reviewing, accepted, rejected, baselined, obsolete
   deliverable: [
     { status: 'draft', label: '草稿', tagType: 'info', actions: [
-      { label: '提交评审', target: 'reviewing', apiFn: 'submitDeliverableReview', type: 'primary' },
+      { label: '提交', target: 'submitted', apiFn: 'submitDeliverableReview', type: 'primary' },
+    ]},
+    { status: 'submitted', label: '已提交', tagType: 'info', actions: [
+      { label: '评审', target: 'reviewing', apiFn: 'updateDeliverable', type: 'primary' },
     ]},
     { status: 'reviewing', label: '评审中', tagType: 'warning', actions: [
       { label: '接收', target: 'accepted', apiFn: 'acceptDeliverable', type: 'success' },
@@ -149,12 +153,12 @@ export const transitions = {
       { label: '基线', target: 'baselined', apiFn: 'updateDeliverable', type: 'primary' },
     ]},
     { status: 'rejected', label: '已驳回', tagType: 'danger', actions: [
-      { label: '重新提交', target: 'reviewing', apiFn: 'submitDeliverableReview', type: 'warning' },
+      { label: '重新提交', target: 'submitted', apiFn: 'submitDeliverableReview', type: 'warning' },
     ]},
-    { status: 'baselined', label: '已基线', tagType: 'success', actions: [] },
-    { status: 'checked_out', label: '已检出', tagType: 'warning', actions: [
-      { label: '检入', target: 'baselined', apiFn: 'updateDeliverable', type: 'primary' },
+    { status: 'baselined', label: '已基线', tagType: 'success', actions: [
+      { label: '废弃', target: 'obsolete', apiFn: 'updateDeliverable', type: 'danger' },
     ]},
+    { status: 'obsolete', label: '已废弃', tagType: '', actions: [] },
   ],
 }
 

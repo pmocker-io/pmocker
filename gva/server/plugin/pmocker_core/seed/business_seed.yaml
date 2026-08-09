@@ -1,4 +1,4 @@
-# M12 业务种子数据：3项目×10模块最小必要数据
+﻿# M12 业务种子数据：3项目×10模块最小必要数据
 # 10 个 module entity_type 简写：
 # eps=eps_node(项目本身), team=team_member, scope=scope_item, schedule=task,
 # cost=cost_item, deliverable=deliverable, requirement=requirement,
@@ -30,21 +30,21 @@ projects:
       - { code: S5, name: "5.测试验收", parent: S1 }
     schedule:
       # 按 task title 做唯一 key
-      - { title: 需求调研, owner: proj_a_ba, start_date: "2026-01-06", end_date: "2026-01-20", estimated_hours: 80, status: done, progress: 100, priority: 2 }
-      - { title: 架构设计, owner: proj_a_be, start_date: "2026-01-20", end_date: "2026-02-05", estimated_hours: 100, status: done, progress: 100, priority: 1, deps: [需求调研] }
-      - { title: DB设计, owner: proj_a_be, start_date: "2026-02-05", end_date: "2026-02-15", estimated_hours: 60, status: done, progress: 100, priority: 2, deps: [架构设计] }
-      - { title: 前端框架搭建, owner: proj_a_fe, start_date: "2026-02-05", end_date: "2026-02-20", estimated_hours: 80, status: done, progress: 100, priority: 2, deps: [架构设计] }
-      - { title: 后端框架搭建, owner: proj_a_be, start_date: "2026-02-05", end_date: "2026-02-25", estimated_hours: 100, status: done, progress: 100, priority: 1, deps: [架构设计] }
-      - { title: 排产算法, owner: proj_a_be, start_date: "2026-02-25", end_date: "2026-04-10", estimated_hours: 200, status: doing, progress: 70, priority: 1, deps: [后端框架搭建] }
-      - { title: 用户管理, owner: proj_a_be, start_date: "2026-03-01", end_date: "2026-03-20", estimated_hours: 80, status: doing, progress: 50, priority: 2, deps: [后端框架搭建] }
-      - { title: 可视化看板, owner: proj_a_fe, start_date: "2026-03-01", end_date: "2026-04-15", estimated_hours: 120, status: doing, progress: 40, priority: 2, deps: [前端框架搭建] }
-      - { title: 集成测试, owner: proj_a_qa, start_date: "2026-04-15", end_date: "2026-05-10", estimated_hours: 100, status: todo, progress: 0, priority: 2, deps: [排产算法, 可视化看板] }
-      - { title: 性能测试, owner: proj_a_qa, start_date: "2026-05-01", end_date: "2026-05-15", estimated_hours: 60, status: todo, progress: 0, priority: 2, deps: [排产算法] }
-      - { title: UAT测试, owner: proj_a_qa, start_date: "2026-05-10", end_date: "2026-05-25", estimated_hours: 60, status: todo, progress: 0, priority: 1, deps: [集成测试] }
-      - { title: 部署上线, owner: proj_a_be, start_date: "2026-05-25", end_date: "2026-06-05", estimated_hours: 40, status: todo, progress: 0, priority: 1, deps: [UAT测试] }
-      - { title: 用户培训, owner: proj_a_ba, start_date: "2026-06-05", end_date: "2026-06-15", estimated_hours: 30, status: todo, progress: 0, priority: 3, deps: [部署上线] }
-      - { title: 文档交付, owner: proj_a_ba, start_date: "2026-06-15", end_date: "2026-06-25", estimated_hours: 40, status: todo, progress: 0, priority: 2, deps: [部署上线] }
-      - { title: 项目结项, owner: proj_a_pm, start_date: "2026-06-25", end_date: "2026-06-30", estimated_hours: 20, status: todo, progress: 0, priority: 1, deps: [用户培训, 文档交付] }
+      - { title: 需求调研, owner: proj_a_ba, start_date: "2026-01-06", end_date: "2026-01-20", estimated_hours: 80, status: completed, progress: 100, priority: 2 }
+      - { title: 架构设计, owner: proj_a_be, start_date: "2026-01-20", end_date: "2026-02-05", estimated_hours: 100, status: completed, progress: 100, priority: 1, deps: [需求调研] }
+      - { title: DB设计, owner: proj_a_be, start_date: "2026-02-05", end_date: "2026-02-15", estimated_hours: 60, status: completed, progress: 100, priority: 2, deps: [架构设计] }
+      - { title: 前端框架搭建, owner: proj_a_fe, start_date: "2026-02-05", end_date: "2026-02-20", estimated_hours: 80, status: completed, progress: 100, priority: 2, deps: [架构设计] }
+      - { title: 后端框架搭建, owner: proj_a_be, start_date: "2026-02-05", end_date: "2026-02-25", estimated_hours: 100, status: completed, progress: 100, priority: 1, deps: [架构设计] }
+      - { title: 排产算法, owner: proj_a_be, start_date: "2026-02-25", end_date: "2026-04-10", estimated_hours: 200, status: in_progress, progress: 70, priority: 1, deps: [后端框架搭建] }
+      - { title: 用户管理, owner: proj_a_be, start_date: "2026-03-01", end_date: "2026-03-20", estimated_hours: 80, status: in_progress, progress: 50, priority: 2, deps: [后端框架搭建] }
+      - { title: 可视化看板, owner: proj_a_fe, start_date: "2026-03-01", end_date: "2026-04-15", estimated_hours: 120, status: in_progress, progress: 40, priority: 2, deps: [前端框架搭建] }
+      - { title: 集成测试, owner: proj_a_qa, start_date: "2026-04-15", end_date: "2026-05-10", estimated_hours: 100, status: planned, progress: 0, priority: 2, deps: [排产算法, 可视化看板] }
+      - { title: 性能测试, owner: proj_a_qa, start_date: "2026-05-01", end_date: "2026-05-15", estimated_hours: 60, status: planned, progress: 0, priority: 2, deps: [排产算法] }
+      - { title: UAT测试, owner: proj_a_qa, start_date: "2026-05-10", end_date: "2026-05-25", estimated_hours: 60, status: planned, progress: 0, priority: 1, deps: [集成测试] }
+      - { title: 部署上线, owner: proj_a_be, start_date: "2026-05-25", end_date: "2026-06-05", estimated_hours: 40, status: planned, progress: 0, priority: 1, deps: [UAT测试] }
+      - { title: 用户培训, owner: proj_a_ba, start_date: "2026-06-05", end_date: "2026-06-15", estimated_hours: 30, status: planned, progress: 0, priority: 3, deps: [部署上线] }
+      - { title: 文档交付, owner: proj_a_ba, start_date: "2026-06-15", end_date: "2026-06-25", estimated_hours: 40, status: planned, progress: 0, priority: 2, deps: [部署上线] }
+      - { title: 项目结项, owner: proj_a_pm, start_date: "2026-06-25", end_date: "2026-06-30", estimated_hours: 20, status: planned, progress: 0, priority: 1, deps: [用户培训, 文档交付] }
     cost:
       - { code: C1, name: PM薪资6月, cost_type: labor, amount: 150000 }       # 156.25 * 160 * 6 = 150000
       - { code: C2, name: BA薪资6月, cost_type: labor, amount: 108000 }
@@ -59,14 +59,14 @@ projects:
     requirement:
       - { title: 排产算法引擎, priority: 1, status: approved, owner: proj_a_be, description: 核心排产算法支持多目标优化 }
       - { title: 可视化看板, priority: 2, status: approved, owner: proj_a_fe, description: 甘特图+资源视图+健康度 }
-      - { title: 用户管理, priority: 2, status: in_progress, owner: proj_a_be, description: 用户/角色/权限 }
-      - { title: 权限控制, priority: 2, status: in_progress, owner: proj_a_be, description: 数据权限基于部门范围 }
-      - { title: 数据导入导出, priority: 3, status: proposed, owner: proj_a_ba, description: Excel/CSV }
-      - { title: 报表导出, priority: 3, status: proposed, owner: proj_a_qa, description: 进度/成本报表 }
-      - { title: 告警通知, priority: 2, status: proposed, owner: proj_a_pm, description: 邮件+站内信 }
-      - { title: 移动端适配, priority: 3, status: proposed, owner: proj_a_fe, description: 响应式布局 }
-      - { title: API开放接口, priority: 2, status: proposed, owner: proj_a_be, description: REST API供第三方系统 }
-      - { title: 多工厂支持, priority: 3, status: proposed, owner: proj_a_pm, description: 多租户数据隔离 }
+      - { title: 用户管理, priority: 2, status: reviewing, owner: proj_a_be, description: 用户/角色/权限 }
+      - { title: 权限控制, priority: 2, status: reviewing, owner: proj_a_be, description: 数据权限基于部门范围 }
+      - { title: 数据导入导出, priority: 3, status: reviewing, owner: proj_a_ba, description: Excel/CSV }
+      - { title: 报表导出, priority: 3, status: reviewing, owner: proj_a_qa, description: 进度/成本报表 }
+      - { title: 告警通知, priority: 2, status: reviewing, owner: proj_a_pm, description: 邮件+站内信 }
+      - { title: 移动端适配, priority: 3, status: reviewing, owner: proj_a_fe, description: 响应式布局 }
+      - { title: API开放接口, priority: 2, status: reviewing, owner: proj_a_be, description: REST API供第三方系统 }
+      - { title: 多工厂支持, priority: 3, status: reviewing, owner: proj_a_pm, description: 多租户数据隔离 }
     issue:
       - { title: 算法性能瓶颈, priority: 1, status: resolved, owner: proj_a_be, severity: major, description: 10000订单计算超时10s }
       - { title: 前端内存泄漏, priority: 2, status: resolved, owner: proj_a_fe, severity: normal, description: 甘特图渲染后内存持续增长 }
@@ -79,38 +79,38 @@ projects:
       - { title: 告警误报, priority: 2, status: open, owner: proj_a_pm, severity: normal, description: 阈值不当 }
       - { title: 移动端布局, priority: 3, status: open, owner: proj_a_fe, severity: minor, description: 小屏手机错乱 }
     risk:
-      - { title: 算法精度不达标, probability: 0.6, impact: 0.9, status: mitigated, owner: proj_a_be, response: 引入第三方算法库 }
-      - { title: 核心人员离职, probability: 0.3, impact: 0.8, status: open, owner: proj_a_pm, response: 备份关键知识 }
-      - { title: 需求蔓延, probability: 0.8, impact: 0.7, status: open, owner: proj_a_ba, response: 变更控制流程 }
-      - { title: 技术栈升级, probability: 0.5, impact: 0.4, status: open, owner: proj_a_be, response: 预留兼容测试 }
-      - { title: 第三方依赖, probability: 0.4, impact: 0.6, status: open, owner: proj_a_be, response: 多供应商备选 }
-      - { title: 数据迁移, probability: 0.3, impact: 0.5, status: open, owner: proj_a_be, response: 预演迁移方案 }
-      - { title: 性能压力, probability: 0.5, impact: 0.7, status: open, owner: proj_a_qa, response: 提前做性能测试 }
-      - { title: 安全漏洞, probability: 0.2, impact: 0.9, status: open, owner: proj_a_be, response: 安全审计+代码扫描 }
-      - { title: 进度延期, probability: 0.6, impact: 0.6, status: in_progress, owner: proj_a_pm, response: 关键路径增加资源 }
-      - { title: 成本超支, probability: 0.4, impact: 0.5, status: open, owner: proj_a_pm, response: 严格工时审批 }
+      - { title: 算法精度不达标, probability: 0.6, impact: 0.9, status: assessed, owner: proj_a_be, response: 引入第三方算法库 }
+      - { title: 核心人员离职, probability: 0.3, impact: 0.8, status: identified, owner: proj_a_pm, response: 备份关键知识 }
+      - { title: 需求蔓延, probability: 0.8, impact: 0.7, status: identified, owner: proj_a_ba, response: 变更控制流程 }
+      - { title: 技术栈升级, probability: 0.5, impact: 0.4, status: identified, owner: proj_a_be, response: 预留兼容测试 }
+      - { title: 第三方依赖, probability: 0.4, impact: 0.6, status: identified, owner: proj_a_be, response: 多供应商备选 }
+      - { title: 数据迁移, probability: 0.3, impact: 0.5, status: identified, owner: proj_a_be, response: 预演迁移方案 }
+      - { title: 性能压力, probability: 0.5, impact: 0.7, status: identified, owner: proj_a_qa, response: 提前做性能测试 }
+      - { title: 安全漏洞, probability: 0.2, impact: 0.9, status: identified, owner: proj_a_be, response: 安全审计+代码扫描 }
+      - { title: 进度延期, probability: 0.6, impact: 0.6, status: responding, owner: proj_a_pm, response: 关键路径增加资源 }
+      - { title: 成本超支, probability: 0.4, impact: 0.5, status: identified, owner: proj_a_pm, response: 严格工时审批 }
     change:
       - { title: 排产规则变更, type: requirement, status: approved, priority: 1, owner: proj_a_be, description: 增加换型时间约束 }
-      - { title: UI改版, type: scope, status: implemented, priority: 2, owner: proj_a_fe, description: 整体配色调整为深色 }
-      - { title: 增加移动端, type: scope, status: under_review, priority: 2, owner: proj_a_pm, description: 支持小程序 }
-      - { title: DB结构调整, type: design, status: proposed, priority: 1, owner: proj_a_be, description: 增加分表 }
-      - { title: API重构, type: design, status: proposed, priority: 2, owner: proj_a_be, description: v1→v2 }
-      - { title: 权限模型调整, type: process, status: proposed, priority: 2, owner: proj_a_pm, description: 引入ABAC }
-      - { title: 报表引擎替换, type: tool, status: proposed, priority: 3, owner: proj_a_qa, description: 引入ECharts pro }
-      - { title: 告警规则修改, type: process, status: proposed, priority: 2, owner: proj_a_pm, description: 动态阈值 }
-      - { title: 部署方案变更, type: infra, status: proposed, priority: 2, owner: proj_a_be, description: k8s容器化 }
-      - { title: 验收标准调整, type: process, status: proposed, priority: 2, owner: proj_a_qa, description: 性能指标放宽 }
+      - { title: UI改版, type: scope, status: implementing, priority: 2, owner: proj_a_fe, description: 整体配色调整为深色 }
+      - { title: 增加移动端, type: scope, status: ccb_review, priority: 2, owner: proj_a_pm, description: 支持小程序 }
+      - { title: DB结构调整, type: design, status: submitted, priority: 1, owner: proj_a_be, description: 增加分表 }
+      - { title: API重构, type: design, status: submitted, priority: 2, owner: proj_a_be, description: v1→v2 }
+      - { title: 权限模型调整, type: process, status: submitted, priority: 2, owner: proj_a_pm, description: 引入ABAC }
+      - { title: 报表引擎替换, type: tool, status: submitted, priority: 3, owner: proj_a_qa, description: 引入ECharts pro }
+      - { title: 告警规则修改, type: process, status: submitted, priority: 2, owner: proj_a_pm, description: 动态阈值 }
+      - { title: 部署方案变更, type: infra, status: submitted, priority: 2, owner: proj_a_be, description: k8s容器化 }
+      - { title: 验收标准调整, type: process, status: submitted, priority: 2, owner: proj_a_qa, description: 性能指标放宽 }
     deliverable:
       # 20个：前15个常用，补齐20
       - { code: D01, title: 需求规格说明书, owner: proj_a_ba, status: accepted, priority: 1 }
       - { code: D02, title: 架构设计文档, owner: proj_a_be, status: accepted, priority: 1 }
       - { code: D03, title: DB设计文档, owner: proj_a_be, status: accepted, priority: 2 }
-      - { code: D04, title: API接口文档, owner: proj_a_be, status: in_review, priority: 2 }
-      - { code: D05, title: 前端源代码, owner: proj_a_fe, status: created, priority: 1 }
-      - { code: D06, title: 后端源代码, owner: proj_a_be, status: created, priority: 1 }
-      - { code: D07, title: 排产算法库, owner: proj_a_be, status: created, priority: 1 }
-      - { code: D08, title: 测试计划, owner: proj_a_qa, status: in_review, priority: 2 }
-      - { code: D09, title: 测试用例, owner: proj_a_qa, status: created, priority: 2 }
+      - { code: D04, title: API接口文档, owner: proj_a_be, status: reviewing, priority: 2 }
+      - { code: D05, title: 前端源代码, owner: proj_a_fe, status: draft, priority: 1 }
+      - { code: D06, title: 后端源代码, owner: proj_a_be, status: draft, priority: 1 }
+      - { code: D07, title: 排产算法库, owner: proj_a_be, status: draft, priority: 1 }
+      - { code: D08, title: 测试计划, owner: proj_a_qa, status: reviewing, priority: 2 }
+      - { code: D09, title: 测试用例, owner: proj_a_qa, status: draft, priority: 2 }
       - { code: D10, title: 测试报告, owner: proj_a_qa, status: draft, priority: 2 }
       - { code: D11, title: UAT报告, owner: proj_a_qa, status: draft, priority: 1 }
       - { code: D12, title: 部署手册, owner: proj_a_be, status: draft, priority: 2 }
@@ -148,21 +148,21 @@ projects:
       - { code: W5, name: "装饰装修", parent: "" }
       - { code: W6, name: "验收交付", parent: "" }
     schedule:
-      - { title: 地质勘察, owner: proj_b_civil, start_date: "2025-10-01", end_date: "2025-10-31", estimated_hours: 120, status: done, progress: 100, priority: 1 }
-      - { title: 方案设计, owner: proj_b_pm, start_date: "2025-11-01", end_date: "2025-11-30", estimated_hours: 160, status: done, progress: 100, priority: 1, deps: [地质勘察] }
-      - { title: 施工图设计, owner: proj_b_civil, start_date: "2025-12-01", end_date: "2026-01-15", estimated_hours: 200, status: done, progress: 100, priority: 1, deps: [方案设计] }
-      - { title: 报建审批, owner: proj_b_pm, start_date: "2026-01-15", end_date: "2026-02-28", estimated_hours: 80, status: done, progress: 100, priority: 1, deps: [施工图设计] }
-      - { title: 基础施工, owner: proj_b_civil, start_date: "2026-03-01", end_date: "2026-04-30", estimated_hours: 320, status: done, progress: 100, priority: 1, deps: [报建审批] }
-      - { title: 主体结构, owner: proj_b_civil, start_date: "2026-05-01", end_date: "2026-07-31", estimated_hours: 480, status: doing, progress: 60, priority: 0, deps: [基础施工] }
-      - { title: 二次结构, owner: proj_b_civil, start_date: "2026-07-15", end_date: "2026-08-31", estimated_hours: 160, status: doing, progress: 20, priority: 1, deps: [主体结构] }
-      - { title: 机电安装, owner: proj_b_mep, start_date: "2026-08-01", end_date: "2026-09-15", estimated_hours: 240, status: todo, progress: 0, priority: 1, deps: [二次结构] }
-      - { title: 装修工程, owner: proj_b_civil, start_date: "2026-09-01", end_date: "2026-10-15", estimated_hours: 320, status: todo, progress: 0, priority: 1, deps: [机电安装] }
-      - { title: 室外工程, owner: proj_b_civil, start_date: "2026-09-15", end_date: "2026-10-31", estimated_hours: 160, status: todo, progress: 0, priority: 2, deps: [装修工程] }
-      - { title: 消防验收, owner: proj_b_safety, start_date: "2026-10-20", end_date: "2026-11-10", estimated_hours: 80, status: todo, progress: 0, priority: 1, deps: [室外工程] }
-      - { title: 竣工验收, owner: proj_b_pm, start_date: "2026-11-01", end_date: "2026-11-20", estimated_hours: 80, status: todo, progress: 0, priority: 0, deps: [消防验收] }
-      - { title: 设备调试, owner: proj_b_mep, start_date: "2026-11-15", end_date: "2026-11-30", estimated_hours: 80, status: todo, progress: 0, priority: 2, deps: [竣工验收] }
-      - { title: 搬迁入驻, owner: proj_b_pm, start_date: "2026-12-01", end_date: "2026-12-15", estimated_hours: 40, status: todo, progress: 0, priority: 2, deps: [设备调试] }
-      - { title: 项目结项, owner: proj_b_pm, start_date: "2026-12-15", end_date: "2026-12-20", estimated_hours: 20, status: todo, progress: 0, priority: 1, deps: [搬迁入驻] }
+      - { title: 地质勘察, owner: proj_b_civil, start_date: "2025-10-01", end_date: "2025-10-31", estimated_hours: 120, status: completed, progress: 100, priority: 1 }
+      - { title: 方案设计, owner: proj_b_pm, start_date: "2025-11-01", end_date: "2025-11-30", estimated_hours: 160, status: completed, progress: 100, priority: 1, deps: [地质勘察] }
+      - { title: 施工图设计, owner: proj_b_civil, start_date: "2025-12-01", end_date: "2026-01-15", estimated_hours: 200, status: completed, progress: 100, priority: 1, deps: [方案设计] }
+      - { title: 报建审批, owner: proj_b_pm, start_date: "2026-01-15", end_date: "2026-02-28", estimated_hours: 80, status: completed, progress: 100, priority: 1, deps: [施工图设计] }
+      - { title: 基础施工, owner: proj_b_civil, start_date: "2026-03-01", end_date: "2026-04-30", estimated_hours: 320, status: completed, progress: 100, priority: 1, deps: [报建审批] }
+      - { title: 主体结构, owner: proj_b_civil, start_date: "2026-05-01", end_date: "2026-07-31", estimated_hours: 480, status: in_progress, progress: 60, priority: 0, deps: [基础施工] }
+      - { title: 二次结构, owner: proj_b_civil, start_date: "2026-07-15", end_date: "2026-08-31", estimated_hours: 160, status: in_progress, progress: 20, priority: 1, deps: [主体结构] }
+      - { title: 机电安装, owner: proj_b_mep, start_date: "2026-08-01", end_date: "2026-09-15", estimated_hours: 240, status: planned, progress: 0, priority: 1, deps: [二次结构] }
+      - { title: 装修工程, owner: proj_b_civil, start_date: "2026-09-01", end_date: "2026-10-15", estimated_hours: 320, status: planned, progress: 0, priority: 1, deps: [机电安装] }
+      - { title: 室外工程, owner: proj_b_civil, start_date: "2026-09-15", end_date: "2026-10-31", estimated_hours: 160, status: planned, progress: 0, priority: 2, deps: [装修工程] }
+      - { title: 消防验收, owner: proj_b_safety, start_date: "2026-10-20", end_date: "2026-11-10", estimated_hours: 80, status: planned, progress: 0, priority: 1, deps: [室外工程] }
+      - { title: 竣工验收, owner: proj_b_pm, start_date: "2026-11-01", end_date: "2026-11-20", estimated_hours: 80, status: planned, progress: 0, priority: 0, deps: [消防验收] }
+      - { title: 设备调试, owner: proj_b_mep, start_date: "2026-11-15", end_date: "2026-11-30", estimated_hours: 80, status: planned, progress: 0, priority: 2, deps: [竣工验收] }
+      - { title: 搬迁入驻, owner: proj_b_pm, start_date: "2026-12-01", end_date: "2026-12-15", estimated_hours: 40, status: planned, progress: 0, priority: 2, deps: [设备调试] }
+      - { title: 项目结项, owner: proj_b_pm, start_date: "2026-12-15", end_date: "2026-12-20", estimated_hours: 20, status: planned, progress: 0, priority: 1, deps: [搬迁入驻] }
     cost:
       - { code: B1, name: PM薪资15月, cost_type: labor, amount: 300000 }
       - { code: B2, name: 土建工程师薪资, cost_type: labor, amount: 440000 }
@@ -179,12 +179,12 @@ projects:
       - { title: 消防等级, priority: 0, status: approved, owner: proj_b_safety, description: 一级耐火 }
       - { title: 层高要求, priority: 1, status: approved, owner: proj_b_pm, description: 首层7米 }
       - { title: 供电容量, priority: 1, status: approved, owner: proj_b_mep, description: 2000KVA }
-      - { title: 环保标准, priority: 1, status: in_progress, owner: proj_b_pm, description: 工业环保标准 }
+      - { title: 环保标准, priority: 1, status: reviewing, owner: proj_b_pm, description: 工业环保标准 }
       - { title: 面积需求, priority: 0, status: approved, owner: proj_b_pm, description: 5万平米 }
-      - { title: 绿化比例, priority: 2, status: proposed, owner: proj_b_pm, description: 20%绿化率 }
-      - { title: 停车位, priority: 2, status: proposed, owner: proj_b_pm, description: 300个车位 }
-      - { title: 卸货平台, priority: 2, status: proposed, owner: proj_b_pm, description: 6个卸货口 }
-      - { title: 光伏发电, priority: 3, status: proposed, owner: proj_b_mep, description: 屋顶光伏 }
+      - { title: 绿化比例, priority: 2, status: reviewing, owner: proj_b_pm, description: 20%绿化率 }
+      - { title: 停车位, priority: 2, status: reviewing, owner: proj_b_pm, description: 300个车位 }
+      - { title: 卸货平台, priority: 2, status: reviewing, owner: proj_b_pm, description: 6个卸货口 }
+      - { title: 光伏发电, priority: 3, status: reviewing, owner: proj_b_mep, description: 屋顶光伏 }
     issue:
       # 10条
       - { title: 雨季施工延误, priority: 0, status: in_progress, owner: proj_b_pm, severity: critical, description: 连续降雨导致基础施工延期2周 }
@@ -199,28 +199,28 @@ projects:
       - { title: 验收标准变动, priority: 2, status: open, owner: proj_b_pm, severity: normal, description: 当地验收标准修订 }
     risk:
       # 10条
-      - { title: 成本严重超支, probability: 0.9, impact: 0.9, status: in_progress, owner: proj_b_qs, response: 重新预算+申请追加 }
-      - { title: 工期严重延期, probability: 0.9, impact: 0.8, status: in_progress, owner: proj_b_pm, response: 赶工加人 }
-      - { title: 业主方付款, probability: 0.5, impact: 0.9, status: open, owner: proj_b_pm, response: 付款催收 }
-      - { title: 质量事故, probability: 0.3, impact: 0.9, status: open, owner: proj_b_safety, response: 加强质检 }
-      - { title: 安全事故, probability: 0.4, impact: 0.9, status: open, owner: proj_b_safety, response: 安全培训 }
-      - { title: 政策变动, probability: 0.3, impact: 0.7, status: open, owner: proj_b_pm, response: 咨询政策 }
-      - { title: 环保停工, probability: 0.5, impact: 0.7, status: open, owner: proj_b_safety, response: 环保投入 }
-      - { title: 材料供应中断, probability: 0.4, impact: 0.7, status: open, owner: proj_b_qs, response: 备选供应商 }
-      - { title: 工人罢工, probability: 0.2, impact: 0.8, status: open, owner: proj_b_pm, response: 福利提升 }
-      - { title: 极端天气, probability: 0.4, impact: 0.6, status: open, owner: proj_b_pm, response: 应急预案 }
+      - { title: 成本严重超支, probability: 0.9, impact: 0.9, status: responding, owner: proj_b_qs, response: 重新预算+申请追加 }
+      - { title: 工期严重延期, probability: 0.9, impact: 0.8, status: responding, owner: proj_b_pm, response: 赶工加人 }
+      - { title: 业主方付款, probability: 0.5, impact: 0.9, status: identified, owner: proj_b_pm, response: 付款催收 }
+      - { title: 质量事故, probability: 0.3, impact: 0.9, status: identified, owner: proj_b_safety, response: 加强质检 }
+      - { title: 安全事故, probability: 0.4, impact: 0.9, status: identified, owner: proj_b_safety, response: 安全培训 }
+      - { title: 政策变动, probability: 0.3, impact: 0.7, status: identified, owner: proj_b_pm, response: 咨询政策 }
+      - { title: 环保停工, probability: 0.5, impact: 0.7, status: identified, owner: proj_b_safety, response: 环保投入 }
+      - { title: 材料供应中断, probability: 0.4, impact: 0.7, status: identified, owner: proj_b_qs, response: 备选供应商 }
+      - { title: 工人罢工, probability: 0.2, impact: 0.8, status: identified, owner: proj_b_pm, response: 福利提升 }
+      - { title: 极端天气, probability: 0.4, impact: 0.6, status: identified, owner: proj_b_pm, response: 应急预案 }
     change:
       # 10条
-      - { title: 新增地下车库, type: scope, status: under_review, priority: 0, owner: proj_b_pm, description: 增加地下一层车库 }
+      - { title: 新增地下车库, type: scope, status: ccb_review, priority: 0, owner: proj_b_pm, description: 增加地下一层车库 }
       - { title: 钢筋规格升级, type: material, status: approved, priority: 1, owner: proj_b_civil, description: HRB400→HRB500 }
-      - { title: 增加消防喷淋, type: scope, status: implemented, priority: 1, owner: proj_b_mep, description: 全部自动喷淋 }
-      - { title: 外墙材质变更, type: material, status: proposed, priority: 2, owner: proj_b_civil, description: 涂料→石材 }
-      - { title: 容积率调整, type: design, status: proposed, priority: 1, owner: proj_b_pm, description: 容积率提升 }
-      - { title: 供电扩容, type: infra, status: under_review, priority: 1, owner: proj_b_mep, description: 2000→3000KVA }
-      - { title: 吊顶取消, type: scope, status: proposed, priority: 2, owner: proj_b_pm, description: 厂房取消吊顶 }
-      - { title: 卸货区增加雨棚, type: scope, status: proposed, priority: 2, owner: proj_b_pm, description: 雨棚覆盖卸货区 }
-      - { title: 电梯数量增加, type: equipment, status: proposed, priority: 2, owner: proj_b_mep, description: 2→3部货梯 }
-      - { title: 验收流程调整, type: process, status: proposed, priority: 2, owner: proj_b_pm, description: 增加预验收环节 }
+      - { title: 增加消防喷淋, type: scope, status: implementing, priority: 1, owner: proj_b_mep, description: 全部自动喷淋 }
+      - { title: 外墙材质变更, type: material, status: submitted, priority: 2, owner: proj_b_civil, description: 涂料→石材 }
+      - { title: 容积率调整, type: design, status: submitted, priority: 1, owner: proj_b_pm, description: 容积率提升 }
+      - { title: 供电扩容, type: infra, status: ccb_review, priority: 1, owner: proj_b_mep, description: 2000→3000KVA }
+      - { title: 吊顶取消, type: scope, status: submitted, priority: 2, owner: proj_b_pm, description: 厂房取消吊顶 }
+      - { title: 卸货区增加雨棚, type: scope, status: submitted, priority: 2, owner: proj_b_pm, description: 雨棚覆盖卸货区 }
+      - { title: 电梯数量增加, type: equipment, status: submitted, priority: 2, owner: proj_b_mep, description: 2→3部货梯 }
+      - { title: 验收流程调整, type: process, status: submitted, priority: 2, owner: proj_b_pm, description: 增加预验收环节 }
     deliverable:
       # 20个
       - { code: B01, title: 地质勘察报告, owner: proj_b_civil, status: accepted, priority: 1 }
@@ -229,10 +229,10 @@ projects:
       - { code: B04, title: 报建文件, owner: proj_b_pm, status: accepted, priority: 1 }
       - { code: B05, title: 施工组织设计, owner: proj_b_pm, status: accepted, priority: 1 }
       - { code: B06, title: 基础施工记录, owner: proj_b_civil, status: accepted, priority: 1 }
-      - { code: B07, title: 材料进场验收单, owner: proj_b_qs, status: in_review, priority: 2 }
-      - { code: B08, title: 质检报告, owner: proj_b_civil, status: in_review, priority: 1 }
-      - { code: B09, title: 安全检查记录, owner: proj_b_safety, status: created, priority: 1 }
-      - { code: B10, title: 隐蔽工程验收, owner: proj_b_civil, status: created, priority: 1 }
+      - { code: B07, title: 材料进场验收单, owner: proj_b_qs, status: reviewing, priority: 2 }
+      - { code: B08, title: 质检报告, owner: proj_b_civil, status: reviewing, priority: 1 }
+      - { code: B09, title: 安全检查记录, owner: proj_b_safety, status: draft, priority: 1 }
+      - { code: B10, title: 隐蔽工程验收, owner: proj_b_civil, status: draft, priority: 1 }
       - { code: B11, title: 机电施工图, owner: proj_b_mep, status: accepted, priority: 1 }
       - { code: B12, title: 消防报审材料, owner: proj_b_safety, status: draft, priority: 1 }
       - { code: B13, title: 竣工图, owner: proj_b_civil, status: draft, priority: 0 }
@@ -268,21 +268,21 @@ projects:
       - { code: C4, name: "验证测试", parent: "" }
       - { code: C5, name: "转产固化", parent: "" }
     schedule:
-      - { title: 市场调研, owner: proj_c_pm, start_date: "2025-12-01", end_date: "2025-12-20", estimated_hours: 60, status: done, progress: 100, priority: 2 }
-      - { title: 概念设计, owner: proj_c_elec, start_date: "2025-12-20", end_date: "2026-01-15", estimated_hours: 80, status: done, progress: 100, priority: 1, deps: [市场调研] }
-      - { title: 方案评审, owner: proj_c_pm, start_date: "2026-01-15", end_date: "2026-01-20", estimated_hours: 20, status: done, progress: 100, priority: 1, deps: [概念设计] }
-      - { title: 结构详细设计, owner: proj_c_struct, start_date: "2026-01-20", end_date: "2026-02-28", estimated_hours: 120, status: done, progress: 100, priority: 1, deps: [方案评审] }
-      - { title: 电路详细设计, owner: proj_c_elec, start_date: "2026-01-20", end_date: "2026-02-28", estimated_hours: 120, status: done, progress: 100, priority: 1, deps: [方案评审] }
-      - { title: PCB打样, owner: proj_c_elec, start_date: "2026-03-01", end_date: "2026-03-15", estimated_hours: 40, status: done, progress: 100, priority: 1, deps: [电路详细设计] }
-      - { title: 结构件开模, owner: proj_c_struct, start_date: "2026-03-01", end_date: "2026-03-25", estimated_hours: 60, status: done, progress: 100, priority: 1, deps: [结构详细设计] }
-      - { title: 原型组装, owner: proj_c_process, start_date: "2026-03-25", end_date: "2026-04-10", estimated_hours: 80, status: doing, progress: 80, priority: 2, deps: [PCB打样, 结构件开模] }
-      - { title: 功能测试, owner: proj_c_test, start_date: "2026-04-10", end_date: "2026-04-30", estimated_hours: 100, status: doing, progress: 30, priority: 1, deps: [原型组装] }
-      - { title: 环境试验, owner: proj_c_test, start_date: "2026-05-01", end_date: "2026-05-20", estimated_hours: 80, status: todo, progress: 0, priority: 1, deps: [功能测试] }
-      - { title: 工艺优化, owner: proj_c_process, start_date: "2026-05-10", end_date: "2026-06-10", estimated_hours: 100, status: todo, progress: 0, priority: 1, deps: [功能测试] }
-      - { title: EMC测试, owner: proj_c_test, start_date: "2026-05-20", end_date: "2026-06-05", estimated_hours: 60, status: todo, progress: 0, priority: 1, deps: [环境试验] }
-      - { title: 小批量试产, owner: proj_c_process, start_date: "2026-06-10", end_date: "2026-07-10", estimated_hours: 120, status: todo, progress: 0, priority: 1, deps: [工艺优化, EMC测试] }
-      - { title: 客户试用, owner: proj_c_pm, start_date: "2026-07-10", end_date: "2026-08-15", estimated_hours: 80, status: todo, progress: 0, priority: 1, deps: [小批量试产] }
-      - { title: 设计冻结结项, owner: proj_c_pm, start_date: "2026-08-15", end_date: "2026-08-31", estimated_hours: 40, status: todo, progress: 0, priority: 0, deps: [客户试用] }
+      - { title: 市场调研, owner: proj_c_pm, start_date: "2025-12-01", end_date: "2025-12-20", estimated_hours: 60, status: completed, progress: 100, priority: 2 }
+      - { title: 概念设计, owner: proj_c_elec, start_date: "2025-12-20", end_date: "2026-01-15", estimated_hours: 80, status: completed, progress: 100, priority: 1, deps: [市场调研] }
+      - { title: 方案评审, owner: proj_c_pm, start_date: "2026-01-15", end_date: "2026-01-20", estimated_hours: 20, status: completed, progress: 100, priority: 1, deps: [概念设计] }
+      - { title: 结构详细设计, owner: proj_c_struct, start_date: "2026-01-20", end_date: "2026-02-28", estimated_hours: 120, status: completed, progress: 100, priority: 1, deps: [方案评审] }
+      - { title: 电路详细设计, owner: proj_c_elec, start_date: "2026-01-20", end_date: "2026-02-28", estimated_hours: 120, status: completed, progress: 100, priority: 1, deps: [方案评审] }
+      - { title: PCB打样, owner: proj_c_elec, start_date: "2026-03-01", end_date: "2026-03-15", estimated_hours: 40, status: completed, progress: 100, priority: 1, deps: [电路详细设计] }
+      - { title: 结构件开模, owner: proj_c_struct, start_date: "2026-03-01", end_date: "2026-03-25", estimated_hours: 60, status: completed, progress: 100, priority: 1, deps: [结构详细设计] }
+      - { title: 原型组装, owner: proj_c_process, start_date: "2026-03-25", end_date: "2026-04-10", estimated_hours: 80, status: in_progress, progress: 80, priority: 2, deps: [PCB打样, 结构件开模] }
+      - { title: 功能测试, owner: proj_c_test, start_date: "2026-04-10", end_date: "2026-04-30", estimated_hours: 100, status: in_progress, progress: 30, priority: 1, deps: [原型组装] }
+      - { title: 环境试验, owner: proj_c_test, start_date: "2026-05-01", end_date: "2026-05-20", estimated_hours: 80, status: planned, progress: 0, priority: 1, deps: [功能测试] }
+      - { title: 工艺优化, owner: proj_c_process, start_date: "2026-05-10", end_date: "2026-06-10", estimated_hours: 100, status: planned, progress: 0, priority: 1, deps: [功能测试] }
+      - { title: EMC测试, owner: proj_c_test, start_date: "2026-05-20", end_date: "2026-06-05", estimated_hours: 60, status: planned, progress: 0, priority: 1, deps: [环境试验] }
+      - { title: 小批量试产, owner: proj_c_process, start_date: "2026-06-10", end_date: "2026-07-10", estimated_hours: 120, status: planned, progress: 0, priority: 1, deps: [工艺优化, EMC测试] }
+      - { title: 客户试用, owner: proj_c_pm, start_date: "2026-07-10", end_date: "2026-08-15", estimated_hours: 80, status: planned, progress: 0, priority: 1, deps: [小批量试产] }
+      - { title: 设计冻结结项, owner: proj_c_pm, start_date: "2026-08-15", end_date: "2026-08-31", estimated_hours: 40, status: planned, progress: 0, priority: 0, deps: [客户试用] }
     cost:
       - { code: K1, name: PM薪资, cost_type: labor, amount: 108000 }
       - { code: K2, name: 结构工程师薪资, cost_type: labor, amount: 170000 }
@@ -299,12 +299,12 @@ projects:
       - { title: 精度指标, priority: 0, status: approved, owner: proj_c_test, description: ±0.1°C }
       - { title: 响应时间, priority: 1, status: approved, owner: proj_c_elec, description: <100ms }
       - { title: 输出接口, priority: 1, status: approved, owner: proj_c_elec, description: I2C/SPI }
-      - { title: 封装尺寸, priority: 1, status: in_progress, owner: proj_c_struct, description: 3x3x0.8mm }
+      - { title: 封装尺寸, priority: 1, status: reviewing, owner: proj_c_struct, description: 3x3x0.8mm }
       - { title: 工作电压, priority: 2, status: approved, owner: proj_c_elec, description: 1.8-3.3V }
-      - { title: 功耗, priority: 2, status: proposed, owner: proj_c_elec, description: <0.5mW }
-      - { title: ESD等级, priority: 2, status: proposed, owner: proj_c_test, description: ±8kV接触 }
-      - { title: AEC-Q100, priority: 2, status: proposed, owner: proj_c_pm, description: 车规认证 }
-      - { title: RoHS合规, priority: 1, status: in_progress, owner: proj_c_process, description: 无铅工艺 }
+      - { title: 功耗, priority: 2, status: reviewing, owner: proj_c_elec, description: <0.5mW }
+      - { title: ESD等级, priority: 2, status: reviewing, owner: proj_c_test, description: ±8kV接触 }
+      - { title: AEC-Q100, priority: 2, status: reviewing, owner: proj_c_pm, description: 车规认证 }
+      - { title: RoHS合规, priority: 1, status: reviewing, owner: proj_c_process, description: 无铅工艺 }
     issue:
       - { title: 封装热应力, priority: 1, status: in_progress, owner: proj_c_struct, severity: major, description: 高低温封装开裂 }
       - { title: 采样噪声, priority: 1, status: resolved, owner: proj_c_elec, severity: major, description: ADC噪声过大 }
@@ -318,28 +318,28 @@ projects:
       - { title: 客户规格变更, priority: 2, status: open, owner: proj_c_pm, severity: normal, description: 客户要求增加校准功能 }
     risk:
       # 10条
-      - { title: 良率无法达标, probability: 0.7, impact: 0.8, status: in_progress, owner: proj_c_process, response: 更换工艺方案 }
-      - { title: 核心器件断供, probability: 0.6, impact: 0.8, status: open, owner: proj_c_elec, response: 寻找替代料 }
-      - { title: 规格无法达成, probability: 0.5, impact: 0.9, status: open, owner: proj_c_test, response: 与客户重新谈判 }
-      - { title: 模具一再修改, probability: 0.5, impact: 0.6, status: open, owner: proj_c_struct, response: 提前DFM }
-      - { title: EMC整改耗时, probability: 0.6, impact: 0.5, status: open, owner: proj_c_test, response: 提前摸底 }
-      - { title: 客户取消订单, probability: 0.3, impact: 0.9, status: open, owner: proj_c_pm, response: 发展备用客户 }
-      - { title: 关键人员流失, probability: 0.4, impact: 0.7, status: open, owner: proj_c_pm, response: 知识沉淀 }
-      - { title: 知识产权风险, probability: 0.3, impact: 0.8, status: open, owner: proj_c_pm, response: 专利检索 }
-      - { title: 成本超支, probability: 0.5, impact: 0.5, status: open, owner: proj_c_pm, response: 严控开支 }
-      - { title: 认证周期长, probability: 0.5, impact: 0.5, status: open, owner: proj_c_pm, response: 提前安排 }
+      - { title: 良率无法达标, probability: 0.7, impact: 0.8, status: responding, owner: proj_c_process, response: 更换工艺方案 }
+      - { title: 核心器件断供, probability: 0.6, impact: 0.8, status: identified, owner: proj_c_elec, response: 寻找替代料 }
+      - { title: 规格无法达成, probability: 0.5, impact: 0.9, status: identified, owner: proj_c_test, response: 与客户重新谈判 }
+      - { title: 模具一再修改, probability: 0.5, impact: 0.6, status: identified, owner: proj_c_struct, response: 提前DFM }
+      - { title: EMC整改耗时, probability: 0.6, impact: 0.5, status: identified, owner: proj_c_test, response: 提前摸底 }
+      - { title: 客户取消订单, probability: 0.3, impact: 0.9, status: identified, owner: proj_c_pm, response: 发展备用客户 }
+      - { title: 关键人员流失, probability: 0.4, impact: 0.7, status: identified, owner: proj_c_pm, response: 知识沉淀 }
+      - { title: 知识产权风险, probability: 0.3, impact: 0.8, status: identified, owner: proj_c_pm, response: 专利检索 }
+      - { title: 成本超支, probability: 0.5, impact: 0.5, status: identified, owner: proj_c_pm, response: 严控开支 }
+      - { title: 认证周期长, probability: 0.5, impact: 0.5, status: identified, owner: proj_c_pm, response: 提前安排 }
     change:
       # 10条
-      - { title: 封装尺寸调整, type: design, status: under_review, priority: 1, owner: proj_c_struct, description: 3x3→4x4 }
-      - { title: 增加校准功能, type: requirement, status: proposed, priority: 2, owner: proj_c_elec, description: 单点校准 }
-      - { title: 接口增加CAN, type: scope, status: proposed, priority: 2, owner: proj_c_elec, description: 增加CAN FD }
-      - { title: 精度提升, type: requirement, status: proposed, priority: 1, owner: proj_c_test, description: ±0.1→±0.05 }
-      - { title: 更换芯片, type: material, status: proposed, priority: 1, owner: proj_c_elec, description: A厂→B厂 }
-      - { title: 模具型腔数增加, type: tooling, status: proposed, priority: 2, owner: proj_c_process, description: 1→4腔 }
-      - { title: 增加ESD防护, type: design, status: implemented, priority: 1, owner: proj_c_elec, description: TVS管 }
-      - { title: 外壳材质变更, type: material, status: proposed, priority: 2, owner: proj_c_struct, description: PBT→LCP }
-      - { title: 焊盘尺寸调整, type: process, status: under_review, priority: 2, owner: proj_c_process, description: 扩大焊盘 }
-      - { title: 延长质保期, type: process, status: proposed, priority: 2, owner: proj_c_pm, description: 1→2年 }
+      - { title: 封装尺寸调整, type: design, status: ccb_review, priority: 1, owner: proj_c_struct, description: 3x3→4x4 }
+      - { title: 增加校准功能, type: requirement, status: submitted, priority: 2, owner: proj_c_elec, description: 单点校准 }
+      - { title: 接口增加CAN, type: scope, status: submitted, priority: 2, owner: proj_c_elec, description: 增加CAN FD }
+      - { title: 精度提升, type: requirement, status: submitted, priority: 1, owner: proj_c_test, description: ±0.1→±0.05 }
+      - { title: 更换芯片, type: material, status: submitted, priority: 1, owner: proj_c_elec, description: A厂→B厂 }
+      - { title: 模具型腔数增加, type: tooling, status: submitted, priority: 2, owner: proj_c_process, description: 1→4腔 }
+      - { title: 增加ESD防护, type: design, status: implementing, priority: 1, owner: proj_c_elec, description: TVS管 }
+      - { title: 外壳材质变更, type: material, status: submitted, priority: 2, owner: proj_c_struct, description: PBT→LCP }
+      - { title: 焊盘尺寸调整, type: process, status: ccb_review, priority: 2, owner: proj_c_process, description: 扩大焊盘 }
+      - { title: 延长质保期, type: process, status: submitted, priority: 2, owner: proj_c_pm, description: 1→2年 }
     deliverable:
       # 20个
       - { code: K01, title: 市场调研报告, owner: proj_c_pm, status: accepted, priority: 2 }
@@ -349,8 +349,8 @@ projects:
       - { code: K05, title: 原理图, owner: proj_c_elec, status: accepted, priority: 1 }
       - { code: K06, title: PCB Gerber, owner: proj_c_elec, status: accepted, priority: 1 }
       - { code: K07, title: BOM清单, owner: proj_c_elec, status: accepted, priority: 1 }
-      - { code: K08, title: 模具图纸, owner: proj_c_struct, status: in_review, priority: 1 }
-      - { code: K09, title: 组装SOP, owner: proj_c_process, status: created, priority: 2 }
+      - { code: K08, title: 模具图纸, owner: proj_c_struct, status: reviewing, priority: 1 }
+      - { code: K09, title: 组装SOP, owner: proj_c_process, status: draft, priority: 2 }
       - { code: K10, title: 功能测试报告, owner: proj_c_test, status: draft, priority: 1 }
       - { code: K11, title: 环境试验报告, owner: proj_c_test, status: draft, priority: 1 }
       - { code: K12, title: EMC测试报告, owner: proj_c_test, status: draft, priority: 1 }
