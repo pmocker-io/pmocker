@@ -270,6 +270,8 @@ func createProject(_ context.Context, p *ProjectSeedYAML, rt *runtimeCtx) error 
 			CreatedBy:  leader,
 		}
 		db.Create(task)
+		// GORM 对 int 零值使用 default tag（Priority 默认 2），需强制更新以确保 P0(0) 正确落库
+		db.Model(task).Update("priority", t.Priority)
 		rt.taskId[t.Title] = task.ID
 		createAttrStr(db, task.ID, "start_date", t.StartDate)
 		createAttrStr(db, task.ID, "end_date", t.EndDate)
@@ -321,6 +323,8 @@ func createProject(_ context.Context, p *ProjectSeedYAML, rt *runtimeCtx) error 
 			CreatedBy:  leader,
 		}
 		db.Create(e)
+		// 强制更新 priority，避免 GORM default tag 将 P0(0) 替换为默认值 2
+		db.Model(e).Update("priority", priority)
 		return e.ID
 	}
 
