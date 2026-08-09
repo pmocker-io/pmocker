@@ -193,6 +193,17 @@ func (s *SeedSyncService) syncEPSTree(ctx context.Context, db *gorm.DB, p *Proje
 // syncEntity 创建/更新单个业务实体（含 attrs），按 entity_type+project_id+title 幂等
 func (s *SeedSyncService) syncEntity(ctx context.Context, db *gorm.DB, entityType string, projectID uint, ent map[string]interface{}) error {
 	title, _ := ent["title"].(string)
+	// 兼容 name/username 字段作为标题（业务种子常用字段名）
+	if title == "" {
+		if v, ok := ent["name"].(string); ok {
+			title = v
+		}
+	}
+	if title == "" {
+		if v, ok := ent["username"].(string); ok {
+			title = v
+		}
+	}
 	if title == "" {
 		return fmt.Errorf("实体缺少 title: %+v", ent)
 	}
