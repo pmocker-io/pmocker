@@ -10,45 +10,46 @@
 
 ## 用户原始意图摘要
 
-把当前 PM 各模块涉及的种子数据（字段定义、初始值、字典、状态流转、工作流、业务种子数据）以 Web 页面方式管理（CRUD），快速配置各模块；配置项带状态机（草稿/评审/发布/归档）管理；支持编辑、复制复用、删除；配置完善后更新种子数据并支撑 v1.1 升级。
+以 Web 页面方式管理 PM 系统的完整配置。**一条配置记录（配置包）= 实体类型 + 实体的字段 + 初始值(种子数据，含项目) + 状态定义 + 流转规则(含退回)**，聚合为一个整体；类似 gva 自动化代码管理的包管理模式：配置包列表 → 点击 → 可编辑该配置。每条配置记录带**状态管理**（草稿/评审/发布/归档）和**版本管理**（快照+回滚）。EPS 中项目可新增/修改。完整种子数据 = 项目(EPS树，含状态及种子) × 各模块 × 模块字段 × 字段种子 + 模块 × 状态定义 × 流转规则。
 
 ## 影响范围
 
-- 后端：新增 `gva/server/plugin/pmocker_config/` 插件；现有 `pm_entity_types`/`pm_field_defs`/`pm_workflow_defs`/`pm_relation_types` 表加 `status` 列；新增 `pm_state_defs` 表；loader 灌入标记 published；getSchema/ListEntities 加 published 过滤
-- 前端：新增 `gva/web/src/view/pmocker/config/` 子页 + `api/pmocker/config.js`；`statusTransitions.js` 改读 API；复用 VerticalTabLayout
-- 文档：新增 spec（`docs/superpowers/specs/`）；README 里程碑更新
-- 插件 / 模块：新插件 `pmocker_config`（server + web + pmocker 元数据）
+- 后端：`gva/server/plugin/pmocker_config/` 插件**推翻重建**（聚合配置包模型）；新增 `pm_config_packages`/`pm_config_versions` 表；seed_yaml 存储；发布时自动同步到运行表；EPS 项目编辑修复
+- 前端：`gva/web/src/view/pmocker/config/` **推翻重建**（配置包列表→点击→编辑详情）；EPS 页面项目新增/修改修复
+- 文档：重写 spec + plan；README 里程碑更新
+- 插件 / 模块：pmocker_config 插件（server + web + pmocker 元数据）
 
 ## 涉及对象
 
-- 模块：实体类型、字段定义、字典、状态流转、工作流定义、业务种子数据（6 类管理对象）
-- 接口：统一 `/pmocker/config/*`（entityTypes/fields/dictionaries/stateDefs/workflows/seedEntities/export）
-- 页面：单菜单「初始配置」多子页（VerticalTabLayout）+ 组织权限入口跳转 gva superAdmin
-- 配置：导出 YAML 三件套（schema.yaml/seed.yaml/menu.yaml）到镜像源
+- 模块：**每个模块一个配置包**（需求/进度/风险/问题/变更/交付物/范围/成本/团队），聚合实体/字段/状态/流转/项目种子；**独立 EPS 配置包**（entity_type=eps_node，描述树层级：非底层=抽象容器，叶子=基本单元项目）
+- 接口：统一 `/pmocker/config/*`（packages/package/:id/versions/export）
+- 页面：配置包列表页 + 配置编辑页（seed_yaml 表单/向导）+ EPS 项目编辑修复
+- 配置：seed_yaml（YAML 真源）→ 发布时自动同步 DB
 
 ## 已确认约束
 
-- 架构：方案 A——EAV 元表直接 CRUD + 导出生成 YAML（复用现有表/loader/动态表单）
-- 生效机制：直写 DB，**仅 published 配置生效**（状态机驱动）；动态表单/列表读取时按 published 过滤，提供 `?includeDraft=true` 供配置页预览
-- 状态机：所有配置项统一 `draft → reviewing → published → archived`，archived 可恢复 draft；draft 可删除；简化单人流转（无多人审批）
-- **默认值恒 published**：初始配置管理模块新建配置默认即 published（创建即生效），此默认行为不可修改；已有配置可改状态控制是否生效
-- **自动灌入机制**：运行时动态生效——published 配置被业务查询读取（生效），非 published 被过滤（不生效），改状态立即生效无需重启
-- 复用语义：一键复制为 draft（从任意状态配置复制）
-- 组织架构/岗位/角色/用户/权限：入口跳转 gva superAdmin，不重复建设
-- 导出产物：YAML 三件套写 `images/pmbok6-hybrid/`，供 rebuild 镜像 → v1.1 upgrade
-- 兼容：loader 灌入默认标记 published；statusTransitions.js 保留本地 fallback
+- **聚合配置包模型**：一条配置包 = 实体类型 + 字段 + 种子数据(含项目) + 状态定义 + 流转规则，聚合为一个整体，对标 gva autoCode 包管理
+- **每模块一包**：需求/进度/风险/问题/变更/交付物/范围/成本/团队各一配置包 + 独立 EPS 配置包
+- **EPS 树**：独立 EPS 配置包描述层级（集团→事业部→项目集→项目），非底层=抽象容器，叶子=基本单元项目；业务模块种子通过 project_id 引用 EPS 项目
+- **存储**：配置包 seed_yaml 用 **YAML**（与 schema/seed/menu.yaml、loader、.pmi 镜像全链路对齐）
+- **同步机制**：**发布时同步**——配置包发布时校验 seed_yaml 并自动写入运行表（pm_entity_types/pm_field_defs/pm_entities 等），编辑保存不写 DB，发布才生效
+- **状态机**：配置包 draft → reviewing → published → archived，简化单人流转；默认值恒 published 不再适用（配置包按状态机流转）
+- **版本管理**：发布生成不可变快照（pm_config_versions），支持查看历史/回滚
+- **推翻现有 M13**：现有 6 类对象各自 CRUD 的 pmocker_config 实现推翻重建；保留可复用：published 过滤、元表 status 列、状态机概念
+- 组织架构/岗位/角色/用户/权限：入口跳转 gva superAdmin
 
 ## 当前进展
 
-- 2026-08-09：完成 brainstorm，设计全部确认，待写 spec
-- 2026-08-09：spec + plan 已完成并提交
-- 2026-08-09：M13 全部 Task 完成并端到端验证通过（元表 status + pm_state_defs + 状态机 + ConfigService + ExportService + 插件API/Router + published过滤 + 前端7子页 + statusTransitions改读API + 导出路径env覆盖）
+- 2026-08-09：方向修正确认——从「6 类对象各自 CRUD」改为「聚合配置包模型」，推翻重建
+- 2026-08-09：EPS 项目编辑存在 bug（前端传参 name/title 不匹配），待修复
 
 ## 后续待办
 
-- [ ] 状态流转 pm_state_defs 种子数据灌入（当前 stateDefs/public 为 0，需各模块状态流转配置入库）
-- [ ] 更新 README 里程碑（M13 完成）
-- [ ] 用户基于配置模块更新种子数据 → v1.1 升级
+- [ ] 重写 spec（`docs/superpowers/specs/2026-08-09-m13-config-manager-design.md`）
+- [ ] 重写 plan（`docs/superpowers/plans/2026-08-09-m13-config-manager.md`）
+- [ ] 重建实现：pm_config_packages/versions 表 + seed_yaml + 发布同步 + 配置包编辑前端 + EPS 项目编辑修复
+- [ ] 端到端验证 + 版本回滚验证
+- [ ] 用户基于配置包更新种子数据 → v1.1 升级
 
 ## 更新规则
 

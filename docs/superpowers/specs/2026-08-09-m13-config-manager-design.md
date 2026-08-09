@@ -1,258 +1,293 @@
-# M13 初始配置管理模块 设计文档
+# M13 初始配置管理模块（聚合配置包模型） 设计文档
 
-> 版本：v1.0
+> 版本：v2.0（推翻 v1.0「6 类对象各自 CRUD」，改为聚合配置包模型）
 > 日期：2026-08-09
-> 状态：设计已确认，待用户审阅
+> 状态：方向已确认，待实施
 > 需求记忆：`aiDoc/memory/business/active/pmocker-config.md`
 
 ---
 
-## 1. 背景与问题陈述
+## 1. 背景与方向修正
 
-### 1.1 当前状态
+### 1.1 v1.0 偏差
 
-PMocker M1-M12 完成，10 模块 + 聚合视图已落地。但项目管理的**种子/元数据配置**存在以下问题：
+v1.0 设计把配置拆成 6 类对象（实体类型/字段/字典/状态/工作流/业务种子）各自 CRUD。**这是错误理解**——用户期望的配置管理是**聚合配置包**：一条配置记录包含该模块的完整定义。
 
-- **字段定义 / 实体类型 / 工作流 / 字典**目前由各插件 `pmocker/schema.yaml`/`seed.yaml`/`menu.yaml` 经 `loader` 在启动时灌入 `pm_field_defs`/`pm_entity_types`/`pm_workflow_defs` 等元表，**无 Web 管理入口**，修改需改 YAML + 重建镜像
-- **状态与流转**硬编码在前端 `statusTransitions.js`，改状态机需改前端代码
-- **业务种子数据**（3 项目任务/风险/问题等）在 `business_seed.yaml`，无页面编辑能力
-- 组织架构/用户/角色/权限由 gva 内置 superAdmin 管理，但缺少统一配置入口
+### 1.2 用户期望（修正后）
 
-### 1.2 目标
-
-新增「初始配置管理」模块（`pmocker_config` 插件），以 Web 页面方式管理各模块的字段、初始值、字典、状态流转、工作流、业务种子数据，配置项带**状态机管理**（草稿/评审/发布/归档），支持编辑、复制复用、删除；配置完善后**导出 YAML 固化到镜像源**，支撑 v1.1 升级。
-
----
-
-## 2. 已确认决策（brainstorm 结论）
-
-| # | 决策点 | 结论 |
-|---|--------|------|
-| 1 | 架构 | **方案 A**：EAV 元表直接 CRUD + 导出生成 YAML（复用现有表/loader/动态表单） |
-| 2 | 生效机制 | **直写 DB + 导出固化**；仅 published 配置生效（状态机驱动） |
-| 3 | 状态流转配置 | 新建 `pm_state_defs` 表，前端 `statusTransitions.js` 改读 API |
-| 4 | 组织形态 | 独立 `pmocker_config` 插件（server + web + pmocker 元数据） |
-| 5 | 页面组织 | 单菜单「初始配置」多子页（VerticalTabLayout） |
-| 6 | 业务种子范围 | 完整 CRUD（新增/编辑/删除业务实体） |
-| 7 | 组织/用户/权限 | 入口跳转 gva superAdmin，不重复建设 |
-| 8 | 导出产物 | YAML 三件套（schema.yaml/seed.yaml/menu.yaml）到镜像源 |
-| 9 | 状态管理 | 配置项统一状态机 `draft → reviewing → published → archived`，archived 可恢复 draft，draft 可删除；简化单人流转 |
-| 10 | 复用语义 | 一键复制为 draft |
-| 11 | 默认值恒 published | **初始配置管理模块新建配置默认状态即 `published`（创建即生效），此默认行为不可修改**；已有配置可改状态（draft/reviewing/archived）以控制是否生效 |
-| 12 | 自动灌入机制 | **运行时动态生效**：published 配置被业务查询读取（生效），非 published 被过滤（不生效），改状态立即生效，无需重启 |
+- **一条配置记录（配置包）** = 实体类型 + 实体的字段 + 初始值（种子数据，含项目）+ 状态定义 + 流转规则（含退回规则）
+- **交互模式**：类似 gva 自动化代码管理——配置包列表 → 点击 → 进入可编辑的配置详情
+- **每条配置记录**：状态管理（草稿/评审/发布/归档）+ 版本管理（快照/回滚）
+- **EPS 项目**：可新增/修改（当前有 bug）
+- **完整种子数据** = 项目(EPS树，含状态及种子) × 各模块 × 模块字段 × 字段种子 + 模块 × 状态定义 × 流转规则
 
 ---
 
-## 3. 方案架构
+## 2. 核心模型：配置包（Config Package）
 
-### 3.1 总体架构
+### 2.1 概念
 
-```
-┌────────────────────────────────────────────────────────┐
-│                    前端配置层                            │
-│  实体类型 │ 字段定义 │ 字典 │ 状态流转 │ 工作流 │ 业务种子 │
-│            （VerticalTabLayout 单菜单多子页）            │
-├────────────────────────────────────────────────────────┤
-│                pmocker_config 插件（后端）              │
-│  ConfigService（CRUD） │ StateMachineService │ Export  │
-├────────────────────────────────────────────────────────┤
-│                元数据层（已有，加 status）                │
-│  pm_entity_types │ pm_field_defs │ pm_workflow_defs     │
-│  pm_relation_types │ sys_dictionary（+明细）             │
-│  新增：pm_state_defs（状态流转定义）                     │
-├────────────────────────────────────────────────────────┤
-│                业务数据层（EAV，已有）                   │
-│  pm_entities │ pm_attrs（业务种子数据完整 CRUD）          │
-└────────────────────────────────────────────────────────┘
-```
-
-### 3.2 数据模型
-
-#### 3.2.1 现有表加 `status` 列（迁移）
-
-| 表 | 新增列 | 说明 |
-|----|--------|------|
-| `pm_entity_types` | `status` VARCHAR(16) DEFAULT 'published' | 实体类型配置状态 |
-| `pm_field_defs` | `status` VARCHAR(16) DEFAULT 'published' | 字段定义配置状态 |
-| `pm_workflow_defs` | `status` VARCHAR(16) DEFAULT 'published' | 工作流定义配置状态 |
-| `pm_relation_types` | `status` VARCHAR(16) DEFAULT 'published' | 关系类型配置状态 |
-
-> **兼容**：默认值 `published`，现有 loader 灌入的数据自动为已发布，无缝兼容现网实例。
-
-#### 3.2.2 新增 `pm_state_defs`（状态流转定义表）
-
-```sql
-CREATE TABLE pm_state_defs (
-  id            BIGINT PRIMARY KEY AUTOINCREMENT,
-  entity_type   VARCHAR(64) NOT NULL,   -- 实体类型（task/issue/change_request/...）
-  status        VARCHAR(32) NOT NULL,   -- 状态值（open/in_progress/closed/...）
-  label         VARCHAR(64),            -- 状态显示名（待处理/已关闭/...）
-  tag_type      VARCHAR(16),            -- el-tag 类型（info/warning/success/danger/''）
-  sort          INT DEFAULT 0,          -- 排序
-  actions_json  TEXT,                   -- JSON: [{label, target, api, type}]
-  config_status VARCHAR(16) DEFAULT 'published',  -- 配置自身状态（draft/reviewing/published/archived）
-  UNIQUE(entity_type, status)
-);
-```
-
-对应前端 `statusTransitions.js` 的结构，页面可配置每个状态的标签、样式、可执行流转动作。
-
-#### 3.2.3 状态机（所有配置对象统一）
+**配置包** 是 PMocker 系统配置的基本单元，对标 gva 自动化代码的"包"（SysAutoCodePackage + History）。
 
 ```
-draft ──提交评审──> reviewing ──发布──> published ──归档──> archived
-  ▲                    │                                  │
-  └────编辑/保存────────┘                                  │
-  └──────────────恢复为草稿────────────────────────────────┘
+pm_config_packages（配置包表）
+├── id
+├── code                    -- 配置包编码（requirement/schedule/eps/...）
+├── name                    -- 显示名（需求管理/进度管理/EPS...）
+├── description
+├── version                 -- 当前版本号（int，从 1 递增）
+├── status                  -- draft / reviewing / published / archived
+├── seed_yaml               -- TEXT：完整种子数据（YAML 真源）
+├── entity_type             -- 本包对应的实体类型（eps_node 为 EPS 配置包）
+├── module                  -- 所属模块
+├── created_by / created_at / updated_at
 ```
 
-- `draft`：可编辑、可删除、可复制
-- `reviewing`：待发布（MVP 单人流转，仅状态标记）
-- `published`：**生效**（动态表单/列表/工作流读取）
-- `archived`：归档只读，可恢复为 draft
-
-### 3.3 插件结构（遵循 aiDoc 插件规范）
-
 ```
-gva/server/plugin/pmocker_config/
-├── plugin.go              # interfaces.Plugin + PMockerPlugin
-├── model/                 # request/response struct
-│   ├── entity_type.go
-│   ├── field_def.go
-│   ├── dictionary.go
-│   ├── state_def.go
-│   ├── workflow_def.go
-│   └── seed_entity.go
-├── api/                   # ConfigApi
-│   ├── entity_type.go
-│   ├── field_def.go
-│   ├── dictionary.go
-│   ├── state_def.go
-│   ├── workflow_def.go
-│   ├── seed_entity.go
-│   └── export.go
-├── service/               # 复用 pmocker 核心 service + 新写
-│   └── config_service.go
-├── router/                # InitConfig（中间件链四件套）
-├── initialize/            # router.go + menu.go + api.go
-└── pmocker/
-    ├── menu.yaml          # 菜单注册
-    ├── api.yaml           # API 注册（Casbin）
-    └── manifest.yaml      # 插件清单
+pm_config_versions（配置包版本历史表）
+├── id
+├── package_id              -- → pm_config_packages.id
+├── version                 -- 版本号
+├── snapshot_yaml           -- 不可变快照（发布时的 seed_yaml 全量）
+├── flag                    -- 0=发布 1=回滚
+├── created_by / created_at
 ```
 
-### 3.4 后端核心 Service
+### 2.2 seed_yaml 结构（聚合所有信息）
 
-| Service | 职责 |
+```yaml
+entity_type: requirement
+module: requirement
+name: 需求管理
+fields:                              # 实体字段定义
+  - {key: code, label: 需求编码, data_type: string}
+  - {key: priority, label: 优先级, data_type: enum, options: [P0,P1,P2,P3], default: P2}
+  - {key: source, label: 来源, data_type: enum, options: [客户,市场,内部,合规]}
+states:                              # 状态定义
+  - {status: draft, label: 草稿, tag_type: info}
+  - {status: reviewing, label: 评审中, tag_type: warning}
+  - {status: published, label: 已发布, tag_type: success}
+transitions:                         # 流转规则（含退回）
+  - {from: draft, to: reviewing, action: submit}
+  - {from: reviewing, to: published, action: approve}
+  - {from: reviewing, to: draft, action: reject, rollback: true}   # 退回
+projects:                            # 项目级种子数据（引用 EPS 项目）
+  - project_id: 3                    # → EPS 配置包的叶子项目
+    entities:                        # 该项目下本模块的实体种子
+      requirement:
+        - {title: 排产算法, status: published, priority: P0}
+        - {title: 可视化看板, status: draft, priority: P1}
+      issue:
+        - {title: 算法性能瓶颈, status: closed, severity: high}
+```
+
+### 2.3 配置包粒度
+
+| 配置包 | entity_type | 说明 |
+|--------|-------------|------|
+| `eps` | eps_node | **独立 EPS 配置包**，描述树层级 |
+| `requirement` | requirement | 需求管理 |
+| `schedule` | task | 进度管理 |
+| `risk` | risk | 风险管理 |
+| `issue` | issue | 问题管理 |
+| `change` | change_request | 变更管理 |
+| `deliverable` | deliverable | 交付物管理 |
+| `scope` | scope_item | 范围管理 |
+| `cost` | cost_item | 成本管理 |
+| `team` | team_member | 团队管理 |
+
+> 每个业务模块一个配置包；EPS 树独立一个配置包。
+
+### 2.4 EPS 树种子（树层级）
+
+EPS 配置包的 seed_yaml `projects` 描述**树节点层级**（集团→事业部→项目集→项目）：
+
+```yaml
+entity_type: eps_node
+module: eps
+name: 组织EPS
+fields:
+  - {key: type, label: 节点类型, data_type: enum, options: [group,division,program,project,subproject]}
+  - {key: code, label: 编码, data_type: string}
+states: [...]
+transitions: [...]
+projects:
+  - code: GROUP_HQ
+    name: 集团总部
+    type: group                  # 非底层 = 抽象容器（类比菜单 RouterHolder）
+    children:
+      - code: DIV_RND
+        name: 智能排产研发部
+        type: division           # 抽象容器
+        children:
+          - code: PROJ_A
+            name: 智能排产系统研发
+            type: project        # 叶子 = 基本单元项目
+            status: active
+            priority: 1
+```
+
+> 类比菜单管理：有子菜单 → RouterHolder（抽象容器）；无子菜单 → 具体 .vue 页面（基本单元项目）。业务模块配置包的种子通过 `project_id` 引用 EPS 配置包中叶子项目的实际实体 ID。
+
+---
+
+## 3. 核心流程
+
+### 3.1 配置包生命周期
+
+```
+创建配置包 → 编辑 seed_yaml（前端编辑页，保存为 draft）
+  → 提交评审（reviewing）
+  → 发布（published）
+      ├── 1. 校验 seed_yaml（YAML 合法 + 结构完整）
+      ├── 2. 自动同步运行表（事务内）：
+      │     ├── 实体类型 → pm_entity_types
+      │     ├── 字段 → pm_field_defs
+      │     ├── 状态/流转 → pm_state_defs
+      │     ├── 项目(仅EPS包) → pm_entities(eps_node) + EPS树
+      │     └── 业务实体种子 → pm_entities + pm_attrs
+      ├── 3. 生成版本快照 → pm_config_versions
+      └── 4. version++
+  → 归档（archived）/ 回滚到历史版本（restore）
+```
+
+### 3.2 发布时自动同步 DB（核心）
+
+**编辑 seed_yaml 不写运行 DB**，**发布时一次性同步**（事务内，失败整体回滚）：
+
+| seed_yaml 段 | 同步目标 |
+|--------------|----------|
+| `fields` | `pm_field_defs`（status=published） |
+| `states` + `transitions` | `pm_state_defs`（聚合为 status + actions_json） |
+| `projects`（EPS 包） | `pm_entities`(eps_node) + `pm_eps_tree`（树层级） |
+| `projects[].entities`（业务包） | `pm_entities` + `pm_attrs`（按 project_id 归属） |
+
+**幂等**：按配置包 code + 版本去重；重新发布同版本覆盖，新版本增量。
+
+### 3.3 版本管理
+
+- 每次发布生成不可变快照（`pm_config_versions`）
+- 支持查看历史版本、**回滚到任意版本**（flag=1，恢复 snapshot_yaml 到 seed_yaml 并重新发布同步）
+
+---
+
+## 4. 后端设计
+
+### 4.1 新增表（model）
+
+| 表 | model | 说明 |
+|----|-------|------|
+| `pm_config_packages` | `PMConfigPackage` | 配置包（含 seed_yaml TEXT） |
+| `pm_config_versions` | `PMConfigVersion` | 版本快照 |
+
+> 复用现有：`pm_entity_types`/`pm_field_defs`（已有 status 列）、`pm_state_defs`（已有）、`pm_entities`/`pm_attrs`。
+
+### 4.2 Service
+
+| Service | 方法 |
 |---------|------|
-| `ConfigService` | 6 类配置对象的 CRUD + `CopyAsDraft(id)` 复制为草稿 |
-| `StateMachineService` | 统一状态流转：`SubmitReview/Approve(发布)/Archive/Restore/Delete`，校验状态合法性 |
-| `ExportService` | 读 DB published 配置 → 序列化 → 生成 `schema.yaml`/`seed.yaml`/`menu.yaml` → 写镜像源 |
+| `ConfigPackageService` | `List/Create/Get/Update(seed_yaml)/Delete`、`CopyAsDraft` |
+| `ConfigStateMachine` | `SubmitReview/Approve(发布→同步DB)/Archive/Restore(回滚)/Delete` |
+| `SeedSyncService` | `SyncPackageToDB(ctx, package)`：seed_yaml → 运行表（核心） |
+| `SeedParser` | `ParseSeedYAML(bytes) → ConfigPackageSeed`（YAML 解析为结构化） |
 
-### 3.5 API 端点（统一 `/pmocker/config/*`）
+### 4.3 API（统一 `/pmocker/config/*`）
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| GET | `/config/entityTypes` | 实体类型列表（含草稿，供配置页） |
-| POST | `/config/entityType` | 新增实体类型（draft） |
-| PUT | `/config/entityType/:id` | 更新实体类型 |
-| POST | `/config/entityType/:id/copy` | 复制为 draft |
-| POST | `/config/entityType/:id/transition` | 状态流转 |
-| DELETE | `/config/entityType/:id` | 删除（仅 draft） |
-| GET/POST/PUT/DELETE | `/config/fields...` | 字段定义 CRUD（按实体类型） |
-| GET/POST/PUT/DELETE | `/config/dictionaries...` | 字典 + 明细 CRUD |
-| GET/POST/PUT/DELETE | `/config/stateDefs...` | 状态流转定义 CRUD |
-| GET/POST/PUT/DELETE | `/config/workflows...` | 工作流定义 CRUD |
-| GET | `/config/seedEntities?entityType=&projectId=` | 业务种子实体列表 |
-| POST/PUT/DELETE | `/config/seedEntity...` | 业务种子实体 CRUD |
-| POST | `/config/export` | 导出 YAML 三件套到镜像源 |
-| GET | `/config/stateDefs/public` | 已发布状态流转（前端 statusTransitions 读取） |
+| GET | `/pmocker/config/packages` | 配置包列表（含状态/版本） |
+| POST | `/pmocker/config/package` | 新建配置包（draft） |
+| GET | `/pmocker/config/package/:id` | 获取配置包详情（含 seed_yaml） |
+| PUT | `/pmocker/config/package/:id` | 更新 seed_yaml（draft/reviewing 可编辑） |
+| POST | `/pmocker/config/package/:id/copy` | 复制为 draft |
+| POST | `/pmocker/config/package/:id/transition` | 状态流转（submit_review/approve/archive/restore） |
+| DELETE | `/pmocker/config/package/:id` | 删除（仅 draft） |
+| GET | `/pmocker/config/package/:id/versions` | 版本历史 |
+| POST | `/pmocker/config/package/:id/rollback` | 回滚到指定版本 |
+| POST | `/pmocker/config/export` | 导出所有 published 配置包为 YAML 到镜像源 |
 
-### 3.6 published 过滤生效链路（运行时动态生效）
-
-- **生效机制**：`GetSchema`/`ListEntities`（eav.go）查询时**默认只返回 `status='published'`** 的配置；非 published 配置被过滤，**改状态立即生效，无需重启**
-- 新增查询参数 `includeDraft=true` 供配置管理页预览全部（含 draft/reviewing/archived）
-- loader 灌入时标记 `status='published'`
-- **新建配置默认即 published**：初始配置管理模块创建配置时 `status` 默认 `published`（创建即生效），该默认行为在模块内固定，不提供"默认 draft"选项；需要暂不生效时由用户在创建后手动流转为 draft/archived
+> `approve`（发布）触发 `SeedSyncService.SyncPackageToDB`。
 
 ---
 
-## 4. 前端设计
+## 5. 前端设计
 
-### 4.1 新增文件
+### 5.1 页面结构
 
-- `gva/web/src/api/pmocker/config.js`
-- `gva/web/src/view/pmocker/config/index.vue`（VerticalTabLayout 容器）
-- `gva/web/src/view/pmocker/config/entityType.vue`
-- `gva/web/src/view/pmocker/config/fieldDef.vue`
-- `gva/web/src/view/pmocker/config/dictionary.vue`
-- `gva/web/src/view/pmocker/config/stateDef.vue`
-- `gva/web/src/view/pmocker/config/workflow.vue`
-- `gva/web/src/view/pmocker/config/seedEntity.vue`
-- `gva/web/src/view/pmocker/config/orgEntry.vue`（跳转 gva superAdmin）
+```
+初始配置（菜单）
+├── 配置包列表（config/packageList.vue）   ← 主入口，对标 gva autoCode 包列表
+│   ├── 表格：编码/名称/实体类型/状态/版本/更新时间/操作
+│   ├── 操作：编辑/复制/提交评审/发布/归档/回滚/删除
+│   └── 新建配置包按钮
+└── 配置包编辑（config/packageEditor.vue）  ← 点击进入
+    ├── 基本信息（code/name/entity_type/module）
+    ├── seed_yaml 编辑
+    │   ├── 表单模式：字段表格 + 状态表格 + 流转表格 + 项目种子树
+    │   └── 或 YAML 文本编辑器（进阶）
+    ├── 版本历史侧栏
+    └── 保存（draft）/ 提交评审 / 发布
+```
 
-### 4.2 子页组织（单菜单「初始配置」）
+### 5.2 交互
 
-| 子页 | 功能要点 |
-|------|---------|
-| 实体类型 | 表格 CRUD + 复制 + 状态 tag + 流转按钮 |
-| 字段定义 | 实体类型下拉筛选 + 字段表格 CRUD + 复制 + 流转 |
-| 字典 | 字典列表 + 明细编辑（el-tree 或表格） |
-| 状态流转 | 各模块状态定义表格（状态值/标签/样式/流转动作 JSON 编辑） |
-| 工作流 | 工作流列表 + 定义 JSON 编辑 |
-| 业务种子 | 项目/模块筛选 + 表格 + DynamicForm 编辑（完整 CRUD） |
-| 组织权限 | 入口卡片跳转 gva superAdmin 各页面 |
+- **配置包列表**：对标 gva 自动化代码包管理——列表 → 点击行 → 进入编辑
+- **编辑页**：分区块编辑（基本信息 / 字段 / 状态流转 / 项目种子），保存为 draft
+- **发布**：触发后端同步 DB，成功后状态变 published，version++
+- **回滚**：从版本历史选择 → 确认 → 恢复到该版本 seed_yaml
 
-### 4.3 状态流转交互
+### 5.3 EPS 项目编辑修复
 
-- 每个配置项行内显示状态 tag（复用 `statusOptions.js` 风格）
-- 操作按钮：提交评审/发布/归档/恢复/删除/复制
-- 按状态过滤显示（草稿/已发布/已归档）
-
-### 4.4 statusTransitions.js 改造
-
-- 启动/进入页面时从 `GET /config/stateDefs/public` 拉取状态流转配置
-- `getTransitions(entityType)` 改为读全局配置（模块级缓存），**保留本地 fallback**（API 不可用或未配置时降级到内置定义）
-- 保持现有列表页调用方式不变（`getTransitions` 签名兼容）
+- 修复 `eps/tree.vue`：`createEPSNode`/`updateEPSNode` 传参与后端 `CreateNode`/`UpdateNode` 期望对齐（`title`/`name` 映射）
 
 ---
 
-## 5. 测试策略
+## 6. 测试策略
 
 | 测试 | 说明 |
 |------|------|
-| `ConfigService` CRUD | 6 类配置对象增删改查 + 复制为 draft（testutil.NewMemoryDB） |
-| `StateMachineService` | 状态机流转合法性：draft→reviewing→published→archived→restore，非法流转报错 |
-| `ExportService` | 导出 YAML 与 loader 解析格式双向一致（schema.yaml/seed.yaml/menu.yaml） |
-| published 过滤 | getSchema/ListEntities 只返回 published；includeDraft=true 返回全部 |
-| 前端 | 状态流转交互、DynamicForm 读取 published schema（浏览器点测） |
+| `SeedParser` | seed_yaml 解析为结构化（YAML 合法/结构完整/错误处理） |
+| `SeedSyncService` | 发布同步：seed_yaml → 各运行表正确写入；幂等；事务回滚 |
+| `ConfigStateMachine` | 状态机流转合法性 + 发布触发同步 |
+| `ConfigPackageService` | 配置包 CRUD + 复制 |
+| 版本回滚 | 发布 → 回滚 → 恢复 snapshot_yaml 并重新同步 |
+| EPS 项目编辑 | 前端 title/name 对齐后新增/修改项目成功 |
+| 端到端 | 创建配置包 → 编辑种子 → 发布 → 验证运行表生效 |
 
 ---
 
-## 6. 兼容性与 v1.1 衔接
+## 7. 与 v1.1 衔接
 
-- **loader 兼容**：现有 `loadSingleSchema`/`LoadSeed`/`LoadWorkflow` 灌入时显式设置 `status=published`
-- **现网数据**：已有实例的元表加 `status` 列默认 `published`，零迁移成本
-- **statusTransitions fallback**：API 未发布时前端降级到内置状态机，不影响现有页面
-- **v1.1 升级**：配置页导出 YAML 三件套到 `images/pmbok6-hybrid/` → rebuild `.pmi` 镜像 → `pmocker upgrade` 应用到新实例；用户可在配置页调整种子数据后完成 v1.1 升级
+- 配置包发布后 seed_yaml 即"种子数据真源"
+- 导出所有 published 配置包为 YAML → `images/pmbok6-hybrid/` → rebuild `.pmi` → v1.1 upgrade
+- 用户可在配置包编辑页直接调整种子数据，发布后 DB 同步更新，再导出重建镜像
 
 ---
 
-## 7. 里程碑拆分（实施计划输入）
+## 8. 兼容性与清理
+
+- **保留复用**：元表 `status` 列、`pm_state_defs` 表、published 过滤（eav.go）、状态机概念
+- **推翻**：`pmocker_config` 的 6 类对象 CRUD（ConfigService/StateMachineService/ExportService 改造或删除）、前端 7 子页（改为配置包列表+编辑）
+- **现有业务种子**（3 项目）：迁移为对应配置包的 seed_yaml projects 段（EPS 包 + 各业务包）
+
+---
+
+## 9. 里程碑拆分
 
 | 阶段 | 内容 |
 |------|------|
-| M13-A | 数据模型迁移（加 status 列 + pm_state_defs）+ 状态机 + ConfigService CRUD 后端 |
-| M13-B | 前端配置页（7 子页）+ 状态流转交互 + statusTransitions 改读 API |
-| M13-C | ExportService 导出 YAML + published 过滤改造 + 全量测试 + 端到端验证 |
+| M13-A | 数据模型（pm_config_packages/versions）+ 状态机 + 配置包 CRUD + seed_yaml 解析 |
+| M13-B | 发布同步 DB（SeedSyncService）+ 版本快照/回滚 |
+| M13-C | 前端配置包列表 + 编辑页 + EPS 项目编辑修复 |
+| M13-D | 端到端验证 + 清理旧 6 类 CRUD 实现 |
 
 ---
 
-## 8. 风险与依赖
+## 10. 风险与依赖
 
 | 风险 | 缓解 |
 |------|------|
-| 导出 YAML 与 loader 格式不一致 | ExportService 单测 + 双向校验测试 |
-| 加 status 列影响现有查询 | 默认值 published 兼容；过滤仅影响配置读取，业务数据不受影响 |
-| statusTransitions 改造影响现有列表 | 保留本地 fallback，渐进切换 |
-| 工程量大（6 类对象 + 状态机 + 导出） | 分 3 个里程碑提交，每阶段独立验证 |
+| seed_yaml 结构与现有 schema/seed 格式差异 | SeedParser 单测 + 与 loader 结构对齐 |
+| 发布同步覆盖已有运行数据 | 幂等 + 事务 + 版本快照可回滚 |
+| EPS 树种子与业务种子 project_id 关联 | EPS 包先发布（先生成项目 ID），业务包引用 |
+| 现有 3 项目业务种子迁移复杂 | 迁移为配置包 projects 段，端到端验证数据一致 |
