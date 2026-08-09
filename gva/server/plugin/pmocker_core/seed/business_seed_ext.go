@@ -414,10 +414,22 @@ func archiveOneProject(rt *runtimeCtx) error {
 		return fmt.Errorf("更新项目状态: %w", err)
 	}
 
-	// 2. 关联实体标记 archived
-	entityTypes := []string{"task", "issue", "risk", "requirement", "change_request", "deliverable",
-		"team_member", "cost_item", "scope_item", "milestone"}
-	for _, et := range entityTypes {
+	// 2. 关联实体标记为各自终态（archived 不是业务状态，需映射到模块终态）
+	terminalStatuses := map[string]string{
+		"task":           "completed",
+		"issue":          "closed",
+		"risk":           "closed",
+		"requirement":    "fulfilled",
+		"change_request": "closed",
+		"deliverable":    "accepted",
+	}
+	for et, terminal := range terminalStatuses {
+		db.Model(&pmocker.PMEntity{}).
+			Where("project_id = ? AND entity_type = ? AND status != ?", projectID, et, terminal).
+			Update("status", terminal)
+	}
+	// 非状态机实体保持 archived（team_member/cost_item/scope_item/milestone 无 statusTransitions 定义）
+	for _, et := range []string{"team_member", "cost_item", "scope_item", "milestone"} {
 		db.Model(&pmocker.PMEntity{}).
 			Where("project_id = ? AND entity_type = ? AND status != ?", projectID, et, "archived").
 			Update("status", "archived")
