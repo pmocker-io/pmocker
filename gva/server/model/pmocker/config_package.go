@@ -10,7 +10,7 @@ type PMConfigPackage struct {
 	Description string `json:"description" gorm:"type:text;comment:描述"`
 	EntityType  string `json:"entityType" gorm:"size:64;index;comment:实体类型"`
 	Module      string `json:"module" gorm:"size:32;index;comment:所属模块"`
-	Version     int    `json:"version" gorm:"default:1;comment:当前版本号"`
+	Version     int    `json:"version" gorm:"comment:当前版本号(0=未发布)"`
 	Status      string `json:"status" gorm:"size:16;default:draft;comment:draft/reviewing/published/archived"`
 	SeedYAML    string `json:"seedYaml" gorm:"type:text;comment:种子数据YAML真源"`
 }

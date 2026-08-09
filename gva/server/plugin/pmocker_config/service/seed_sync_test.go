@@ -111,7 +111,7 @@ func TestSyncProjectEntities(t *testing.T) {
 
 func TestPublishPackageSyncsDB(t *testing.T) {
 	ctx := context.Background()
-	db := testutil.NewMemoryDB(t, &pmocker.PMConfigPackage{}, &pmocker.PMEntityType{}, &pmocker.PMFieldDef{}, &pmocker.PMStateDef{}, &pmocker.PMEntity{}, &pmocker.PMAttr{})
+	db := testutil.NewMemoryDB(t, &pmocker.PMConfigPackage{}, &pmocker.PMConfigVersion{}, &pmocker.PMEntityType{}, &pmocker.PMFieldDef{}, &pmocker.PMStateDef{}, &pmocker.PMEntity{}, &pmocker.PMAttr{})
 	s := &ConfigPackageService{}
 	if err := s.Create(ctx, pmocker.PMConfigPackage{
 		Code: "requirement", Name: "需求管理", EntityType: "requirement", Module: "requirement",

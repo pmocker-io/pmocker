@@ -24,8 +24,8 @@ func TestConfigPackageCRUD(t *testing.T) {
 	if pkg.Status != "draft" {
 		t.Fatalf("新建配置包状态 = %s, want draft", pkg.Status)
 	}
-	if pkg.Version != 1 {
-		t.Fatalf("新建配置包版本 = %d, want 1", pkg.Version)
+	if pkg.Version != 0 {
+		t.Fatalf("新建配置包版本 = %d, want 0（未发布）", pkg.Version)
 	}
 
 	// 更新 seed_yaml（draft 可编辑）

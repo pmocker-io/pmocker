@@ -23,13 +23,10 @@ func (s *ConfigPackageService) List(ctx context.Context, includeDraft bool) ([]p
 	return list, err
 }
 
-// Create 新建配置包（默认 draft，version=1）
+// Create 新建配置包（默认 draft，version=0 未发布）
 func (s *ConfigPackageService) Create(ctx context.Context, pkg pmocker.PMConfigPackage) error {
 	if pkg.Status == "" {
 		pkg.Status = "draft"
-	}
-	if pkg.Version == 0 {
-		pkg.Version = 1
 	}
 	return global.GVA_DB.WithContext(ctx).Create(&pkg).Error
 }
@@ -43,14 +40,14 @@ func (s *ConfigPackageService) Get(ctx context.Context, id uint) (*pmocker.PMCon
 	return &pkg, nil
 }
 
-// UpdateSeed 更新 seed_yaml（draft/reviewing 可编辑）
+// UpdateSeed 更新 seed_yaml（draft/reviewing/published 可编辑；archived 需先恢复）
 func (s *ConfigPackageService) UpdateSeed(ctx context.Context, id uint, seedYAML string) error {
 	var pkg pmocker.PMConfigPackage
 	if err := global.GVA_DB.WithContext(ctx).First(&pkg, id).Error; err != nil {
 		return err
 	}
-	if pkg.Status != "draft" && pkg.Status != "reviewing" {
-		return errors.New("仅 draft/reviewing 状态可编辑，请先归档或复制为草稿")
+	if pkg.Status == "archived" {
+		return errors.New("archived 状态不可编辑，请先恢复为草稿")
 	}
 	return global.GVA_DB.WithContext(ctx).Model(&pkg).Update("seed_yaml", seedYAML).Error
 }
@@ -65,7 +62,7 @@ func (s *ConfigPackageService) CopyAsDraft(ctx context.Context, id uint) error {
 	copy.ID = 0
 	copy.Code = src.Code + "-copy"
 	copy.Name = src.Name + "(副本)"
-	copy.Version = 1
+	copy.Version = 0
 	copy.Status = "draft"
 	return global.GVA_DB.WithContext(ctx).Create(&copy).Error
 }
@@ -83,21 +80,21 @@ func (s *ConfigPackageService) Delete(ctx context.Context, id uint) error {
 }
 
 // Publish 发布配置包：状态机校验 + 解析 seed_yaml + 同步运行表 + 版本号递增 + 版本快照
-// draft/reviewing → published
+// draft/reviewing/published → published（published 重新发布 = 新版本）
 func (s *ConfigPackageService) Publish(ctx context.Context, id uint) error {
 	db := global.GVA_DB.WithContext(ctx)
 	var pkg pmocker.PMConfigPackage
 	if err := db.First(&pkg, id).Error; err != nil {
 		return err
 	}
-	if pkg.Status != "draft" && pkg.Status != "reviewing" {
-		return fmt.Errorf("非法发布：当前状态 %s（仅 draft/reviewing 可发布）", pkg.Status)
+	if pkg.Status == "archived" {
+		return fmt.Errorf("archived 配置包不可发布，请先恢复")
 	}
 	seed, err := ParseSeedYAML([]byte(pkg.SeedYAML))
 	if err != nil {
 		return fmt.Errorf("seed_yaml 解析失败: %w", err)
 	}
-	// 事务：同步运行表 + 状态流转 + 版本递增
+	// 事务：同步运行表 + 状态流转 + 版本递增 + 版本快照
 	return db.Transaction(func(tx *gorm.DB) error {
 		syncSvc := &SeedSyncService{}
 		if err := syncSvc.Sync(ctx, tx, seed); err != nil {
@@ -106,7 +103,13 @@ func (s *ConfigPackageService) Publish(ctx context.Context, id uint) error {
 		if err := tx.Model(&pkg).Update("status", "published").Error; err != nil {
 			return err
 		}
-		return tx.Model(&pkg).Update("version", pkg.Version+1).Error
+		// 版本递增并记录快照（快照版本 = 递增后的版本号）
+		newVersion := pkg.Version + 1
+		if err := tx.Model(&pkg).Update("version", newVersion).Error; err != nil {
+			return err
+		}
+		verSvc := &ConfigVersionService{}
+		return verSvc.Snapshot(tx, &pkg, newVersion)
 	})
 }
 
