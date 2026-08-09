@@ -6,19 +6,22 @@ PMocker 把不同方法论（PMBOK 第六版 / PRINCE2 / ISO 21502 / 敏捷）�
 
 ## 当前状态
 
-v1.0 MVP 骨架已基本成型，M1-M8 里程碑完成并推送 `origin/main`：
+v1.0 MVP 已达成，M1-M12 里程碑全部完成（M1-M8 已推送 `origin/main`，M9-M12 已实现）：
 
 | 里程碑 | 交付内容 | 状态 |
 |------|------|------|
 | M1 · 骨架 | 仓库 + go.work + gva subtree + 空 CLI | 已完成 |
 | M2 · 内核 | EAV 引擎 + 三维权限 + 声明式工作流引擎 | 已完成 |
-| M3 · 9 模块 | 9 个 gva 插件（server + web + pmocker 元数据） | 已完成 |
+| M3 · 模块 | 9 个 gva 插件（server + web + pmocker 元数据） | 已完成 |
 | M4 · 镜像 | `.pmi` 镜像打包 + OCI 解析 + diff/upgrade | 已完成 |
 | M5 · 前端 | 23 个页面组件 + 9 个 API 封装 + 特色视图 | 已完成 |
 | M6 · CLI | 12 个 CLI 命令 + 默认镜像 `pmbok6-hybrid.pmi` | 已完成 |
 | M7 · 集成修复 | 实例模式自动初始化 + 静态资源服务 + 商业授权裁剪 | 已完成 |
 | M8 · MCP | MCP 集成（8 内置工具 + 78 动态工具 + 双进程架构） | 已完成 |
-| M9 · 实用性增强 | seed/schema 字段补全 + 工作流重构 | 规划中 |
+| M9 · 字段补全 | 10 模块 schema/seed 字段补全 + team 团队管理模块 | 已完成 |
+| M10 · 表单适配 | 前端 DynamicForm 动态表单 + Schema API | 已完成 |
+| M11 · 可视化 | 甘特图 / 检入检出 / 变更 diff / 跨模块联动 | 已完成 |
+| M12 · 业务闭环 | 基线 / 偏差 / 事件引擎 / 完成度 / 仪表盘 / PMO / 结项 / 任务中心 / 项目工作台 | 已完成 |
 
 > 完整设计见 [需求文档.MD](需求文档.MD)，实现计划见 [docs/superpowers/plans/](docs/superpowers/plans/)。
 
@@ -83,9 +86,9 @@ pmocker rm <name> [-v]          # 删除实例（-v 同时删数据卷）
 | **PMSystem** | 运行中的 PM 系统实例，独立 gin-vue-admin 进程 + 独立数据卷 | Docker 容器 |
 | **项目** | PMSystem 内管理的项目数据（WBS、进度、风险…），存储于数据卷 | 容器内应用数据 |
 
-## 9 大模块
+## 10 大模块
 
-v1 默认镜像 `pmbok6-hybrid.pmi` 内置 9 个 gva 插件模块，对标 PMBOK 第六版 + 行业最佳实践：
+v1 默认镜像 `pmbok6-hybrid.pmi` 内置 10 个 gva 插件模块，对标 PMBOK 第六版 + 行业最佳实践：
 
 | 模块 | 说明 | 特色视图/算法 |
 |------|------|------|
@@ -98,13 +101,20 @@ v1 默认镜像 `pmbok6-hybrid.pmi` 内置 9 个 gva 插件模块，对标 PMBOK
 | 问题管理 issue | 问题类型、看板视图 | kanban 看板 |
 | 变更管理 change | CCB 流程、影响分析 | CCB 评审、变更日志 |
 | 组织级项目 EPS | EPS 树、项目组合管理 | 树形组织 |
+| 团队管理 team | 成员/角色/培训/绩效（PMBOK 资源管理） | 利用率计算 |
+
+聚合视图层（M12）：
+- **项目仪表盘 / PMO 看板 / 结项归档**：健康度 RAG、成本偏差、资源负荷
+- **个人任务中心 / 项目工作台**：4 类任务聚合 + "我关注"子视图（P0/P1 可见性）
+- **基线快照 / 偏差分析**：3 类基线 + 字段级 diff + SPI/CPI
+- **事件引擎**：工作流节点 hook 触发基线生成、完成度刷新、变更应用
 
 ## MCP 集成
 
 PMocker 通过 MCP（Model Context Protocol）让 AI 编辑器调用项目管理能力：
 
 - **8 个内置工具**：`pmocker_create_requirement`、`pmocker_evm_calc`、`pmocker_critical_path`、`pmocker_risk_matrix` 等，位于 [gva/server/mcp/pmocker_*.go](gva/server/mcp/)
-- **78 个动态工具**：9 模块全部 API 自动绑定为 MCP 工具，由 `AutoInitIfEmpty` 注册到 `sys_mcp_tools` 表
+- **78 个动态工具**：10 模块全部 API 自动绑定为 MCP 工具，由 `AutoInitIfEmpty` 注册到 `sys_mcp_tools` 表
 - **双进程架构**：实例模式下 `pmocker run` 同时拉起 gva-server（8080）和 MCP 服务（8899），共享数据卷，自动签发长期 API Token
 
 在 AI 编辑器中接入（`pmocker inspect` 输出配置）：
@@ -133,7 +143,7 @@ pmocker/
 │   └── internal/            # builder / instance / image
 ├── gva/                     # gin-vue-admin v3.0.0（Git Subtree）
 │   ├── server/
-│   │   ├── plugin/pmocker_*/   # ★ 9 个 PM 模块 gva 插件（后端）
+│   │   ├── plugin/pmocker_*/   # ★ 10 个 PM 模块 gva 插件（后端）
 │   │   ├── mcp/                 # MCP 工具（内置 + 动态注册）
 │   │   ├── initialize/auto_init.go  # 实例模式自动初始化
 │   │   └── service/pmocker/     # EAV 引擎 + RBAC + 工作流
@@ -147,7 +157,7 @@ pmocker/
 │       ├── diff/            # 镜像 diff + migration 生成
 │       └── plugin/          # PMockerPlugin 接口 + 注册器
 ├── images/pmbok6-hybrid/    # 默认镜像源（9 模块 + 3 层）
-└── docs/superpowers/plans/  # 里程碑实现计划（M1-M9）
+└── docs/superpowers/plans/  # 里程碑实现计划（M1-M12）
 ```
 
 ### 插件元数据扩展

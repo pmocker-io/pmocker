@@ -64,6 +64,7 @@ func (s *stubWF) LoadDefinition(ctx context.Context, def workflow.Definition) er
 	s.defs = append(s.defs, def)
 	return nil
 }
+func (s *stubWF) RegisterAutoHandler(name string, h workflow.AutoHandler) {}
 
 func TestLoadSchema(t *testing.T) {
 	eav := &stubEAV{}

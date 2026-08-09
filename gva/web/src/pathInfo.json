@@ -110,6 +110,7 @@
   "/src/view/pmocker/components/RelationPicker.vue": "RelationPicker",
   "/src/view/pmocker/components/TimeEntryDialog.vue": "TimeEntryDialog",
   "/src/view/pmocker/components/ProjectSelector.vue": "PmockerProjectSelector",
+  "/src/view/pmocker/components/VerticalTabLayout.vue": "VerticalTabLayout",
   "/src/view/pmocker/team/member.vue": "PmockerTeamMember",
   "/src/view/pmocker/team/role.vue": "PmockerTeamRole",
   "/src/view/pmocker/team/training.vue": "PmockerTeamTraining",
