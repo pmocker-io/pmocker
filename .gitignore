@@ -71,3 +71,6 @@ test_*.sh
 
 # PMocker 实例运行时生成的 MCP Token 文件
 mcp_token.txt
+
+# Playwright 浏览器点测产物（page-click-testing）
+.playwright-mcp/

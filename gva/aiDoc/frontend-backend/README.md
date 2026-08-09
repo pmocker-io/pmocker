@@ -18,3 +18,4 @@
 - `frontend-utils.md`
 - `component-library.md`
 - `theme-classnames.md`
+- `instance-frontend-sync.md` — 实例模式下前端 dist 更新流程（改了前端代码后如何让实例生效，避免"新页面空白"）

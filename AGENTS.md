@@ -44,6 +44,7 @@
 
 ### 其他
 - 浏览器点测遵循 `aiDoc/frontend-backend/page-click-testing.md`（token 从 `.local/gva-test-token` 静默读取，不写入任何提交文件）
+- **改了前端代码后要让实例生效**，遵循 `aiDoc/frontend-backend/instance-frontend-sync.md`：`pmocker run --force --rebuild` 重建实例，或手动同步数据卷 `<volumeID>/dist`；`pmocker stop`+`start` 不会刷新数据卷内 dist，会导致新页面空白/404
 - 不直接读取 `node_modules/` 代码
 - commit 规范：`type(scope): description`（type: feat/fix/docs/style/refactor/test/chore），描述用中文，如 `feat(pmocker): xxx`
 

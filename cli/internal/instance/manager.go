@@ -185,6 +185,12 @@ func (m *Manager) Start(idOrName string) error {
 	if inst.Status == "running" {
 		return fmt.Errorf("instance %s is already running", inst.Name)
 	}
+	// 刷新前端资源：data 卷内的 dist 可能落后于 .pmocker-data/bin/dist
+	// （前端代码更新后仅 stop+start 不刷新 dist，会导致新页面空白/404）。
+	// 复制失败不阻止启动，避免因 dist 缺失导致实例无法恢复。
+	if err := m.copyFrontendDist(inst.VolumeID); err != nil {
+		fmt.Printf("warning: copy frontend dist on start: %v\n", err)
+	}
 	pid, err := m.startProcess(inst, "")
 	if err != nil {
 		return fmt.Errorf("start process: %w", err)
