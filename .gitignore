@@ -55,6 +55,10 @@ images/sha256_*/
 # PMocker 二进制/数据目录
 gva/server/bin/
 
+# PMocker CLI 构建产物 + 实例数据卷
+bin/
+volumes/
+
 # 临时文件
 /tmp/
 
