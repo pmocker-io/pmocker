@@ -44,12 +44,14 @@
 - 2026-08-09：EPS 项目编辑 bug 确认（前端传参 name/title 不匹配 + 缺 entityType）
 - 2026-08-09：**聚合配置包重建完成**——pm_config_packages/versions 表 + SeedParser + ConfigPackageService + 发布同步DB(SeedSyncService) + 版本快照/回滚 + 配置包API + 前端列表/编辑页 + EPS项目修复（传参对齐 + BuildEPSTree排除组织节点 + 跳过空名节点）
 - 2026-08-09：端到端验证通过（创建→发布→DB同步→版本v2→回滚→归档→恢复 + EPS新增项目显示在树）
+- 2026-08-09：**3项目业务种子完整迁移为配置包**——cmd/migrate 脚本从 business_seed.yaml + 各模块 schema.yaml 生成 10 个配置包（EPS树 + 9业务模块：字段/状态/简化流转/项目实体种子），启动自动导入 + 全部发布成功，各模块实体正确归属 3 项目
+- 2026-08-09：修复配置包发布数据权限（WithSystem）+ project_code 引用 + name/username 兼容
 
 ## 后续待办
 
-- [ ] 现有 3 项目业务种子迁移为配置包（EPS包 + 各业务包 seed_yaml）
 - [ ] 更新 README 里程碑（M13 聚合配置包模型）
-- [ ] 用户基于配置包更新种子数据 → v1.1 升级
+- [ ] 用户基于配置包编辑页调整种子 → 发布同步 → 导出 → v1.1 升级
+- [ ] 清理历史重复组织节点（eps_node project_id=0 的 group/division 35 个，seed 多次重建累积）
 
 ## 更新规则
 
