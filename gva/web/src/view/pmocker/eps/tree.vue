@@ -135,8 +135,25 @@ const handleSave = async () => {
   if (!formRef.value) return
   await formRef.value.validate(async (valid) => {
     if (!valid) return
-    const api = dialogType.value === 'add' ? createEPSNode : updateEPSNode
-    const res = await api(form)
+    let res
+    if (dialogType.value === 'add') {
+      // 后端 CreateNode 期望 {name, parentId, attrs, status}
+      res = await createEPSNode({
+        name: form.title,
+        parentId: form.parentId || 0,
+        attrs: { ...form.attrs },
+        status: form.status || 'active'
+      })
+    } else {
+      // 后端 UpdateNode 期望 Entity{ID, entityType, title, attrs, status}
+      res = await updateEPSNode({
+        ID: form.ID,
+        entityType: 'eps_node',
+        title: form.title,
+        attrs: { ...form.attrs },
+        status: form.status || 'active'
+      })
+    }
     if (res.code === 0) {
       ElMessage.success(dialogType.value === 'add' ? '添加成功' : '更新成功')
       dialogVisible.value = false

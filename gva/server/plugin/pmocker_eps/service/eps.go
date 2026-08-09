@@ -84,20 +84,29 @@ func (s *Service) DeleteEPSNode(ctx context.Context, id uint) error {
 }
 
 func (s *Service) BuildEPSTree(ctx context.Context, projectID uint) ([]TreeNode, error) {
-	// EPS 只显示项目节点（带 progress_algo 属性的 eps_node）
-	// 组织架构由 GVA 内置部门管理负责，不应出现在 EPS 中
 	entities, _, err := pmservice.ServiceGroupApp.ListEntities(ctx, projectID, "eps_node", 0, 10000)
 	if err != nil {
 		return nil, err
 	}
-	// 过滤：只保留带 progress_algo 属性的项目节点
+	// 保留项目节点 + 用户新建节点；排除组织架构节点（type=group/division，由 GVA 部门管理）
 	var projects []eavtypes.Entity
 	for _, e := range entities {
-		if _, ok := e.Attrs["progress_algo"]; ok {
-			projects = append(projects, e)
+		if isOrgNode(e.Attrs) {
+			continue
 		}
+		projects = append(projects, e)
 	}
 	return buildTreeFromEntities(projects), nil
+}
+
+// isOrgNode 判断是否组织架构节点（group=集团/division=部门，由 GVA 部门管理，不在 EPS 树展示）
+func isOrgNode(attrs map[string]interface{}) bool {
+	if v, ok := attrs["type"].(string); ok {
+		if v == "group" || v == "division" {
+			return true
+		}
+	}
+	return false
 }
 
 func buildTreeFromEntities(entities []eavtypes.Entity) []TreeNode {
