@@ -148,3 +148,26 @@ func (s *ConfigPackageService) ListStateDefsPublic(ctx context.Context, entityTy
 	return list, err
 }
 
+// LoadSeedPackage 灌入单个配置包 seed_yaml 到 pm_config_packages（幂等：code 已存在跳过）
+func (s *ConfigPackageService) LoadSeedPackage(ctx context.Context, code string, seedYAML string) error {
+	var count int64
+	global.GVA_DB.WithContext(ctx).Model(&pmocker.PMConfigPackage{}).Where("code = ?", code).Count(&count)
+	if count > 0 {
+		return nil
+	}
+	// 从 seed_yaml 解析基本信息
+	seed, err := ParseSeedYAML([]byte(seedYAML))
+	if err != nil {
+		return err
+	}
+	pkg := pmocker.PMConfigPackage{
+		Code:       code,
+		Name:       seed.Name,
+		EntityType: seed.EntityType,
+		Module:     seed.Module,
+		Status:     "draft",
+		SeedYAML:   seedYAML,
+	}
+	return global.GVA_DB.WithContext(ctx).Create(&pkg).Error
+}
+

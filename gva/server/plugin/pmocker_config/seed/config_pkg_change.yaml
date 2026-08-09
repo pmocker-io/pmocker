@@ -1,0 +1,339 @@
+entity_type: change_request
+module: change
+name: 变更管理
+fields:
+    - key: code
+      label: 变更编号
+      data_type: string
+    - key: title
+      label: 标题
+      data_type: string
+    - key: type
+      label: 类型
+      data_type: enum
+      options:
+        - scope
+        - schedule
+        - cost
+        - quality
+        - resource
+        - risk
+        - other
+    - key: priority
+      label: 优先级
+      data_type: enum
+      options:
+        - critical
+        - high
+        - medium
+        - low
+    - key: description
+      label: 变更描述
+      data_type: text
+    - key: reason
+      label: 变更原因
+      data_type: text
+    - key: requested_by
+      label: 申请人
+      data_type: user
+    - key: requested_date
+      label: 申请日期
+      data_type: date
+    - key: impact_scope
+      label: 影响范围
+      data_type: text
+    - key: impact_schedule
+      label: 进度影响(天)
+      data_type: int
+    - key: impact_cost
+      label: 成本影响
+      data_type: decimal
+    - key: impact_quality
+      label: 质量影响
+      data_type: text
+    - key: ccb_decision
+      label: CCB决议
+      data_type: text
+    - key: implemented_by
+      label: 实施人
+      data_type: user
+    - key: implemented_date
+      label: 实施日期
+      data_type: date
+    - key: validation_result
+      label: 验证结果
+      data_type: text
+    - key: change_nature
+      label: 变更性质
+      data_type: enum
+      options:
+        - corrective
+        - preventive
+        - defect_repair
+        - enhancement
+    - key: ccb_decision_date
+      label: CCB决议日期
+      data_type: date
+    - key: ccb_decision_maker
+      label: CCB决议人
+      data_type: user
+    - key: impact_analyzed_by
+      label: 影响分析人
+      data_type: user
+    - key: validated_by
+      label: 验证人
+      data_type: user
+    - key: is_emergency
+      label: 是否紧急变更
+      data_type: bool
+      default: "false"
+    - key: affected_baselines
+      label: 受影响基线
+      data_type: json
+    - key: baseline_snapshot
+      label: 基线快照
+      data_type: json
+states:
+    - status: draft
+      label: 草稿
+      tag_type: info
+    - status: submitted
+      label: 已提交
+      tag_type: warning
+    - status: analyzing
+      label: analyzing
+      tag_type: info
+    - status: ccb_review
+      label: CCB评审
+      tag_type: warning
+    - status: approved
+      label: 已批准
+      tag_type: success
+    - status: rejected
+      label: 已驳回
+      tag_type: danger
+    - status: implementing
+      label: 实施中
+      tag_type: warning
+    - status: verified
+      label: 已验证
+      tag_type: success
+    - status: closed
+      label: 已关闭
+      tag_type: success
+    - status: cancelled
+      label: 已取消
+      tag_type: info
+transitions:
+    - from: draft
+      to: submitted
+      action: submit
+    - from: submitted
+      to: approved
+      action: approve
+    - from: submitted
+      to: draft
+      action: reject
+      rollback: true
+projects:
+    - code: PROJ_A
+      name: 智能排产系统研发
+      type: project
+      status: active
+      priority: 1
+      entities:
+        change_request:
+            - description: 增加换型时间约束
+              owner: proj_a_be
+              priority: 1
+              status: approved
+              title: 排产规则变更
+              type: requirement
+            - description: 整体配色调整为深色
+              owner: proj_a_fe
+              priority: 2
+              status: implementing
+              title: UI改版
+              type: scope
+            - description: 支持小程序
+              owner: proj_a_pm
+              priority: 2
+              status: ccb_review
+              title: 增加移动端
+              type: scope
+            - description: 增加分表
+              owner: proj_a_be
+              priority: 1
+              status: submitted
+              title: DB结构调整
+              type: design
+            - description: v1→v2
+              owner: proj_a_be
+              priority: 2
+              status: submitted
+              title: API重构
+              type: design
+            - description: 引入ABAC
+              owner: proj_a_pm
+              priority: 2
+              status: submitted
+              title: 权限模型调整
+              type: process
+            - description: 引入ECharts pro
+              owner: proj_a_qa
+              priority: 3
+              status: submitted
+              title: 报表引擎替换
+              type: tool
+            - description: 动态阈值
+              owner: proj_a_pm
+              priority: 2
+              status: submitted
+              title: 告警规则修改
+              type: process
+            - description: k8s容器化
+              owner: proj_a_be
+              priority: 2
+              status: submitted
+              title: 部署方案变更
+              type: infra
+            - description: 性能指标放宽
+              owner: proj_a_qa
+              priority: 2
+              status: submitted
+              title: 验收标准调整
+              type: process
+    - code: PROJ_B
+      name: 新建厂房工程
+      type: project
+      status: active
+      priority: 0
+      entities:
+        change_request:
+            - description: 增加地下一层车库
+              owner: proj_b_pm
+              priority: 0
+              status: ccb_review
+              title: 新增地下车库
+              type: scope
+            - description: HRB400→HRB500
+              owner: proj_b_civil
+              priority: 1
+              status: approved
+              title: 钢筋规格升级
+              type: material
+            - description: 全部自动喷淋
+              owner: proj_b_mep
+              priority: 1
+              status: implementing
+              title: 增加消防喷淋
+              type: scope
+            - description: 涂料→石材
+              owner: proj_b_civil
+              priority: 2
+              status: submitted
+              title: 外墙材质变更
+              type: material
+            - description: 容积率提升
+              owner: proj_b_pm
+              priority: 1
+              status: submitted
+              title: 容积率调整
+              type: design
+            - description: 2000→3000KVA
+              owner: proj_b_mep
+              priority: 1
+              status: ccb_review
+              title: 供电扩容
+              type: infra
+            - description: 厂房取消吊顶
+              owner: proj_b_pm
+              priority: 2
+              status: submitted
+              title: 吊顶取消
+              type: scope
+            - description: 雨棚覆盖卸货区
+              owner: proj_b_pm
+              priority: 2
+              status: submitted
+              title: 卸货区增加雨棚
+              type: scope
+            - description: 2→3部货梯
+              owner: proj_b_mep
+              priority: 2
+              status: submitted
+              title: 电梯数量增加
+              type: equipment
+            - description: 增加预验收环节
+              owner: proj_b_pm
+              priority: 2
+              status: submitted
+              title: 验收流程调整
+              type: process
+    - code: PROJ_C
+      name: 高精度温度传感器研发
+      type: project
+      status: active
+      priority: 1
+      entities:
+        change_request:
+            - description: 3x3→4x4
+              owner: proj_c_struct
+              priority: 1
+              status: ccb_review
+              title: 封装尺寸调整
+              type: design
+            - description: 单点校准
+              owner: proj_c_elec
+              priority: 2
+              status: submitted
+              title: 增加校准功能
+              type: requirement
+            - description: 增加CAN FD
+              owner: proj_c_elec
+              priority: 2
+              status: submitted
+              title: 接口增加CAN
+              type: scope
+            - description: ±0.1→±0.05
+              owner: proj_c_test
+              priority: 1
+              status: submitted
+              title: 精度提升
+              type: requirement
+            - description: A厂→B厂
+              owner: proj_c_elec
+              priority: 1
+              status: submitted
+              title: 更换芯片
+              type: material
+            - description: 1→4腔
+              owner: proj_c_process
+              priority: 2
+              status: submitted
+              title: 模具型腔数增加
+              type: tooling
+            - description: TVS管
+              owner: proj_c_elec
+              priority: 1
+              status: implementing
+              title: 增加ESD防护
+              type: design
+            - description: PBT→LCP
+              owner: proj_c_struct
+              priority: 2
+              status: submitted
+              title: 外壳材质变更
+              type: material
+            - description: 扩大焊盘
+              owner: proj_c_process
+              priority: 2
+              status: ccb_review
+              title: 焊盘尺寸调整
+              type: process
+            - description: 1→2年
+              owner: proj_c_pm
+              priority: 2
+              status: submitted
+              title: 延长质保期
+              type: process

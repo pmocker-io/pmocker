@@ -1,0 +1,57 @@
+entity_type: eps_node
+module: eps
+name: 组织EPS
+fields:
+    - key: type
+      label: 节点类型
+      data_type: enum
+      options:
+        - group
+        - division
+        - program
+        - project
+        - subproject
+    - key: code
+      label: 编码
+      data_type: string
+    - key: progress_algo
+      label: 完成度算法
+      data_type: enum
+      options:
+        - hours
+        - wbs
+        - count
+    - key: health
+      label: 健康度
+      data_type: enum
+      options:
+        - green
+        - yellow
+        - red
+states:
+    - status: active
+      label: 进行中
+      tag_type: success
+    - status: archived
+      label: 已归档
+      tag_type: info
+    - status: paused
+      label: 已暂停
+      tag_type: warning
+transitions: []
+projects:
+    - code: PROJ_A
+      name: 智能排产系统研发
+      type: project
+      status: active
+      priority: 1
+    - code: PROJ_B
+      name: 新建厂房工程
+      type: project
+      status: active
+      priority: 0
+    - code: PROJ_C
+      name: 高精度温度传感器研发
+      type: project
+      status: active
+      priority: 1

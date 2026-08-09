@@ -83,6 +83,33 @@ func TestConfigPackageCopyAsDraft(t *testing.T) {
 	}
 }
 
+func TestLoadSeedPackageIdempotent(t *testing.T) {
+	db := testutil.NewMemoryDB(t, &pmocker.PMConfigPackage{})
+	ctx := context.Background()
+	s := &ConfigPackageService{}
+
+	if err := s.LoadSeedPackage(ctx, "eps", testSeedYAML); err != nil {
+		t.Fatal(err)
+	}
+	// 重复加载幂等
+	if err := s.LoadSeedPackage(ctx, "eps", testSeedYAML); err != nil {
+		t.Fatal(err)
+	}
+	var count int64
+	db.Model(&pmocker.PMConfigPackage{}).Count(&count)
+	if count != 1 {
+		t.Fatalf("幂等失败 count=%d", count)
+	}
+	var pkg pmocker.PMConfigPackage
+	db.Where("code = ?", "eps").First(&pkg)
+	if pkg.Status != "draft" {
+		t.Fatalf("导入配置包状态 = %s, want draft", pkg.Status)
+	}
+	if pkg.EntityType != "requirement" {
+		t.Fatalf("EntityType = %s, want requirement", pkg.EntityType)
+	}
+}
+
 func TestConfigPackageDeletePublishedRejected(t *testing.T) {
 	db := testutil.NewMemoryDB(t, &pmocker.PMConfigPackage{})
 	ctx := context.Background()

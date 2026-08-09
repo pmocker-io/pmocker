@@ -1,0 +1,324 @@
+entity_type: issue
+module: issue
+name: 问题管理
+fields:
+    - key: code
+      label: 问题编号
+      data_type: string
+    - key: title
+      label: 标题
+      data_type: string
+    - key: description
+      label: 描述
+      data_type: text
+    - key: priority
+      label: 优先级
+      data_type: enum
+      options:
+        - 紧急
+        - 高
+        - 中
+        - 低
+    - key: severity
+      label: 严重程度
+      data_type: enum
+      options:
+        - fatal
+        - critical
+        - major
+        - minor
+        - trivial
+    - key: category
+      label: 分类
+      data_type: enum
+      options:
+        - bug
+        - performance
+        - usability
+        - process
+        - schedule
+        - resource
+        - communication
+        - other
+    - key: assignee
+      label: 指派给
+      data_type: user
+    - key: reported_by
+      label: 报告人
+      data_type: user
+    - key: due_date
+      label: 截止日期
+      data_type: date
+    - key: resolution
+      label: 解决方案
+      data_type: text
+    - key: root_cause
+      label: 根本原因
+      data_type: text
+    - key: status
+      label: 状态
+      data_type: enum
+      options:
+        - open
+        - assigned
+        - in_progress
+        - resolved
+        - verified
+        - closed
+        - reopened
+    - key: closure_criteria
+      label: 关闭条件
+      data_type: text
+    - key: affected_scope
+      label: 影响范围
+      data_type: ref
+    - key: resolution_type
+      label: 解决类型
+      data_type: enum
+      options:
+        - workaround
+        - permanent_fix
+    - key: related_risk_id
+      label: 关联风险
+      data_type: ref
+    - key: resolved_date
+      label: 解决日期
+      data_type: date
+    - key: resolution_effort
+      label: 解决工时
+      data_type: decimal
+    - key: verified_by
+      label: 验证人
+      data_type: user
+    - key: verified_date
+      label: 验证日期
+      data_type: date
+    - key: reopen_count
+      label: 重开次数
+      data_type: int
+      default: "0"
+states:
+    - status: open
+      label: 待处理
+      tag_type: info
+    - status: assigned
+      label: 已指派
+      tag_type: warning
+    - status: in_progress
+      label: 处理中
+      tag_type: warning
+    - status: resolved
+      label: 已解决
+      tag_type: success
+    - status: verified
+      label: 已验证
+      tag_type: success
+    - status: closed
+      label: 已关闭
+      tag_type: success
+    - status: reopened
+      label: 已重开
+      tag_type: danger
+transitions: []
+projects:
+    - code: PROJ_A
+      name: 智能排产系统研发
+      type: project
+      status: active
+      priority: 1
+      entities:
+        issue:
+            - description: 10000订单计算超时10s
+              owner: proj_a_be
+              priority: 1
+              severity: major
+              status: resolved
+              title: 算法性能瓶颈
+            - description: 甘特图渲染后内存持续增长
+              owner: proj_a_fe
+              priority: 2
+              severity: normal
+              status: resolved
+              title: 前端内存泄漏
+            - description: 高并发下EAV写死锁
+              owner: proj_a_be
+              priority: 1
+              severity: major
+              status: in_progress
+              title: DB死锁
+            - description: 批量查询>3s
+              owner: proj_a_be
+              priority: 2
+              severity: normal
+              status: in_progress
+              title: 接口超时
+            - description: IE11布局错乱
+              owner: proj_a_fe
+              priority: 3
+              severity: minor
+              status: open
+              title: 浏览器兼容性
+            - description: 进度更新后统计不实时
+              owner: proj_a_be
+              priority: 2
+              severity: normal
+              status: open
+              title: 数据一致性
+            - description: 团队成员访问其他项目
+              owner: proj_a_pm
+              priority: 2
+              severity: normal
+              status: open
+              title: 权限遗漏
+            - description: 大数据量报表加载慢
+              owner: proj_a_qa
+              priority: 3
+              severity: minor
+              status: open
+              title: 报表慢查询
+            - description: 阈值不当
+              owner: proj_a_pm
+              priority: 2
+              severity: normal
+              status: open
+              title: 告警误报
+            - description: 小屏手机错乱
+              owner: proj_a_fe
+              priority: 3
+              severity: minor
+              status: open
+              title: 移动端布局
+    - code: PROJ_B
+      name: 新建厂房工程
+      type: project
+      status: active
+      priority: 0
+      entities:
+        issue:
+            - description: 连续降雨导致基础施工延期2周
+              owner: proj_b_pm
+              priority: 0
+              severity: critical
+              status: in_progress
+              title: 雨季施工延误
+            - description: 钢筋水泥涨价15%
+              owner: proj_b_qs
+              priority: 0
+              severity: critical
+              status: in_progress
+              title: 材料涨价
+            - description: 钢筋间距不符合规范
+              owner: proj_b_civil
+              priority: 1
+              severity: major
+              status: resolved
+              title: 分包商质量
+            - description: 高空坠物隐患
+              owner: proj_b_safety
+              priority: 0
+              severity: critical
+              status: resolved
+              title: 高空作业安全
+            - description: 夜间施工扰民投诉
+              owner: proj_b_safety
+              priority: 2
+              severity: normal
+              status: open
+              title: 施工噪音投诉
+            - description: 设计变更频繁
+              owner: proj_b_civil
+              priority: 1
+              severity: normal
+              status: open
+              title: 图纸变更频繁
+            - description: 旺季工人紧缺
+              owner: proj_b_pm
+              priority: 1
+              severity: major
+              status: open
+              title: 劳动力不足
+            - description: 临时用电不规范
+              owner: proj_b_safety
+              priority: 2
+              severity: normal
+              status: open
+              title: 临时用电
+            - description: 实际地质差于勘察报告
+              owner: proj_b_civil
+              priority: 1
+              severity: major
+              status: resolved
+              title: 地质条件偏差
+            - description: 当地验收标准修订
+              owner: proj_b_pm
+              priority: 2
+              severity: normal
+              status: open
+              title: 验收标准变动
+    - code: PROJ_C
+      name: 高精度温度传感器研发
+      type: project
+      status: active
+      priority: 1
+      entities:
+        issue:
+            - description: 高低温封装开裂
+              owner: proj_c_struct
+              priority: 1
+              severity: major
+              status: in_progress
+              title: 封装热应力
+            - description: ADC噪声过大
+              owner: proj_c_elec
+              priority: 1
+              severity: major
+              status: resolved
+              title: 采样噪声
+            - description: 原型良率仅50%
+              owner: proj_c_process
+              priority: 1
+              severity: major
+              status: in_progress
+              title: 工艺良率低
+            - description: 180ms超标
+              owner: proj_c_elec
+              priority: 2
+              severity: normal
+              status: open
+              title: 响应时间超差
+            - description: 1000h漂移超规格
+              owner: proj_c_test
+              priority: 2
+              severity: normal
+              status: open
+              title: 长期漂移
+            - description: 模具超预算
+              owner: proj_c_pm
+              priority: 2
+              severity: normal
+              status: open
+              title: 模具费用
+            - description: 芯片交期延长
+              owner: proj_c_elec
+              priority: 1
+              severity: major
+              status: open
+              title: 元件缺货
+            - description: 辐射发射超标
+              owner: proj_c_test
+              priority: 2
+              severity: normal
+              status: open
+              title: EMC超标
+            - description: SMT焊点剪切力不足
+              owner: proj_c_process
+              priority: 2
+              severity: normal
+              status: open
+              title: 焊点强度
+            - description: 客户要求增加校准功能
+              owner: proj_c_pm
+              priority: 2
+              severity: normal
+              status: open
+              title: 客户规格变更

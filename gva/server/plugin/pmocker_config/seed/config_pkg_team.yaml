@@ -1,0 +1,194 @@
+entity_type: team_member
+module: team
+name: 团队管理
+fields:
+    - key: code
+      label: 成员编号
+      data_type: string
+    - key: user_id
+      label: 关联用户
+      data_type: ref
+    - key: full_name
+      label: 姓名
+      data_type: string
+    - key: role
+      label: 角色
+      data_type: enum
+      options:
+        - pm
+        - sponsor
+        - ba
+        - dev
+        - qa
+        - designer
+        - architect
+        - sme
+    - key: department
+      label: 部门
+      data_type: string
+    - key: allocation_percent
+      label: 投入比例(%)
+      data_type: decimal
+    - key: start_date
+      label: 开始日期
+      data_type: date
+    - key: end_date
+      label: 结束日期
+      data_type: date
+    - key: skills
+      label: 技能
+      data_type: json
+    - key: skill_level
+      label: 技能等级
+      data_type: enum
+      options:
+        - junior
+        - mid
+        - senior
+        - expert
+    - key: certifications
+      label: 认证
+      data_type: json
+    - key: hourly_rate
+      label: 时薪
+      data_type: decimal
+    - key: cost_center
+      label: 成本中心
+      data_type: string
+    - key: billable
+      label: 是否计费
+      data_type: bool
+      default: "false"
+    - key: location
+      label: 所在地
+      data_type: string
+    - key: timezone
+      label: 时区
+      data_type: string
+    - key: communication_mode
+      label: 工作模式
+      data_type: enum
+      options:
+        - onsite
+        - hybrid
+        - remote
+    - key: reporting_to
+      label: 汇报对象
+      data_type: user
+    - key: performance_rating
+      label: 绩效评分
+      data_type: decimal
+    - key: utilization_rate
+      label: 利用率(%)
+      data_type: decimal
+    - key: status
+      label: 状态
+      data_type: enum
+      options:
+        - candidate
+        - onboarded
+        - active
+        - leaving
+        - offboarded
+    - key: offboard_reason
+      label: 离职原因
+      data_type: text
+states:
+    - status: candidate
+      label: candidate
+      tag_type: info
+    - status: onboarded
+      label: onboarded
+      tag_type: info
+    - status: active
+      label: 进行中
+      tag_type: info
+    - status: leaving
+      label: leaving
+      tag_type: info
+    - status: offboarded
+      label: offboarded
+      tag_type: info
+transitions: []
+projects:
+    - code: PROJ_A
+      name: 智能排产系统研发
+      type: project
+      status: active
+      priority: 1
+      entities:
+        team_member:
+            - allocation: 1
+              hourly_rate: 156.25
+              role: PM
+              username: proj_a_pm
+            - allocation: 1
+              hourly_rate: 112.5
+              role: BA
+              username: proj_a_ba
+            - allocation: 1
+              hourly_rate: 125
+              role: FE_DEV
+              username: proj_a_fe
+            - allocation: 1
+              hourly_rate: 137.5
+              role: BE_DEV
+              username: proj_a_be
+            - allocation: 1
+              hourly_rate: 100
+              role: QA
+              username: proj_a_qa
+    - code: PROJ_B
+      name: 新建厂房工程
+      type: project
+      status: active
+      priority: 0
+      entities:
+        team_member:
+            - allocation: 1
+              hourly_rate: 125
+              role: PM
+              username: proj_b_pm
+            - allocation: 1
+              hourly_rate: 100
+              role: CIVIL_ENG
+              username: proj_b_civil
+            - allocation: 1
+              hourly_rate: 106.25
+              role: MEP_ENG
+              username: proj_b_mep
+            - allocation: 1
+              hourly_rate: 81.25
+              role: SAFETY
+              username: proj_b_safety
+            - allocation: 1
+              hourly_rate: 93.75
+              role: QS
+              username: proj_b_qs
+    - code: PROJ_C
+      name: 高精度温度传感器研发
+      type: project
+      status: active
+      priority: 1
+      entities:
+        team_member:
+            - allocation: 1
+              hourly_rate: 112.5
+              role: PM
+              username: proj_c_pm
+            - allocation: 1
+              hourly_rate: 106.25
+              role: STRUCT_ENG
+              username: proj_c_struct
+            - allocation: 1
+              hourly_rate: 118.75
+              role: ELEC_ENG
+              username: proj_c_elec
+            - allocation: 1
+              hourly_rate: 93.75
+              role: PROCESS_ENG
+              username: proj_c_process
+            - allocation: 1
+              hourly_rate: 87.5
+              role: TEST_ENG
+              username: proj_c_test
