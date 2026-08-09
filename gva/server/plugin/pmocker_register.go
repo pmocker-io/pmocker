@@ -11,6 +11,7 @@ import (
 
 	// 业务插件（按目录名字母序自动生成）
 	_ "github.com/flipped-aurora/gin-vue-admin/server/plugin/pmocker_change"       // 变更管理
+	_ "github.com/flipped-aurora/gin-vue-admin/server/plugin/pmocker_config"       // 初始配置管理
 	_ "github.com/flipped-aurora/gin-vue-admin/server/plugin/pmocker_cost"         // 成本管理
 	_ "github.com/flipped-aurora/gin-vue-admin/server/plugin/pmocker_deliverable"  // 交付物管理
 	_ "github.com/flipped-aurora/gin-vue-admin/server/plugin/pmocker_eps"          // 组织级EPS

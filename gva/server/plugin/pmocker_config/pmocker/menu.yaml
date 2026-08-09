@@ -1,0 +1,56 @@
+menus:
+  - path: /pmocker/config
+    name: pmockerConfig
+    component: view/routerHolder.vue
+    sort: 90
+    title: 初始配置
+    icon: setting
+  - path: entityType
+    name: pmockerConfigEntityType
+    parent_name: pmockerConfig
+    component: view/pmocker/config/entityType.vue
+    sort: 1
+    title: 实体类型
+    icon: document
+  - path: fieldDef
+    name: pmockerConfigFieldDef
+    parent_name: pmockerConfig
+    component: view/pmocker/config/fieldDef.vue
+    sort: 2
+    title: 字段定义
+    icon: list
+  - path: dictionary
+    name: pmockerConfigDictionary
+    parent_name: pmockerConfig
+    component: view/pmocker/config/dictionary.vue
+    sort: 3
+    title: 字典
+    icon: files
+  - path: stateDef
+    name: pmockerConfigStateDef
+    parent_name: pmockerConfig
+    component: view/pmocker/config/stateDef.vue
+    sort: 4
+    title: 状态流转
+    icon: refresh
+  - path: workflow
+    name: pmockerConfigWorkflow
+    parent_name: pmockerConfig
+    component: view/pmocker/config/workflow.vue
+    sort: 5
+    title: 工作流
+    icon: set-up
+  - path: seedEntity
+    name: pmockerConfigSeedEntity
+    parent_name: pmockerConfig
+    component: view/pmocker/config/seedEntity.vue
+    sort: 6
+    title: 业务种子
+    icon: list
+  - path: org
+    name: pmockerConfigOrg
+    parent_name: pmockerConfig
+    component: view/pmocker/config/orgEntry.vue
+    sort: 7
+    title: 组织权限
+    icon: user

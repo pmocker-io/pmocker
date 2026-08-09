@@ -1,0 +1,8 @@
+apis:
+  - {path: /pmocker/config/entityTypes, description: 实体类型列表, api_group: 初始配置, method: GET}
+  - {path: /pmocker/config/entityType, description: 新增实体类型, api_group: 初始配置, method: POST}
+  - {path: /pmocker/config/transition, description: 配置状态流转, api_group: 初始配置, method: POST}
+  - {path: /pmocker/config/copy, description: 复制为草稿, api_group: 初始配置, method: POST}
+  - {path: /pmocker/config/stateDefs/public, description: 已发布状态流转, api_group: 初始配置, method: GET}
+  - {path: /pmocker/config/seedEntities, description: 业务种子列表, api_group: 初始配置, method: GET}
+  - {path: /pmocker/config/export, description: 导出配置YAML, api_group: 初始配置, method: POST}
