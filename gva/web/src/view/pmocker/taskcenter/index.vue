@@ -9,20 +9,20 @@
       <el-col :span="6"><el-card shadow="hover"><div class="stat"><span>进行中</span><b style="color:#409EFF">{{ stats.doingCount }}</b></div></el-card></el-col>
     </el-row>
 
-    <div class="task-body">
-      <div class="task-tabs">
-        <div
-          v-for="t in tabs"
-          :key="t.name"
-          class="tab-item"
-          :class="{ active: activeTab === t.name }"
-          @click="switchTab(t.name)"
-        >
-          {{ t.label }}
-          <span v-if="t.count !== null" class="tab-badge">{{ t.count }}</span>
-        </div>
-      </div>
-      <div class="task-content">
+    <div style="margin-top: 16px">
+      <VerticalTabLayout
+        v-model:activeTab="activeTab"
+        :tabs="tabs"
+        @tab-change="switchTab"
+      >
+        <!-- 表格上方的工具栏/按钮区（预留给后续扩展：如新增、批量分配、导出等） -->
+        <template #toolbar>
+          <div class="task-toolbar">
+            <span class="tab-title">{{ currentTabLabel }}</span>
+          </div>
+        </template>
+
+        <!-- 表格主内容区 -->
         <el-table :data="tasks" border size="small" v-loading="loading">
           <el-table-column prop="title" label="任务名称" min-width="180" />
           <el-table-column label="来源" width="110">
@@ -44,14 +44,15 @@
             </template>
           </el-table-column>
         </el-table>
-      </div>
+      </VerticalTabLayout>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { getMyTasks, getFocusedTasks, getTaskStats } from '@/api/pmocker/taskCenter'
+import VerticalTabLayout from '../components/VerticalTabLayout.vue'
 
 const activeTab = ref('todo')
 const tasks = ref([])
@@ -66,9 +67,18 @@ const tabs = ref([
   { name: 'focused', label: '我关注的', count: null }
 ])
 
-const switchTab = (name) => {
-  activeTab.value = name
-  loadTasks()
+const currentTabLabel = computed(() => {
+  const cur = tabs.value.find(t => t.name === activeTab.value)
+  return cur ? cur.label : ''
+})
+
+const switchTab = async (name) => {
+  await loadTasks()
+  const cur = tabs.value.find(t => t.name === name)
+  if (cur) {
+    cur.count = tasks.value.length
+    tabs.value = [...tabs.value]
+  }
 }
 
 const loadStats = async () => {
@@ -91,9 +101,8 @@ const fetchTabCount = async (tabName) => {
 }
 
 const preloadCounts = async () => {
-  const others = tabs.value.filter(t => t.name !== activeTab.value)
-  const results = await Promise.all(others.map(t => fetchTabCount(t.name)))
-  results.forEach((cnt, i) => { others[i].count = cnt })
+  const results = await Promise.all(tabs.value.map(t => fetchTabCount(t.name)))
+  tabs.value = tabs.value.map((t, i) => ({ ...t, count: results[i] }))
 }
 
 const loadTasks = async () => {
@@ -107,8 +116,6 @@ const loadTasks = async () => {
     }
     if (res.code === 0) {
       tasks.value = res.data || []
-      const cur = tabs.value.find(t => t.name === activeTab.value)
-      if (cur) cur.count = tasks.value.length
     }
   } finally {
     loading.value = false
@@ -127,66 +134,14 @@ onMounted(() => { loadStats(); preloadCounts(); loadTasks() })
 .task-center { padding: 16px; }
 .stat { display: flex; justify-content: space-between; align-items: center; }
 .stat b { font-size: 24px; }
-
-.task-body {
-  display: flex;
-  margin-top: 16px;
-  min-height: 500px;
-  border: 1px solid #e4e7ed;
-  border-radius: 4px;
-  overflow: hidden;
-}
-.task-tabs {
-  width: 140px;
-  flex-shrink: 0;
-  background: #fafafa;
-  border-right: 1px solid #e4e7ed;
-}
-.tab-item {
+.task-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 16px;
-  height: 44px;
-  line-height: 44px;
-  cursor: pointer;
-  border-bottom: 1px solid #f0f0f0;
-  color: #606266;
-  transition: all 0.2s;
-  user-select: none;
 }
-.tab-item:hover {
-  background: #ecf5ff;
-  color: #409eff;
-}
-.tab-item.active {
-  background: #409eff;
-  color: #fff;
+.tab-title {
+  font-size: 14px;
   font-weight: 500;
-}
-.tab-item.active:hover {
-  background: #409eff;
-  color: #fff;
-}
-.tab-badge {
-  display: inline-block;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  line-height: 18px;
-  text-align: center;
-  font-size: 11px;
-  border-radius: 9px;
-  background: #f0f0f0;
-  color: #909399;
-}
-.tab-item.active .tab-badge {
-  background: rgba(255, 255, 255, 0.3);
-  color: #fff;
-}
-.task-content {
-  flex: 1;
-  padding: 12px;
-  overflow: auto;
+  color: #303133;
 }
 </style>

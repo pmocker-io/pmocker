@@ -186,8 +186,8 @@ func getUserVisibilityScope(db *gorm.DB, userID uint) VisibilityScope {
 	// 2. 检查岗位
 	var posCodes []string
 	db.Table("sys_user_positions sup").
-		Joins("JOIN sys_positions sp ON sp.id = sup.position_id").
-		Where("sup.user_id = ?", userID).
+		Joins("JOIN sys_positions sp ON sp.id = sup.sys_position_id").
+		Where("sup.sys_user_id = ?", userID).
 		Pluck("sp.code", &posCodes)
 	for _, code := range posCodes {
 		if code == "DEPT_LEADER" {
