@@ -1,8 +1,8 @@
 <template>
   <div class="dashboard-page">
     <el-page-header content="项目仪表盘" @back="$router.back()" />
-    <el-select v-model="projectId" placeholder="选择项目" filterable style="margin: 12px 200px 12px 0" @change="loadData">
-      <el-option v-for="p in projects" :key="p.ID" :label="p.title" :value="p.ID" />
+    <el-select v-model="projectId" placeholder="选择项目" filterable style="margin: 12px 200px 12px 0" @change="onProjectChange">
+      <el-option v-for="p in projects" :key="p.id" :label="p.name" :value="p.id" />
     </el-select>
     <el-button type="primary" @click="genSnapshot">生成月报快照</el-button>
 
@@ -71,9 +71,12 @@ import { ref, reactive, onMounted, nextTick } from 'vue'
 import * as echarts from 'echarts'
 import { ElMessage } from 'element-plus'
 import { getDashboard, generateSnapshot } from '@/api/pmocker/dashboard'
+import { useProjectStore } from '@/pinia'
 import service from '@/utils/request'
 
-const projectId = ref('')
+const projectStore = useProjectStore()
+// 优先从全局项目上下文初始化（由 EPS/工作台"进入项目"时设置）
+const projectId = ref(projectStore.projectId || '')
 const projects = ref([])
 const dash = reactive({
   progress: 0, health: 'green', priority: 2,
@@ -104,6 +107,13 @@ const loadProjects = async () => {
     const allNodes = flattenTree(treeData)
     projects.value = allNodes.filter(p => p.type === 'project' || !p.type)
   }
+}
+
+// 切换项目时同步到全局 store，并加载数据
+const onProjectChange = (val) => {
+  const proj = projects.value.find(p => p.id === val)
+  projectStore.setProject(val, proj ? proj.name : '')
+  loadData()
 }
 
 const loadData = async () => {
@@ -187,7 +197,13 @@ const priorityTag = (p) => ({ 0: 'danger', 1: 'warning', 2: 'info', 3: 'info' }[
 const healthLabel = (h) => ({ green: '健康', yellow: '关注', red: '预警' }[h] || '健康')
 const healthTag = (h) => ({ green: 'success', yellow: 'warning', red: 'danger' }[h] || 'success')
 
-onMounted(() => { loadProjects() })
+onMounted(async () => {
+  await loadProjects()
+  // 若已有项目上下文（从 EPS/工作台进入），直接加载仪表盘数据
+  if (projectId.value) {
+    loadData()
+  }
+})
 </script>
 
 <style scoped>

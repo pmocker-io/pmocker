@@ -1,8 +1,8 @@
 <template>
   <div class="close-page">
     <el-page-header content="结项报告" @back="$router.back()" />
-    <el-select v-model="projectId" placeholder="选择项目" filterable style="margin: 12px 200px 12px 0" @change="loadData">
-      <el-option v-for="p in projects" :key="p.ID" :label="p.title" :value="p.ID" />
+    <el-select v-model="projectId" placeholder="选择项目" filterable style="margin: 12px 200px 12px 0" @change="onProjectChange">
+      <el-option v-for="p in projects" :key="p.id" :label="p.name" :value="p.id" />
     </el-select>
     <el-button type="danger" :disabled="!report || report.archivedAt" @click="doArchive">执行归档</el-button>
 
@@ -102,9 +102,12 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getCloseReport, archiveProject } from '@/api/pmocker/archive'
+import { useProjectStore } from '@/pinia'
 import service from '@/utils/request'
 
-const projectId = ref('')
+const projectStore = useProjectStore()
+// 优先从全局项目上下文初始化（由 EPS/工作台"进入项目"时设置）
+const projectId = ref(projectStore.projectId || '')
 const projects = ref([])
 const report = ref(null)
 
@@ -123,8 +126,16 @@ const loadProjects = async () => {
   const res = await service({ url: '/pmocker/eps/tree', method: 'get' })
   if (res.code === 0) {
     const treeData = res.data || []
-    projects.value = flattenTree(treeData)
+    // 只展示项目节点（排除 group/division 组织节点）
+    projects.value = flattenTree(treeData).filter(p => p.type !== 'group' && p.type !== 'division')
   }
+}
+
+// 切换项目时同步到全局 store，并加载数据
+const onProjectChange = (val) => {
+  const proj = projects.value.find(p => p.id === val)
+  projectStore.setProject(val, proj ? proj.name : '')
+  loadData()
 }
 
 const loadData = async () => {
@@ -144,7 +155,13 @@ const doArchive = async () => {
   }
 }
 
-onMounted(() => { loadProjects() })
+onMounted(async () => {
+  await loadProjects()
+  // 若已有项目上下文（从 EPS/工作台进入），直接加载结项报告
+  if (projectId.value) {
+    loadData()
+  }
+})
 </script>
 
 <style scoped>

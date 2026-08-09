@@ -19,7 +19,7 @@
 
     <el-row :gutter="12">
       <el-col v-for="card in cards" :key="card.projectId" :span="8" style="margin-bottom: 12px">
-        <el-card shadow="hover" :body-style="{ padding: '16px' }">
+        <el-card shadow="hover" :body-style="{ padding: '16px' }" class="proj-card" @click="enterProject(card)">
           <div class="card-head">
             <span class="dot" :class="card.health" />
             <span class="proj-name">{{ card.projectName }}</span>
@@ -42,11 +42,21 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { getMyProjects, getFocusedProjects } from '@/api/pmocker/projectWorkbench'
+import { useProjectStore } from '@/pinia'
 
+const router = useRouter()
+const projectStore = useProjectStore()
 const activeTab = ref('created')
 const statusFilter = ref('')
 const cards = ref([])
+
+// 点击项目卡片：设置项目上下文并跳转项目仪表盘
+const enterProject = (card) => {
+  projectStore.setProject(card.projectId, card.projectName)
+  router.push({ name: 'pmockerDashboard' })
+}
 
 const loadData = async () => {
   if (activeTab.value === 'focused') {
@@ -76,6 +86,8 @@ onMounted(() => { loadData() })
 
 <style scoped>
 .workbench { padding: 16px; }
+.proj-card { cursor: pointer; transition: transform 0.15s; }
+.proj-card:hover { transform: translateY(-2px); }
 .card-head { display: flex; align-items: center; }
 .proj-name { font-weight: bold; margin-left: 8px; }
 .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }

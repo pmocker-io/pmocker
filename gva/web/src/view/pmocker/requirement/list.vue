@@ -6,14 +6,6 @@
         <el-form-item label="需求名称">
           <el-input v-model="searchInfo.keyword" placeholder="请输入需求名称" />
         </el-form-item>
-        <el-form-item label="状态">
-          <el-select v-model="searchInfo.status" placeholder="请选择状态" clearable>
-            <el-option label="草稿" value="draft" />
-            <el-option label="评审中" value="reviewing" />
-            <el-option label="已批准" value="approved" />
-            <el-option label="已驳回" value="rejected" />
-          </el-select>
-        </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="onSubmit">查询</el-button>
           <el-button @click="onReset">重置</el-button>
@@ -26,60 +18,68 @@
           <svg-icon icon="lucide:plus" /> 新增需求
         </el-button>
       </div>
-      <el-table :data="tableData" row-key="ID">
-        <el-table-column label="ID" prop="ID" width="80" />
-        <el-table-column label="需求名称" prop="title" min-width="200" />
-        <el-table-column label="优先级" width="100">
-          <template #default="{ row }">
-            <el-tag :type="priorityType(getAttr(row, 'priority'))">{{ getAttr(row, 'priority') }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="MoSCoW" width="120">
-          <template #default="{ row }">
-            {{ getAttr(row, 'moscow_priority') }}
-          </template>
-        </el-table-column>
-        <el-table-column label="需求类型" width="120">
-          <template #default="{ row }">
-            {{ getAttr(row, 'requirement_type') }}
-          </template>
-        </el-table-column>
-        <el-table-column label="故事点" width="100">
-          <template #default="{ row }">
-            {{ getAttr(row, 'story_points') }}
-          </template>
-        </el-table-column>
-        <el-table-column label="状态" prop="status" width="120">
-          <template #default="{ row }">
-            <el-tag :type="statusType(row.status)">{{ statusLabel(row.status) }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="提出人" prop="owner_name" width="120" />
-        <el-table-column label="创建时间" prop="CreatedAt" width="180">
-          <template #default="{ row }">
-            {{ formatDate(row.CreatedAt) }}
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" width="280" fixed="right">
-          <template #default="{ row }">
-            <el-button type="primary" link @click="openDialog('edit', row)">编辑</el-button>
-            <el-button v-if="row.status === 'draft'" type="warning" link @click="handleSubmitReview(row)">提交评审</el-button>
-            <el-button v-if="row.status === 'reviewing'" type="success" link @click="handleApprove(row)">批准</el-button>
-            <el-button v-if="row.status === 'reviewing'" type="danger" link @click="handleReject(row)">驳回</el-button>
-            <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-      <el-pagination
-        class="gva-pagination"
-        v-model:current-page="page"
-        v-model:page-size="pageSize"
-        :total="total"
-        :page-sizes="[10, 20, 50]"
-        layout="total, sizes, prev, pager, next"
-        @size-change="getTableData"
-        @current-change="getTableData"
-      />
+
+      <!-- 按状态分组展示 -->
+      <div v-for="group in groupedData" :key="group.status" class="status-group">
+        <div class="group-header">
+          <div class="group-title">
+            <el-tag :type="group.tagType">{{ group.label }}</el-tag>
+            <span class="count">({{ group.items.length }})</span>
+          </div>
+          <div class="group-actions" v-if="group.actions.length > 0">
+            <el-button v-for="action in group.actions" :key="action.label"
+              :type="action.type" size="small"
+              :disabled="!selectedMap[group.status] || selectedMap[group.status].length === 0"
+              @click="handleBatchAction(group, action)">
+              {{ action.label }}
+            </el-button>
+          </div>
+        </div>
+        <el-table :data="group.items" row-key="id" size="small"
+          @selection-change="(val) => onSelectionChange(group.status, val)">
+          <el-table-column type="selection" width="40" />
+          <el-table-column label="ID" prop="id" width="70" />
+          <el-table-column label="需求名称" prop="title" min-width="200" />
+          <el-table-column label="优先级" width="100">
+            <template #default="{ row }">
+              <el-tag size="small" :type="priorityType(getAttr(row, 'priority'))">{{ getAttr(row, 'priority') }}</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="MoSCoW" width="120">
+            <template #default="{ row }">
+              {{ getAttr(row, 'moscow_priority') }}
+            </template>
+          </el-table-column>
+          <el-table-column label="需求类型" width="120">
+            <template #default="{ row }">
+              {{ getAttr(row, 'requirement_type') }}
+            </template>
+          </el-table-column>
+          <el-table-column label="故事点" width="100">
+            <template #default="{ row }">
+              {{ getAttr(row, 'story_points') }}
+            </template>
+          </el-table-column>
+          <el-table-column label="提出人" width="120">
+            <template #default="{ row }">
+              {{ row.ownerName || '-' }}
+            </template>
+          </el-table-column>
+          <el-table-column label="创建时间" prop="CreatedAt" width="180">
+            <template #default="{ row }">
+              {{ formatDate(row.CreatedAt) }}
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="150" fixed="right">
+            <template #default="{ row }">
+              <el-button type="primary" link size="small" @click="openDialog('edit', row)">编辑</el-button>
+              <el-button type="danger" link size="small" @click="handleDelete(row)">删除</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+
+      <el-empty v-if="groupedData.length === 0" description="暂无数据" />
     </div>
 
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="800px">
@@ -98,7 +98,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   getRequirementList,
@@ -112,24 +112,24 @@ import {
 import DynamicForm from '../components/DynamicForm.vue'
 import ProjectSelector from '../components/ProjectSelector.vue'
 import { useProjectStore } from '@/pinia'
+import { groupByStatus } from '../components/statusTransitions.js'
 
 defineOptions({ name: 'PmockerRequirementList' })
 
 const projectStore = useProjectStore()
-const onProjectChange = () => { page.value = 1; getTableData() }
+const onProjectChange = () => { getTableData() }
 
 const searchInfo = ref({})
 const tableData = ref([])
-const page = ref(1)
-const pageSize = ref(10)
-const total = ref(0)
 const dialogVisible = ref(false)
 const dialogTitle = ref('')
 const formRef = ref(null)
 const dialogType = ref('add')
 
+const selectedMap = ref({})
+
 const form = reactive({
-  ID: null,
+  id: null,
   title: '',
   status: 'draft',
   attrs: {}
@@ -147,38 +147,51 @@ const priorityType = (priority) => {
   return map[priority] || 'info'
 }
 
-const statusType = (status) => {
-  const map = { draft: 'info', reviewing: 'warning', approved: 'success', rejected: 'danger' }
-  return map[status] || 'info'
-}
+// 按状态分组
+const groupedData = computed(() => groupByStatus(tableData.value, 'requirement'))
 
-const statusLabel = (status) => {
-  const map = { draft: '草稿', reviewing: '评审中', approved: '已批准', rejected: '已驳回' }
-  return map[status] || status
-}
+// API 函数映射
+const apiMap = { submitRequirementReview, approveRequirement, rejectRequirement, updateRequirement }
 
 const getTableData = async () => {
-  const params = { page: page.value, pageSize: pageSize.value, ...searchInfo.value }
+  const params = { page: 1, pageSize: 999, projectId: projectStore.projectId, ...searchInfo.value }
   const res = await getRequirementList(params)
   if (res.code === 0) {
     tableData.value = res.data.list || []
-    total.value = res.data.total || 0
   }
 }
 
-const onSubmit = () => {
-  page.value = 1
-  getTableData()
+const onSubmit = () => { getTableData() }
+const onReset = () => { searchInfo.value = {}; getTableData() }
+
+const onSelectionChange = (status, selection) => {
+  selectedMap.value = { ...selectedMap.value, [status]: selection }
 }
 
-const onReset = () => {
-  searchInfo.value = {}
-  page.value = 1
-  getTableData()
+// 批量状态流转
+const handleBatchAction = async (group, action) => {
+  const selected = selectedMap.value[group.status] || []
+  if (selected.length === 0) return
+  try {
+    await ElMessageBox.confirm(`确认将选中的 ${selected.length} 条记录执行「${action.label}」操作？`, '提示', { type: 'warning' })
+    const apiFn = apiMap[action.apiFn]
+    const promises = selected.map(row => {
+      if (action.apiFn === 'updateRequirement') {
+        return apiFn({ id: row.id, title: row.title, status: action.target, attrs: row.attrs || {} })
+      }
+      return apiFn({ id: row.id })
+    })
+    await Promise.all(promises)
+    ElMessage.success(`成功${action.label} ${selected.length} 条记录`)
+    selectedMap.value[group.status] = []
+    getTableData()
+  } catch (e) {
+    if (e !== 'cancel') ElMessage.error('操作失败')
+  }
 }
 
 const resetForm = () => {
-  Object.assign(form, { ID: null, title: '', status: 'draft', attrs: {} })
+  Object.assign(form, { id: null, title: '', status: 'draft', attrs: {} })
 }
 
 const openDialog = (type, row) => {
@@ -186,7 +199,7 @@ const openDialog = (type, row) => {
   dialogTitle.value = type === 'add' ? '新增需求' : '编辑需求'
   resetForm()
   if (type === 'edit' && row) {
-    form.ID = row.ID
+    form.id = row.id
     form.title = row.title
     form.status = row.status || 'draft'
     form.attrs = row.attrs ? { ...row.attrs } : {}
@@ -211,7 +224,7 @@ const handleSave = async () => {
 const handleDelete = (row) => {
   ElMessageBox.confirm('确认删除该需求吗？', '提示', { type: 'warning' })
     .then(async () => {
-      const res = await deleteRequirement({ ID: row.ID })
+      const res = await deleteRequirement({ id: row.id })
       if (res.code === 0) {
         ElMessage.success('删除成功')
         getTableData()
@@ -220,33 +233,35 @@ const handleDelete = (row) => {
     .catch(() => {})
 }
 
-const handleSubmitReview = async (row) => {
-  const res = await submitRequirementReview({ ID: row.ID })
-  if (res.code === 0) {
-    ElMessage.success('已提交评审')
-    getTableData()
-  }
-}
-
-const handleApprove = async (row) => {
-  const res = await approveRequirement({ ID: row.ID })
-  if (res.code === 0) {
-    ElMessage.success('已批准')
-    getTableData()
-  }
-}
-
-const handleReject = (row) => {
-  ElMessageBox.prompt('请输入驳回原因', '驳回', { type: 'warning' })
-    .then(async ({ value }) => {
-      const res = await rejectRequirement({ ID: row.ID, reason: value })
-      if (res.code === 0) {
-        ElMessage.success('已驳回')
-        getTableData()
-      }
-    })
-    .catch(() => {})
-}
-
 getTableData()
 </script>
+
+<style scoped>
+.status-group {
+  margin-bottom: 16px;
+  border: 1px solid #ebeef5;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  background: #f5f7fa;
+  border-bottom: 1px solid #ebeef5;
+}
+.group-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.count {
+  color: #909399;
+  font-size: 13px;
+}
+.group-actions {
+  display: flex;
+  gap: 8px;
+}
+</style>

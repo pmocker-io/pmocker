@@ -1,5 +1,6 @@
 <template>
   <div>
+    <ProjectSelector @change="loadData" />
     <div class="gva-table-box">
       <div class="gva-btn-list">
         <el-button type="primary" @click="openDialog">
@@ -48,8 +49,12 @@
 import { ref, reactive } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getScheduleMilestones, createScheduleMilestone } from '@/api/pmocker/schedule'
+import { useProjectStore } from '@/pinia'
+import ProjectSelector from '../components/ProjectSelector.vue'
 
 defineOptions({ name: 'PmockerScheduleMilestone' })
+
+const projectStore = useProjectStore()
 
 const tableData = ref([])
 const dialogVisible = ref(false)
@@ -74,7 +79,7 @@ const milestoneStatusLabel = (status) => {
 }
 
 const loadData = async () => {
-  const res = await getScheduleMilestones({})
+  const res = await getScheduleMilestones({ projectId: projectStore.projectId })
   if (res.code === 0) {
     tableData.value = res.data.list || []
   }
@@ -89,7 +94,7 @@ const handleSave = async () => {
   if (!formRef.value) return
   await formRef.value.validate(async (valid) => {
     if (!valid) return
-    const res = await createScheduleMilestone(form)
+    const res = await createScheduleMilestone({ ...form, projectId: projectStore.projectId })
     if (res.code === 0) {
       ElMessage.success('保存成功')
       dialogVisible.value = false
@@ -101,7 +106,7 @@ const handleSave = async () => {
 const handleDelete = (row) => {
   ElMessageBox.confirm('确认删除该里程碑吗？', '提示', { type: 'warning' })
     .then(async () => {
-      const res = await createScheduleMilestone({ action: 'delete', ID: row.ID })
+      const res = await createScheduleMilestone({ action: 'delete', id: row.id })
       if (res.code === 0) {
         ElMessage.success('删除成功')
         loadData()

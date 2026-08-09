@@ -72,7 +72,7 @@ const logLabel = (action) => {
 }
 
 const loadData = async () => {
-  const res = await getChangeLogs(searchInfo.value)
+  const res = await getChangeLogs({ projectId: projectStore.projectId, ...searchInfo.value })
   if (res.code === 0) {
     logList.value = res.data.list || []
   }

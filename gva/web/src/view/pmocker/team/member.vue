@@ -43,9 +43,13 @@
             <el-tag :type="memberStatusType(row.status)">{{ memberStatusLabel(row.status) }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="150" fixed="right">
+        <el-table-column label="操作" width="280" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" link @click="openDialog(row)">编辑</el-button>
+            <el-button v-if="row.status === 'candidate'" type="success" link @click="handleTransition(row, 'active', transitionMember)">转正</el-button>
+            <el-button v-if="row.status === 'active'" type="warning" link @click="handleTransition(row, 'on_leave', transitionMember)">休假</el-button>
+            <el-button v-if="row.status === 'on_leave'" type="success" link @click="handleTransition(row, 'active', transitionMember)">复职</el-button>
+            <el-button v-if="row.status === 'active'" type="danger" link @click="handleTransition(row, 'terminated', transitionMember)">离职</el-button>
             <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
@@ -80,10 +84,12 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { listMember, createMember, updateMember, deleteMember } from '@/api/pmocker/team'
+import { listMember, createMember, updateMember, deleteMember, transitionMember } from '@/api/pmocker/team'
+import { useProjectStore } from '@/pinia'
 import DynamicForm from '../components/DynamicForm.vue'
 
 defineOptions({ name: 'PmockerTeamMember' })
+const projectStore = useProjectStore()
 
 const tableData = ref([])
 const page = ref(1)
@@ -168,6 +174,15 @@ const handleSave = async () => {
   } finally {
     saving.value = false
   }
+}
+
+const handleTransition = async (row, status, apiFn) => {
+  try {
+    await ElMessageBox.confirm('确认执行此操作？', '提示', { type: 'warning' })
+    await apiFn({ id: row.id, status })
+    ElMessage.success('操作成功')
+    getTableData()
+  } catch (e) { if (e !== 'cancel') ElMessage.error('操作失败') }
 }
 
 const handleDelete = (row) => {

@@ -68,7 +68,7 @@ const createBaseline = async () => {
 }
 const selectBaseline = (row) => { compare(row) }
 const compare = async (row) => {
-  const res = await compareBaseline({ baselineId: row.ID })
+  const res = await compareBaseline({ baselineId: row.id })
   if (res.code === 0) { diffs.value = res.data || []; if (!diffs.value.length) ElMessage.info('无差异') }
 }
 </script>

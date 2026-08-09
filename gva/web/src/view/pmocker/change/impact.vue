@@ -114,8 +114,10 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { getChangeImpactReport, getChangeDiff, getChangeList } from '@/api/pmocker/change'
+import { useProjectStore } from '@/pinia'
 
 defineOptions({ name: 'PmockerChangeImpact' })
+const projectStore = useProjectStore()
 
 const searchInfo = ref({ changeId: '' })
 const report = ref(null)
@@ -125,7 +127,7 @@ const activeTab = ref('impact')
 const affectedTab = ref('scope')
 
 const loadChangeOptions = async () => {
-  const res = await getChangeList({ offset: 0, limit: 100 })
+  const res = await getChangeList({ offset: 0, limit: 100, projectId: projectStore.projectId })
   if (res.code === 0) {
     changeOptions.value = res.data.list || []
   }

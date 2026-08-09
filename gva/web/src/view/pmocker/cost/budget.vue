@@ -10,7 +10,7 @@
           <svg-icon icon="lucide:git-branch" /> 创建基线
         </el-button>
       </div>
-      <el-table :data="tableData" row-key="ID">
+      <el-table :data="tableData" row-key="id">
         <el-table-column label="科目" prop="title" min-width="200" />
         <el-table-column label="计划价值(PV)" width="140">
           <template #default="{ row }">¥{{ formatNum(row.attrs?.planned_value) }}</template>
@@ -120,7 +120,7 @@ const dialogTitle = ref('')
 const formRef = ref(null)
 const dialogType = ref('add')
 
-const form = reactive({ ID: null, title: '', status: 'planned', attrs: {} })
+const form = reactive({ id: null, title: '', status: 'planned', attrs: {} })
 
 const formatNum = (val) => {
   if (val === null || val === undefined || val === '') return '0.00'
@@ -181,7 +181,7 @@ const loadMembers = async () => {
 }
 
 const loadData = async () => {
-  const res = await getCostItems({})
+  const res = await getCostItems({ projectId: projectStore.projectId })
   if (res.code === 0) {
     tableData.value = res.data.list || []
   }
@@ -192,13 +192,13 @@ const openDialog = (row) => {
   dialogTitle.value = row ? '编辑成本项' : '新增成本项'
   if (row) {
     Object.assign(form, {
-      ID: row.ID,
+      id: row.id,
       title: row.title || '',
       status: row.status || 'planned',
       attrs: { ...(row.attrs || {}) }
     })
   } else {
-    Object.assign(form, { ID: null, title: '', status: 'planned', attrs: {} })
+    Object.assign(form, { id: null, title: '', status: 'planned', attrs: {} })
   }
   dialogVisible.value = true
 }
@@ -215,7 +215,7 @@ const handleSave = async () => {
     let res
     if (dialogType.value === 'edit') {
       res = await updateCostItem({
-        id: form.ID,
+        id: form.id,
         entity_type: 'cost_item',
         ...payload
       })
@@ -233,7 +233,7 @@ const handleSave = async () => {
 const handleDelete = (row) => {
   ElMessageBox.confirm('确认删除该成本项吗？', '提示', { type: 'warning' })
     .then(async () => {
-      const res = await deleteCostItem({ ID: row.ID })
+      const res = await deleteCostItem({ id: row.id })
       if (res.code === 0) {
         ElMessage.success('删除成功')
         loadData()
@@ -243,7 +243,7 @@ const handleDelete = (row) => {
 }
 
 const handleCreateBaseline = async () => {
-  const res = await createCostBaseline({})
+  const res = await createCostBaseline({ projectId: projectStore.projectId })
   if (res.code === 0) {
     ElMessage.success('基线创建成功')
     loadData()

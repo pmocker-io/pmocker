@@ -32,9 +32,12 @@
             <el-tag :type="reviewStatusType(row.attrs?.status || row.status)">{{ reviewStatusLabel(row.attrs?.status || row.status) }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="150" fixed="right">
+        <el-table-column label="操作" width="280" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" link @click="openDialog(row)">编辑</el-button>
+            <el-button v-if="row.status === 'draft'" type="warning" link @click="handleTransition(row, 'self_review', transitionPerformance)">自评</el-button>
+            <el-button v-if="row.status === 'self_review'" type="warning" link @click="handleTransition(row, 'reviewing', transitionPerformance)">评审</el-button>
+            <el-button v-if="row.status === 'reviewing'" type="success" link @click="handleTransition(row, 'completed', transitionPerformance)">完成</el-button>
             <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
@@ -70,9 +73,11 @@
 import { ref, reactive } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { listPerformance, createPerformance, updatePerformance, deletePerformance } from '@/api/pmocker/team'
+import { useProjectStore } from '@/pinia'
 import DynamicForm from '../components/DynamicForm.vue'
 
 defineOptions({ name: 'PmockerTeamPerformance' })
+const projectStore = useProjectStore()
 
 const tableData = ref([])
 const page = ref(1)
@@ -102,7 +107,7 @@ const ratingMap = {
 const ratingType = (s) => ratingMap[s] || 'info'
 
 const getTableData = async () => {
-  const res = await listPerformance({ page: page.value, pageSize: pageSize.value })
+  const res = await listPerformance({ projectId: projectStore.projectId, page: page.value, pageSize: pageSize.value })
   if (res.code === 0) {
     tableData.value = res.data.list || []
     total.value = res.data.total || 0
@@ -144,6 +149,15 @@ const handleSave = async () => {
   } finally {
     saving.value = false
   }
+}
+
+const handleTransition = async (row, status, apiFn) => {
+  try {
+    await ElMessageBox.confirm('确认执行此操作？', '提示', { type: 'warning' })
+    await apiFn({ id: row.id, status })
+    ElMessage.success('操作成功')
+    getTableData()
+  } catch (e) { if (e !== 'cancel') ElMessage.error('操作失败') }
 }
 
 const handleDelete = (row) => {

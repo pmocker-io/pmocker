@@ -28,7 +28,7 @@ const chartData = ref(null)
 let chartInstance = null
 
 const loadData = async () => {
-  const res = await getCostItems({})
+  const res = await getCostItems({ projectId: projectStore.projectId })
   if (res.code === 0) {
     chartData.value = res.data
     await nextTick()

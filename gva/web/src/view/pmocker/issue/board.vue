@@ -58,7 +58,7 @@ const priorityType = (p) => ({ urgent: 'danger', high: 'warning', medium: 'info'
 const priorityLabel = (p) => ({ urgent: '紧急', high: '高', medium: '中', low: '低' }[p] || p)
 
 const loadBoard = async () => {
-  const res = await getIssueBoard({})
+  const res = await getIssueBoard({ projectId: projectStore.projectId })
   if (res.code === 0) {
     const groups = res.data.groups || {}
     columns.value.forEach(col => {

@@ -30,9 +30,12 @@
         <el-table-column label="效果评分" width="100">
           <template #default="{ row }">{{ row.attrs?.effectiveness_score }}</template>
         </el-table-column>
-        <el-table-column label="操作" width="150" fixed="right">
+        <el-table-column label="操作" width="280" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" link @click="openDialog(row)">编辑</el-button>
+            <el-button v-if="row.status === 'planned'" type="success" link @click="handleTransition(row, 'in_progress', transitionTraining)">开始</el-button>
+            <el-button v-if="row.status === 'in_progress'" type="success" link @click="handleTransition(row, 'completed', transitionTraining)">完成</el-button>
+            <el-button v-if="row.status === 'planned'" type="danger" link @click="handleTransition(row, 'cancelled', transitionTraining)">取消</el-button>
             <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
@@ -67,10 +70,12 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { listTraining, createTraining, updateTraining, deleteTraining } from '@/api/pmocker/team'
+import { listTraining, createTraining, updateTraining, deleteTraining, transitionTraining } from '@/api/pmocker/team'
+import { useProjectStore } from '@/pinia'
 import DynamicForm from '../components/DynamicForm.vue'
 
 defineOptions({ name: 'PmockerTeamTraining' })
+const projectStore = useProjectStore()
 
 const tableData = ref([])
 const page = ref(1)
@@ -85,7 +90,7 @@ const editingId = ref(null)
 const form = reactive({ title: '', status: 'planned', attrs: {} })
 
 const getTableData = async () => {
-  const res = await listTraining({ page: page.value, pageSize: pageSize.value })
+  const res = await listTraining({ projectId: projectStore.projectId, page: page.value, pageSize: pageSize.value })
   if (res.code === 0) {
     tableData.value = res.data.list || []
     total.value = res.data.total || 0
@@ -127,6 +132,15 @@ const handleSave = async () => {
   } finally {
     saving.value = false
   }
+}
+
+const handleTransition = async (row, status, apiFn) => {
+  try {
+    await ElMessageBox.confirm('确认执行此操作？', '提示', { type: 'warning' })
+    await apiFn({ id: row.id, status })
+    ElMessage.success('操作成功')
+    getTableData()
+  } catch (e) { if (e !== 'cancel') ElMessage.error('操作失败') }
 }
 
 const handleDelete = (row) => {

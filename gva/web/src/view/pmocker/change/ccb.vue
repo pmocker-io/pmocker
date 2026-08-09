@@ -90,8 +90,10 @@
 import { ref, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getChangeList, getChangeCCBStats, approveChange, rejectChange, implementChange, verifyChange, closeChange } from '@/api/pmocker/change'
+import { useProjectStore } from '@/pinia'
 
 defineOptions({ name: 'PmockerChangeCCB' })
+const projectStore = useProjectStore()
 
 const searchInfo = ref({})
 const changeList = ref([])
@@ -114,8 +116,8 @@ const currentStep = computed(() => {
 
 const loadData = async () => {
   const [listRes, statsRes] = await Promise.all([
-    getChangeList({ status: searchInfo.value.status || 'ccb_review', page: 1, pageSize: 20 }),
-    getChangeCCBStats({})
+    getChangeList({ status: searchInfo.value.status || 'ccb_review', page: 1, pageSize: 20, projectId: projectStore.projectId }),
+    getChangeCCBStats({ projectId: projectStore.projectId })
   ])
   if (listRes.code === 0) {
     changeList.value = listRes.data.list || []

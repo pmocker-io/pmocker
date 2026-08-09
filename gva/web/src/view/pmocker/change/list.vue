@@ -6,18 +6,6 @@
         <el-form-item label="变更标题">
           <el-input v-model="searchInfo.keyword" placeholder="请输入" />
         </el-form-item>
-        <el-form-item label="状态">
-          <el-select v-model="searchInfo.status" clearable>
-            <el-option label="已提交" value="submitted" />
-            <el-option label="分析中" value="analyzing" />
-            <el-option label="CCB评审中" value="ccb_review" />
-            <el-option label="已批准" value="approved" />
-            <el-option label="已驳回" value="rejected" />
-            <el-option label="实施中" value="implementing" />
-            <el-option label="验证中" value="verifying" />
-            <el-option label="已关闭" value="closed" />
-          </el-select>
-        </el-form-item>
         <el-form-item label="优先级">
           <el-select v-model="searchInfo.priority" clearable>
             <el-option label="紧急" value="urgent" />
@@ -38,58 +26,73 @@
           <svg-icon icon="lucide:plus" /> 新增变更请求
         </el-button>
       </div>
-      <el-table :data="tableData" row-key="ID">
-        <el-table-column label="ID" prop="ID" width="80" />
-        <el-table-column label="变更标题" prop="title" min-width="200" />
-        <el-table-column label="优先级" width="80">
-          <template #default="{ row }">
-            <el-tag :type="priorityType(getAttr(row, 'priority'))">{{ priorityLabel(getAttr(row, 'priority')) }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="变更性质" width="110">
-          <template #default="{ row }">
-            {{ getAttr(row, 'change_nature') }}
-          </template>
-        </el-table-column>
-        <el-table-column label="紧急变更" width="100">
-          <template #default="{ row }">
-            <el-tag v-if="getAttr(row, 'is_emergency')" type="danger">紧急</el-tag>
-            <el-tag v-else type="info">否</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="受影响基线" width="160">
-          <template #default="{ row }">
-            {{ formatBaselines(getAttr(row, 'affected_baselines')) }}
-          </template>
-        </el-table-column>
-        <el-table-column label="状态" prop="status" width="120">
-          <template #default="{ row }">
-            <el-tag :type="changeStatusType(row.status)">{{ changeStatusLabel(row.status) }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="提出人" prop="submitterName" width="120" />
-        <el-table-column label="创建时间" prop="CreatedAt" width="180">
-          <template #default="{ row }">{{ formatDate(row.CreatedAt) }}</template>
-        </el-table-column>
-        <el-table-column label="操作" width="260" fixed="right">
-          <template #default="{ row }">
-            <el-button type="primary" link @click="openDialog(row)">编辑</el-button>
-            <el-button v-if="row.status === 'submitted'" type="warning" link @click="handleAnalyze(row)">影响分析</el-button>
-            <el-button type="primary" link size="small" @click="showAuditLogs(row.ID)">审计</el-button>
-            <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-      <el-pagination
-        class="gva-pagination"
-        v-model:current-page="page"
-        v-model:page-size="pageSize"
-        :total="total"
-        :page-sizes="[10, 20, 50]"
-        layout="total, sizes, prev, pager, next"
-        @size-change="getTableData"
-        @current-change="getTableData"
-      />
+
+      <!-- 按状态分组展示 -->
+      <div v-for="group in groupedData" :key="group.status" class="status-group">
+        <div class="group-header">
+          <div class="group-title">
+            <el-tag :type="group.tagType">{{ group.label }}</el-tag>
+            <span class="count">({{ group.items.length }})</span>
+          </div>
+          <div class="group-actions" v-if="group.actions.length > 0">
+            <el-button v-for="action in group.actions" :key="action.label"
+              :type="action.type" size="small"
+              :disabled="!selectedMap[group.status] || selectedMap[group.status].length === 0"
+              @click="handleBatchAction(group, action)">
+              {{ action.label }}
+            </el-button>
+          </div>
+        </div>
+        <el-table :data="group.items" row-key="id" size="small"
+          @selection-change="(val) => onSelectionChange(group.status, val)">
+          <el-table-column type="selection" width="40" />
+          <el-table-column label="ID" prop="id" width="70" />
+          <el-table-column label="变更标题" prop="title" min-width="200" />
+          <el-table-column label="优先级" width="90">
+            <template #default="{ row }">
+              <el-tag size="small" :type="priorityType(getAttr(row, 'priority'))">{{ priorityLabel(getAttr(row, 'priority')) }}</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="变更性质" width="110">
+            <template #default="{ row }">
+              {{ getAttr(row, 'change_nature') }}
+            </template>
+          </el-table-column>
+          <el-table-column label="紧急变更" width="100">
+            <template #default="{ row }">
+              <el-tag v-if="getAttr(row, 'is_emergency')" type="danger">紧急</el-tag>
+              <el-tag v-else type="info">否</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="受影响基线" width="160">
+            <template #default="{ row }">
+              {{ formatBaselines(getAttr(row, 'affected_baselines')) }}
+            </template>
+          </el-table-column>
+          <el-table-column label="提出人" width="120">
+            <template #default="{ row }">
+              {{ getAttr(row, 'proposer_name') || row.createdByName || '-' }}
+            </template>
+          </el-table-column>
+          <el-table-column label="负责人" width="120">
+            <template #default="{ row }">
+              {{ getAttr(row, 'assignee_name') || row.ownerName || '-' }}
+            </template>
+          </el-table-column>
+          <el-table-column label="创建时间" prop="CreatedAt" width="180">
+            <template #default="{ row }">{{ formatDate(row.CreatedAt) }}</template>
+          </el-table-column>
+          <el-table-column label="操作" width="200" fixed="right">
+            <template #default="{ row }">
+              <el-button type="primary" link size="small" @click="openDialog(row)">编辑</el-button>
+              <el-button type="primary" link size="small" @click="showAuditLogs(row.id)">审计</el-button>
+              <el-button type="danger" link size="small" @click="handleDelete(row)">删除</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+
+      <el-empty v-if="groupedData.length === 0" description="暂无数据" />
     </div>
 
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="800px">
@@ -118,41 +121,36 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getChangeList, createChange, updateChange, deleteChange, analyzeChange } from '@/api/pmocker/change'
+import { getChangeList, createChange, updateChange, deleteChange, analyzeChange, ccbReviewChange, approveChange, rejectChange, implementChange, verifyChange, closeChange } from '@/api/pmocker/change'
 import { listChangeLogs } from '@/api/pmocker/changeLog'
 import DynamicForm from '../components/DynamicForm.vue'
+import ProjectSelector from '../components/ProjectSelector.vue'
+import { useProjectStore } from '@/pinia'
+import { groupByStatus } from '../components/statusTransitions.js'
 
 defineOptions({ name: 'PmockerChangeList' })
 
+const projectStore = useProjectStore()
+const onProjectChange = () => { getTableData() }
+
 const searchInfo = ref({})
 const tableData = ref([])
-const page = ref(1)
-const pageSize = ref(10)
-const total = ref(0)
 const dialogVisible = ref(false)
 const dialogTitle = ref('')
 const formRef = ref(null)
 const dialogType = ref('add')
 
-const form = reactive({ ID: null, title: '', status: 'submitted', attrs: {} })
+const selectedMap = ref({})
+
+const form = reactive({ id: null, title: '', status: 'submitted', attrs: {} })
 
 const getAttr = (row, key) => (row.attrs && row.attrs[key] !== undefined ? row.attrs[key] : (row[key] || ''))
 
 const formatDate = (dateStr) => dateStr ? new Date(dateStr).toLocaleString('zh-CN') : ''
 const priorityType = (p) => ({ urgent: 'danger', high: 'warning', medium: 'info', low: 'info' }[p] || 'info')
 const priorityLabel = (p) => ({ urgent: '紧急', high: '高', medium: '中', low: '低' }[p] || p)
-const changeStatusType = (s) => ({
-  submitted: 'info', analyzing: 'warning', ccb_review: 'warning',
-  approved: 'success', rejected: 'danger', implementing: 'primary',
-  verifying: 'primary', closed: ''
-}[s] || 'info')
-const changeStatusLabel = (s) => ({
-  submitted: '已提交', analyzing: '分析中', ccb_review: 'CCB评审中',
-  approved: '已批准', rejected: '已驳回', implementing: '实施中',
-  verifying: '验证中', closed: '已关闭'
-}[s] || s)
 
 const formatBaselines = (val) => {
   if (!val) return ''
@@ -161,20 +159,51 @@ const formatBaselines = (val) => {
   return val
 }
 
+// 按状态分组
+const groupedData = computed(() => groupByStatus(tableData.value, 'change_request'))
+
+// API 函数映射
+const apiMap = { analyzeChange, ccbReviewChange, approveChange, rejectChange, implementChange, verifyChange, closeChange, updateChange }
+
 const getTableData = async () => {
-  const params = { page: page.value, pageSize: pageSize.value, projectId: projectStore.projectId, ...searchInfo.value }
+  const params = { page: 1, pageSize: 999, projectId: projectStore.projectId, ...searchInfo.value }
   const res = await getChangeList(params)
   if (res.code === 0) {
     tableData.value = res.data.list || []
-    total.value = res.data.total || 0
   }
 }
 
-const onSubmit = () => { page.value = 1; getTableData() }
-const onReset = () => { searchInfo.value = {}; page.value = 1; getTableData() }
+const onSubmit = () => { getTableData() }
+const onReset = () => { searchInfo.value = {}; getTableData() }
+
+const onSelectionChange = (status, selection) => {
+  selectedMap.value = { ...selectedMap.value, [status]: selection }
+}
+
+// 批量状态流转
+const handleBatchAction = async (group, action) => {
+  const selected = selectedMap.value[group.status] || []
+  if (selected.length === 0) return
+  try {
+    await ElMessageBox.confirm(`确认将选中的 ${selected.length} 条记录执行「${action.label}」操作？`, '提示', { type: 'warning' })
+    const apiFn = apiMap[action.apiFn]
+    const promises = selected.map(row => {
+      if (action.apiFn === 'updateChange') {
+        return apiFn({ id: row.id, title: row.title, status: action.target, attrs: row.attrs || {} })
+      }
+      return apiFn({ id: row.id })
+    })
+    await Promise.all(promises)
+    ElMessage.success(`成功${action.label} ${selected.length} 条记录`)
+    selectedMap.value[group.status] = []
+    getTableData()
+  } catch (e) {
+    if (e !== 'cancel') ElMessage.error('操作失败')
+  }
+}
 
 const resetForm = () => {
-  Object.assign(form, { ID: null, title: '', status: 'submitted', attrs: {} })
+  Object.assign(form, { id: null, title: '', status: 'submitted', attrs: {} })
 }
 
 const openDialog = (row) => {
@@ -182,7 +211,7 @@ const openDialog = (row) => {
   if (row) {
     dialogType.value = 'edit'
     dialogTitle.value = '编辑变更请求'
-    form.ID = row.ID
+    form.id = row.id
     form.title = row.title
     form.status = row.status || 'submitted'
     form.attrs = row.attrs ? { ...row.attrs } : {}
@@ -214,21 +243,13 @@ const handleSave = async () => {
 const handleDelete = (row) => {
   ElMessageBox.confirm('确认删除该变更请求吗？', '提示', { type: 'warning' })
     .then(async () => {
-      const res = await deleteChange({ ID: row.ID })
+      const res = await deleteChange({ id: row.id })
       if (res.code === 0) {
         ElMessage.success('删除成功')
         getTableData()
       }
     })
     .catch(() => {})
-}
-
-const handleAnalyze = async (row) => {
-  const res = await analyzeChange({ ID: row.ID })
-  if (res.code === 0) {
-    ElMessage.success('分析完成')
-    getTableData()
-  }
 }
 
 const logDrawerVisible = ref(false)
@@ -241,3 +262,33 @@ const showAuditLogs = async (entityId) => {
 
 getTableData()
 </script>
+
+<style scoped>
+.status-group {
+  margin-bottom: 16px;
+  border: 1px solid #ebeef5;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  background: #f5f7fa;
+  border-bottom: 1px solid #ebeef5;
+}
+.group-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.count {
+  color: #909399;
+  font-size: 13px;
+}
+.group-actions {
+  display: flex;
+  gap: 8px;
+}
+</style>

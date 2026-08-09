@@ -30,9 +30,12 @@
             <el-tag :type="row.attrs?.is_active ? 'success' : 'info'">{{ row.attrs?.is_active ? '是' : '否' }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="150" fixed="right">
+        <el-table-column label="操作" width="250" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" link @click="openDialog(row)">编辑</el-button>
+            <el-button v-if="row.status === 'draft'" type="success" link @click="handleTransition(row, 'active', transitionRole)">启用</el-button>
+            <el-button v-if="row.status === 'active'" type="danger" link @click="handleTransition(row, 'inactive', transitionRole)">停用</el-button>
+            <el-button v-if="row.status === 'inactive'" type="success" link @click="handleTransition(row, 'active', transitionRole)">启用</el-button>
             <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
@@ -67,10 +70,12 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { listRole, createRole, updateRole, deleteRole } from '@/api/pmocker/team'
+import { listRole, createRole, updateRole, deleteRole, transitionRole } from '@/api/pmocker/team'
+import { useProjectStore } from '@/pinia'
 import DynamicForm from '../components/DynamicForm.vue'
 
 defineOptions({ name: 'PmockerTeamRole' })
+const projectStore = useProjectStore()
 
 const tableData = ref([])
 const page = ref(1)
@@ -85,7 +90,7 @@ const editingId = ref(null)
 const form = reactive({ title: '', status: 'active', attrs: {} })
 
 const getTableData = async () => {
-  const res = await listRole({ page: page.value, pageSize: pageSize.value })
+  const res = await listRole({ projectId: projectStore.projectId, page: page.value, pageSize: pageSize.value })
   if (res.code === 0) {
     tableData.value = res.data.list || []
     total.value = res.data.total || 0
@@ -127,6 +132,15 @@ const handleSave = async () => {
   } finally {
     saving.value = false
   }
+}
+
+const handleTransition = async (row, status, apiFn) => {
+  try {
+    await ElMessageBox.confirm('确认执行此操作？', '提示', { type: 'warning' })
+    await apiFn({ id: row.id, status })
+    ElMessage.success('操作成功')
+    getTableData()
+  } catch (e) { if (e !== 'cancel') ElMessage.error('操作失败') }
 }
 
 const handleDelete = (row) => {

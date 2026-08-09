@@ -38,7 +38,7 @@ const levelType = (value) => {
 }
 
 const loadData = async () => {
-  const res = await getRiskMatrix({})
+  const res = await getRiskMatrix({ projectId: projectStore.projectId })
   if (res.code === 0) {
     riskList.value = res.data.risks || []
     await nextTick()

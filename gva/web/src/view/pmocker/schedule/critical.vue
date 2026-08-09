@@ -38,7 +38,7 @@ const cpmResult = ref(null)
 let chartInstance = null
 
 const analyzeCPM = async () => {
-  const res = await analyzeScheduleCPM({})
+  const res = await analyzeScheduleCPM({ projectId: projectStore.projectId })
   if (res.code === 0) {
     cpmResult.value = res.data
     await nextTick()

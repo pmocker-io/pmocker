@@ -25,8 +25,10 @@
 import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getScopeItems, createScopeBaseline } from '@/api/pmocker/scope'
+import { useProjectStore } from '@/pinia'
 
 defineOptions({ name: 'PmockerScopeBaseline' })
+const projectStore = useProjectStore()
 
 const tableData = ref([])
 
@@ -43,7 +45,7 @@ const loadData = async () => {
 }
 
 const handleCreateBaseline = async () => {
-  const res = await createScopeBaseline({})
+  const res = await createScopeBaseline({ projectId: projectStore.projectId })
   if (res.code === 0) {
     ElMessage.success('基线创建成功')
     loadData()

@@ -36,7 +36,7 @@ const searchInfo = ref({})
 const traceData = ref([])
 
 const loadTrace = async () => {
-  const res = await getDeliverableTraceReport(searchInfo.value)
+  const res = await getDeliverableTraceReport({ projectId: projectStore.projectId, ...searchInfo.value })
   if (res.code === 0) {
     traceData.value = res.data.list || []
   }

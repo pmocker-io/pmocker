@@ -49,7 +49,7 @@ const getCell = (row, scopeId) => {
 }
 
 const loadMatrix = async () => {
-  const res = await getRequirementTraceMatrix(searchInfo.value)
+  const res = await getRequirementTraceMatrix({ projectId: projectStore.projectId, ...searchInfo.value })
   if (res.code === 0) {
     matrixData.value = res.data.requirements || []
     scopeColumns.value = res.data.scopeItems || []

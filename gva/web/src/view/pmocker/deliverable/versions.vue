@@ -132,10 +132,12 @@ import {
   checkInDeliverable
 } from '@/api/pmocker/deliverable'
 import { useUserStore } from '@/pinia/modules/user'
+import { useProjectStore } from '@/pinia'
 
 defineOptions({ name: 'PmockerDeliverableVersions' })
 
 const userStore = useUserStore()
+const projectStore = useProjectStore()
 const currentUserId = computed(() => Number(userStore.userInfo?.ID) || 0)
 
 const searchInfo = ref({})
@@ -168,7 +170,7 @@ const checkedOutAt = computed(() => currentDeliverable.value?.attrs?.checked_out
 const isLockedByMe = computed(() => lockStatus.value === 'checked_out' && checkedOutBy.value === currentUserId.value)
 
 const loadVersions = async () => {
-  const res = await getDeliverableVersions(searchInfo.value)
+  const res = await getDeliverableVersions({ projectId: projectStore.projectId, ...searchInfo.value })
   if (res.code === 0) {
     versions.value = res.data.list || []
   }

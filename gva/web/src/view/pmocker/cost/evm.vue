@@ -112,7 +112,7 @@ const cpiLabel = (val) => {
 }
 
 const loadEVM = async () => {
-  const res = await analyzeCostEVM({})
+  const res = await analyzeCostEVM({ projectId: projectStore.projectId })
   if (res.code === 0) {
     evmData.value = res.data
   }
