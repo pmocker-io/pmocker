@@ -19,6 +19,7 @@ import clickOutSide from '@/directive/clickOutSide'
 import { store } from '@/pinia'
 import App from './App.vue'
 import '@/core/error-handel'
+import { initStatusTransitions } from '@/view/pmocker/components/statusTransitions'
 
 const app = createApp(App)
 
@@ -36,4 +37,6 @@ app
   .use(clickOutSide)
   .use(router)
   .mount('#app')
+// 预加载状态流转远程配置（fire-and-forget，不阻塞首屏，失败保留本地 fallback）
+initStatusTransitions()
 export default app

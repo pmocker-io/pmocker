@@ -1,3 +1,5 @@
+import { listStateDefsPublic } from '@/api/pmocker/config'
+
 /**
  * 各模块状态流转配置
  *
@@ -17,6 +19,7 @@
  * ]
  */
 
+// 本地内置状态流转（fallback，API 未加载/不可用时降级）
 export const transitions = {
   // 问题管理
   issue: [
@@ -162,10 +165,41 @@ export const transitions = {
   ],
 }
 
+let remoteTransitions = null // 模块级缓存 [{entityType,status,label,tagType,actions:[...]}]
+
+// 拉取后端 published 状态流转配置（幂等，失败静默保留本地）
+export async function loadRemoteTransitions() {
+  try {
+    const res = await listStateDefsPublic({})
+    if (res.code === 0 && Array.isArray(res.data) && res.data.length > 0) {
+      remoteTransitions = res.data.map(d => ({
+        entityType: d.entityType,
+        status: d.status,
+        label: d.label,
+        tagType: d.tagType,
+        actions: (() => {
+          try { return JSON.parse(d.actionsJson || '[]') } catch { return [] }
+        })(),
+      }))
+      return true
+    }
+  } catch (e) { /* 静默，保留本地 fallback */ }
+  return false
+}
+
+// 入口预加载（fire-and-forget）
+export function initStatusTransitions() {
+  loadRemoteTransitions()
+}
+
 /**
- * 获取指定实体类型的状态流转配置
+ * 获取指定实体类型的状态流转配置：优先远程，回退本地
  */
 export function getTransitions(entityType) {
+  if (remoteTransitions && remoteTransitions.length) {
+    const remote = remoteTransitions.filter(t => t.entityType === entityType)
+    if (remote.length > 0) return remote
+  }
   return transitions[entityType] || []
 }
 
