@@ -57,8 +57,14 @@ func (a *Api) DeleteNode(c *gin.Context) {
 
 func (a *Api) ListNodes(c *gin.Context) {
 	projectID, _ := strconv.ParseUint(c.Query("projectId"), 10, 64)
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "20"))
 	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+	if c.Query("page") != "" {
+		offset = (page - 1) * pageSize
+		limit = pageSize
+	}
 	list, total, err := ServiceGroupApp.ListEPSNodes(c.Request.Context(), uint(projectID), offset, limit)
 	if err != nil {
 		response.FailWithMessage("查询失败: "+err.Error(), c)
@@ -100,8 +106,14 @@ func (a *Api) RemoveMember(c *gin.Context) {
 
 func (a *Api) ListMembers(c *gin.Context) {
 	projectID, _ := strconv.ParseUint(c.Query("projectId"), 10, 64)
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "20"))
 	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+	if c.Query("page") != "" {
+		offset = (page - 1) * pageSize
+		limit = pageSize
+	}
 	list, total, err := ServiceGroupApp.ListMembers(c.Request.Context(), uint(projectID), offset, limit)
 	if err != nil {
 		response.FailWithMessage("查询失败: "+err.Error(), c)

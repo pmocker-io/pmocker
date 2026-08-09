@@ -22,7 +22,7 @@ entity_types:
       - {field_key: location, field_label: 所在地, data_type: string}
       - {field_key: timezone, field_label: 时区, data_type: string}
       - {field_key: communication_mode, field_label: 工作模式, data_type: enum, options_json: '["onsite","hybrid","remote"]'}
-      - {field_key: reporting_to, field_label: 汇报对象, data_type: ref}
+      - {field_key: reporting_to, field_label: 汇报对象, data_type: user}
       - {field_key: performance_rating, field_label: 绩效评分, data_type: decimal}
       - {field_key: utilization_rate, field_label: 利用率(%), data_type: decimal}
       - {field_key: status, field_label: 状态, data_type: enum, options_json: '["candidate","onboarded","active","leaving","offboarded"]'}
@@ -52,7 +52,7 @@ entity_types:
     icon: reading
     icon_color: "#909399"
     fields:
-      - {field_key: member_id, field_label: 培训成员, data_type: ref}
+      - {field_key: member_id, field_label: 培训成员, data_type: user}
       - {field_key: course_name, field_label: 课程名称, data_type: string}
       - {field_key: training_type, field_label: 培训类型, data_type: enum, options_json: '["technical","soft_skill","safety","certification","onboarding"]'}
       - {field_key: start_date, field_label: 开始日期, data_type: date}
@@ -71,10 +71,10 @@ entity_types:
     icon: trend-charts
     icon_color: "#F56C6C"
     fields:
-      - {field_key: member_id, field_label: 评估成员, data_type: ref}
+      - {field_key: member_id, field_label: 评估成员, data_type: user}
       - {field_key: review_period, field_label: 评估周期, data_type: string}
       - {field_key: review_date, field_label: 评估日期, data_type: date}
-      - {field_key: reviewer_id, field_label: 评估人, data_type: ref}
+      - {field_key: reviewer_id, field_label: 评估人, data_type: user}
       - {field_key: review_type, field_label: 评估类型, data_type: enum, options_json: '["quarterly","annual","project_end","probation"]'}
       - {field_key: rating, field_label: 评级, data_type: enum, options_json: '["excellent","good","satisfactory","needs_improvement","unsatisfactory"]'}
       - {field_key: score, field_label: 评分, data_type: decimal}

@@ -54,7 +54,7 @@ func (s *Service) AssignIssue(ctx context.Context, id uint, assigneeID uint) err
 	if e.Attrs == nil {
 		e.Attrs = map[string]interface{}{}
 	}
-	e.Attrs["assigned_to"] = assigneeID
+	e.Attrs["assignee"] = assigneeID
 	e.Status = "assigned"
 	return pmservice.ServiceGroupApp.UpdateEntity(ctx, *e)
 }

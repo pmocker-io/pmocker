@@ -38,9 +38,8 @@ type SysSecurityConfig struct {
 	LockThreshold int  `json:"lockThreshold" gorm:"default:5;comment:失败次数阈值"`
 	LockDuration  int  `json:"lockDuration" gorm:"default:30;comment:锁定时长(分钟)"`
 	// 密码过期
-	PwdExpireEnable            bool `json:"pwdExpireEnable" gorm:"default:false;comment:是否开启密码过期"`
-	PwdExpireDays              int  `json:"pwdExpireDays" gorm:"default:90;comment:密码有效天数"`
-	ForceNewUserChangePassword bool `json:"forceNewUserChangePassword" gorm:"default:false;comment:新用户首次登录是否强制改密"`
+	PwdExpireEnable bool `json:"pwdExpireEnable" gorm:"default:false;comment:是否开启密码过期"`
+	PwdExpireDays   int  `json:"pwdExpireDays" gorm:"default:90;comment:密码有效天数"`
 }
 
 func (SysSecurityConfig) TableName() string {
@@ -81,8 +80,7 @@ func DefaultSecurityConfig() SysSecurityConfig {
 		LockEnable:                 false,
 		LockThreshold:              5,
 		LockDuration:               30,
-		PwdExpireEnable:            false,
-		PwdExpireDays:              90,
-		ForceNewUserChangePassword: false,
+		PwdExpireEnable: false,
+		PwdExpireDays:   90,
 	}
 }

@@ -51,17 +51,19 @@ type RelationType struct {
 
 // Entity 实体数据（业务层通用结构）
 type Entity struct {
-	ID         uint                   `json:"id"`
-	ProjectID  uint                   `json:"project_id"`
-	EntityType string                 `json:"entity_type"`
-	ParentID   *uint                  `json:"parent_id,omitempty"`
-	Title      string                 `json:"title"`
-	Status     string                 `json:"status"`
-	OwnerID    *uint                  `json:"owner_id,omitempty"`
-	BaselineID *uint                  `json:"baseline_id,omitempty"`
-	Seq        int                    `json:"seq"`
-	CreatedBy  uint                   `json:"created_by,omitempty"`
-	Attrs      map[string]interface{} `json:"attrs,omitempty"`
-	CreatedAt  time.Time              `json:"created_at"`
-	UpdatedAt  time.Time              `json:"updated_at"`
+	ID           uint                   `json:"id"`
+	ProjectID    uint                   `json:"project_id"`
+	EntityType   string                 `json:"entity_type"`
+	ParentID     *uint                  `json:"parent_id,omitempty"`
+	Title        string                 `json:"title"`
+	Status       string                 `json:"status"`
+	OwnerID      *uint                  `json:"owner_id,omitempty"`
+	OwnerName    string                 `json:"ownerName,omitempty"`
+	BaselineID   *uint                  `json:"baseline_id,omitempty"`
+	Seq          int                    `json:"seq"`
+	CreatedBy    uint                   `json:"created_by,omitempty"`
+	CreatedByName string                `json:"createdByName,omitempty"`
+	Attrs        map[string]interface{} `json:"attrs,omitempty"`
+	CreatedAt    time.Time              `json:"created_at"`
+	UpdatedAt    time.Time              `json:"updated_at"`
 }

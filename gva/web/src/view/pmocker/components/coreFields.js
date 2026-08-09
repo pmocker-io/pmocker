@@ -12,6 +12,41 @@
  * - 每个字段可选配置 colSpan（栅格宽度，默认自动：text/json=24，其余=12）
  */
 
+// ── 人员字段集合 ──
+// 这些字段在 DynamicForm 中自动渲染为"用户选择器"（el-select + 用户列表）
+// 值存储为用户 ID（int），显示为用户昵称
+export const userFieldKeys = new Set([
+  'assignee',          // 问题/变更/需求 经办人
+  'reviewer',          // 交付物 审阅人
+  'reviewer_id',       // 绩效 评审人
+  'owner_id',          // 任务/风险/里程碑/交付物 负责人
+  'reported_by',       // 问题 报告人
+  'requested_by',      // 变更/需求 提出人
+  'verified_by',       // 问题 验证人
+  'validated_by',      // 变更 验证人
+  'implemented_by',    // 变更 实施人
+  'impact_analyzed_by',// 变更 影响分析人
+  'ccb_decision_maker',// 变更 CCB决策人
+  'changed_by',        // 变更日志 变更人
+  'member_id',         // 培训/绩效 团队成员
+  'manager_id',        // EPS 项目经理
+  'sponsor_id',        // EPS 发起人
+  'raci_responsible',  // 范围 RACI-R
+  'raci_accountable',  // 范围 RACI-A
+  'reporting_to',      // 团队成员 汇报对象
+  'stakeholder_id',    // 需求 干系人
+  'assignee_id',       // 任务 实施人
+  'checked_out_by',    // 交付物 检出人
+  'created_by',        // 通用 创建人
+])
+
+/**
+ * 判断字段是否为人员字段
+ */
+export function isUserField(fieldKey) {
+  return userFieldKeys.has(fieldKey)
+}
+
 export const coreFieldsConfig = {
   // L1: 通用核心字段 - 自动应用到所有实体类型
   _universal: ['code', 'description'],
@@ -40,7 +75,7 @@ export const coreFieldsConfig = {
     'opportunity_strategy', 'analysis_type', 'response_cost'
   ],
   requirement: [
-    'priority', 'source', 'category', 'assigned_to',
+    'priority', 'source', 'category', 'assignee',
     'moscow_priority', 'requirement_type', 'verification_method',
     'story_points', 'agile_level',
     'requested_by', 'requested_date', 'stakeholder_id'
@@ -51,7 +86,7 @@ export const coreFieldsConfig = {
     'assumptions', 'constraints', 'exclusions'
   ],
   issue: [
-    'priority', 'severity', 'category', 'assigned_to', 'reported_by',
+    'priority', 'severity', 'category', 'assignee', 'reported_by',
     'due_date', 'resolution_type', 'related_risk_id',
     'verified_by', 'reopen_count'
   ],

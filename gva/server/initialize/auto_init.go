@@ -59,19 +59,28 @@ func AutoInitIfEmpty() {
 	}
 
 	// PMocker 实例模式禁用验证码（自动化测试/演示场景）
-	// 无论是否首次初始化都执行：InitDB 不创建 sys_security_config 行，
-	// 直接 Update WHERE id=1 会影响 0 行；通过 SecurityConfigService.Get() 确保行存在
-	// （不存在则创建默认行），再 Set 更新并刷新内存缓存。
-	secSvc := &sysService.SecurityConfigService{}
-	secCfg, err := secSvc.Get(context.Background())
-	if err != nil {
-		logger.Bg().Mod("auto-init").Err(err).Error("获取安全配置失败，跳过验证码禁用")
-		return
+	// 使用原生 SQL 避免 GORM 模型列映射问题
+	var secCount int64
+	global.GVA_DB.Raw("SELECT COUNT(*) FROM sys_security_config WHERE id = 1").Scan(&secCount)
+	if secCount == 0 {
+		// 创建默认安全配置行
+		if err := global.GVA_DB.Exec(`INSERT INTO sys_security_config 
+			(id, captcha_open, captcha_timeout, key_long, img_width, img_height, 
+			 pwd_min_length, pwd_require_upper, pwd_require_lower, pwd_require_digit, pwd_require_special,
+			 limit_enable, limit_window, limit_count,
+			 lock_enable, lock_threshold, lock_duration,
+			 pwd_expire_enable, pwd_expire_days)
+			VALUES (1, 0, 3600, 6, 240, 80, 8, 0, 0, 0, 0, 0, 60, 30, 0, 5, 30, 0, 90)`).Error; err != nil {
+			logger.Bg().Mod("auto-init").Err(err).Error("创建安全配置行失败")
+			return
+		}
 	}
-	secCfg.CaptchaOpen = 99999
-	if err := secSvc.Set(context.Background(), secCfg); err != nil {
+	// 禁用验证码
+	if err := global.GVA_DB.Exec("UPDATE sys_security_config SET captcha_open = 99999 WHERE id = 1").Error; err != nil {
 		logger.Bg().Mod("auto-init").Err(err).Error("禁用验证码失败")
 	} else {
+		secSvc := &sysService.SecurityConfigService{}
+		secSvc.LoadAll(context.Background())
 		logger.Bg().Mod("auto-init").Info("已禁用登录验证码（captcha_open=99999）")
 	}
 }
@@ -247,15 +256,15 @@ func intToStr(n int) string {
 // insertPMockerCasbinRules 为所有 PMocker API 创建 Casbin 权限规则。
 // 为 admin(888) 及 PMocker 业务角色(9001 PMO管理员/9002 项目经理/9003 团队成员/9004 干系人)统一授权，
 // 否则非 admin 用户调用 PMocker API 返回"权限不足"。
+// 同时授予系统基础 API 权限（DefaultCasbin），否则角色无法访问 user/menu 等系统接口。
 // 参考 log_viewer_seed.go 的模式：FirstOrCreate 确保规则幂等，FreshCasbin 使规则立即生效。
 func insertPMockerCasbinRules() error {
 	db := global.GVA_DB
-	var apis []sysModel.SysApi
-	if err := db.Where("path LIKE ?", "/pmocker/%").Find(&apis).Error; err != nil {
-		return err
-	}
 	roleIDs := []string{"888", "9001", "9002", "9003", "9004"}
-	for _, api := range apis {
+
+	// 1. 授予系统基础 API 权限（DefaultCasbin）
+	systemAPIs := request.DefaultCasbin()
+	for _, api := range systemAPIs {
 		for _, roleID := range roleIDs {
 			rule := adapter.CasbinRule{Ptype: "p", V0: roleID, V1: api.Path, V2: api.Method}
 			if err := db.Where(rule).FirstOrCreate(&rule).Error; err != nil {
@@ -263,13 +272,29 @@ func insertPMockerCasbinRules() error {
 			}
 		}
 	}
+
+	// 2. 授予 PMocker API 权限
+	var pmockerAPIs []sysModel.SysApi
+	if err := db.Where("path LIKE ?", "/pmocker/%").Find(&pmockerAPIs).Error; err != nil {
+		return err
+	}
+	for _, api := range pmockerAPIs {
+		for _, roleID := range roleIDs {
+			rule := adapter.CasbinRule{Ptype: "p", V0: roleID, V1: api.Path, V2: api.Method}
+			if err := db.Where(rule).FirstOrCreate(&rule).Error; err != nil {
+				return err
+			}
+		}
+	}
+
 	// 刷新 Casbin 使规则立即生效
 	casbinService := &sysService.CasbinService{}
 	return casbinService.FreshCasbin()
 }
 
-// grantPMockerMenusToAdmin 将所有 PMocker 菜单授予 admin 及 PMocker 业务角色。
+// grantPMockerMenusToAdmin 将所有 PMocker 菜单 + 系统基础菜单授予 admin 及 PMocker 业务角色。
 // 解决实例模式下每次重新初始化后菜单默认不可见、需手动在后台「角色权限」勾选的问题。
+// 同时授予系统 dashboard 菜单作为 defaultRouter 后备（防止 pmockerDashboard 加载时序问题）。
 // 参考 log_viewer_seed.go 的 FirstOrCreate 幂等模式。
 func grantPMockerMenusToAdmin() error {
 	db := global.GVA_DB
@@ -277,13 +302,20 @@ func grantPMockerMenusToAdmin() error {
 	if err := db.Where("name LIKE ?", "pmocker%").Find(&menus).Error; err != nil {
 		return err
 	}
-	if len(menus) == 0 {
+	// 追加系统基础菜单（dashboard, person 等）作为 defaultRouter 后备
+	var sysMenus []sysModel.SysBaseMenu
+	if err := db.Where("name IN ?", []string{"dashboard", "person", "about"}).Find(&sysMenus).Error; err != nil {
+		return err
+	}
+	allMenus := append(menus, sysMenus...)
+
+	if len(allMenus) == 0 {
 		logger.Bg().Mod("auto-init").Info("未找到 PMocker 菜单，跳过菜单授权")
 		return nil
 	}
 	roleIDs := []string{"888", "9001", "9002", "9003", "9004"}
 	granted := 0
-	for _, menu := range menus {
+	for _, menu := range allMenus {
 		for _, roleID := range roleIDs {
 			menuRole := sysModel.SysAuthorityMenu{
 				MenuId:      fmt.Sprint(menu.ID),
@@ -300,7 +332,7 @@ func grantPMockerMenusToAdmin() error {
 			}
 		}
 	}
-	logger.Bg().Mod("auto-init").Info("PMocker 菜单授权完成: " + intToStr(granted) + " 新增, " + intToStr(len(menus)*len(roleIDs)) + " 总计")
+	logger.Bg().Mod("auto-init").Info("PMocker 菜单授权完成: " + intToStr(granted) + " 新增, " + intToStr(len(allMenus)*len(roleIDs)) + " 总计")
 	return nil
 }
 

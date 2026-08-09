@@ -50,3 +50,8 @@ export const findTask = (params) => {
 export const deleteTask = (params) => {
   return service({ url: '/pmocker/schedule/deleteTask', method: 'delete', params })
 }
+
+// @Summary 任务状态流转
+export const transitionTask = (data) => {
+  return service({ url: '/pmocker/schedule/transitionTask', method: 'post', data })
+}

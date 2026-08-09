@@ -31,8 +31,14 @@ func (a *Api) CreateItem(c *gin.Context) {
 
 func (a *Api) ListItems(c *gin.Context) {
 	projectID, _ := strconv.ParseUint(c.Query("projectId"), 10, 64)
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "20"))
 	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+	if c.Query("page") != "" {
+		offset = (page - 1) * pageSize
+		limit = pageSize
+	}
 	list, total, err := ServiceGroupApp.ListItems(c.Request.Context(), uint(projectID), offset, limit)
 	if err != nil {
 		response.FailWithMessage("查询失败: "+err.Error(), c)
@@ -57,6 +63,7 @@ func (a *Api) UpdateItem(c *gin.Context) {
 		response.FailWithMessage("参数错误: "+err.Error(), c)
 		return
 	}
+	e.EntityType = "cost_item"
 	if err := ServiceGroupApp.UpdateItem(c.Request.Context(), e); err != nil {
 		response.FailWithMessage("更新失败: "+err.Error(), c)
 		return

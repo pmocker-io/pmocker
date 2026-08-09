@@ -157,25 +157,28 @@ func (s *TaskCenterService) loadProjectTasksByPriority(db *gorm.DB, userID *uint
 	return s.toMyTasks(db, entities, "project_task")
 }
 
-// loadAttrAssignedTasks 加载 EAV attr 指定字段 = userID 的实体
+// loadAttrAssignedTasks 加载 EAV attr 指定字段 = userID 的实体，同时 fallback 到 owner_id
 func (s *TaskCenterService) loadAttrAssignedTasks(db *gorm.DB, userID uint, entityType, sourceType, attrKey string) []MyTaskItem {
 	var entities []pmocker.PMEntity
-	db.Joins("JOIN pm_attrs ON pm_attrs.entity_id = pm_entities.id").
-		Where("pm_entities.entity_type = ? AND pm_attrs.field_key = ? AND pm_attrs.val_int = ?",
-			entityType, attrKey, userID).
+	// 同时匹配 assignee/reviewer 属性 (val_int) 或 owner_id，用 GROUP BY 去重
+	db.Joins("LEFT JOIN pm_attrs ON pm_attrs.entity_id = pm_entities.id AND pm_attrs.field_key = ?", attrKey).
+		Where("pm_entities.entity_type = ? AND (pm_attrs.val_int = ? OR pm_entities.owner_id = ?)",
+			entityType, userID, userID).
+		Group("pm_entities.id").
 		Find(&entities)
 	return s.toMyTasks(db, entities, sourceType)
 }
 
-// loadAttrAssignedTasksByPriority 按优先级范围加载
+// loadAttrAssignedTasksByPriority 按优先级范围加载，同时 fallback 到 owner_id
 func (s *TaskCenterService) loadAttrAssignedTasksByPriority(db *gorm.DB, userID *uint, entityType, sourceType, attrKey string, minP, maxP int) []MyTaskItem {
 	q := db.Model(&pmocker.PMEntity{}).
-		Joins("JOIN pm_attrs ON pm_attrs.entity_id = pm_entities.id").
-		Where("pm_entities.entity_type = ? AND pm_attrs.field_key = ? AND pm_entities.priority BETWEEN ? AND ?",
-			entityType, attrKey, minP, maxP)
+		Joins("LEFT JOIN pm_attrs ON pm_attrs.entity_id = pm_entities.id AND pm_attrs.field_key = ?", attrKey).
+		Where("pm_entities.entity_type = ? AND pm_entities.priority BETWEEN ? AND ?",
+			entityType, minP, maxP)
 	if userID != nil {
-		q = q.Where("pm_attrs.val_int = ?", *userID)
+		q = q.Where("pm_attrs.val_int = ? OR pm_entities.owner_id = ?", *userID, *userID)
 	}
+	q = q.Group("pm_entities.id")
 	var entities []pmocker.PMEntity
 	q.Find(&entities)
 	return s.toMyTasks(db, entities, sourceType)

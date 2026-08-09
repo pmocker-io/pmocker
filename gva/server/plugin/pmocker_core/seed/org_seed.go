@@ -150,13 +150,23 @@ func createPositions(db *gorm.DB) error {
 func createAuthorities(db *gorm.DB) error {
 	parent888 := uint(888)
 	authorities := []system.SysAuthority{
-		{AuthorityId: 9001, AuthorityName: "PMO管理员", ParentId: &parent888, DataScope: 1, DefaultRouter: "dashboard"},
-		{AuthorityId: 9002, AuthorityName: "项目经理", ParentId: &parent888, DataScope: 2, DefaultRouter: "dashboard"},
-		{AuthorityId: 9003, AuthorityName: "团队成员", ParentId: &parent888, DataScope: 3, DefaultRouter: "dashboard"},
-		{AuthorityId: 9004, AuthorityName: "干系人", ParentId: &parent888, DataScope: 4, DefaultRouter: "dashboard"},
+		{AuthorityId: 9001, AuthorityName: "PMO管理员", ParentId: &parent888, DataScope: 1, DefaultRouter: "pmockerDashboard"},
+		{AuthorityId: 9002, AuthorityName: "项目经理", ParentId: &parent888, DataScope: 2, DefaultRouter: "pmockerDashboard"},
+		{AuthorityId: 9003, AuthorityName: "团队成员", ParentId: &parent888, DataScope: 3, DefaultRouter: "pmockerDashboard"},
+		{AuthorityId: 9004, AuthorityName: "干系人", ParentId: &parent888, DataScope: 4, DefaultRouter: "pmockerDashboard"},
 	}
 	for _, a := range authorities {
-		db.Where("authority_id = ?", a.AuthorityId).FirstOrCreate(&a)
+		var existing system.SysAuthority
+		result := db.Where("authority_id = ?", a.AuthorityId).First(&existing)
+		if result.Error == nil {
+			// 已存在则更新 DefaultRouter（修复旧数据）
+			if existing.DefaultRouter != a.DefaultRouter {
+				existing.DefaultRouter = a.DefaultRouter
+				db.Save(&existing)
+			}
+		} else {
+			db.Create(&a)
+		}
 	}
 	return nil
 }

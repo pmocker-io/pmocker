@@ -42,8 +42,15 @@ func (a *EAVApi) GetEntity(c *gin.Context) {
 func (a *EAVApi) ListEntities(c *gin.Context) {
 	projectID := parseUint(c.Query("projectId"))
 	typeCode := c.Query("entityType")
+	// 同时兼容两种分页参数：offset/limit（后端约定）和 page/pageSize（前端约定）
+	page := parseInt(c.DefaultQuery("page", "1"))
+	pageSize := parseInt(c.DefaultQuery("pageSize", "20"))
 	offset := parseInt(c.DefaultQuery("offset", "0"))
 	limit := parseInt(c.DefaultQuery("limit", "20"))
+	if c.Query("page") != "" {
+		offset = (page - 1) * pageSize
+		limit = pageSize
+	}
 	entities, total, err := service.ListEntities(c.Request.Context(), projectID, typeCode, offset, limit)
 	if err != nil {
 		response.FailWithMessage("查询失败: "+err.Error(), c)

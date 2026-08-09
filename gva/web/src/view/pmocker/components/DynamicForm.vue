@@ -5,21 +5,78 @@
     <el-row :gutter="16">
       <el-col v-for="field in coreFields" :key="field.field_key" :span="getColSpan(field)">
         <el-form-item :label="field.field_label" :prop="'attrs.' + field.field_key">
-          <component
-            :is="getComponent(field)"
+          <!-- 人员字段：用户选择器 -->
+          <el-select
+            v-if="isUserField(field.field_key) || field.data_type === 'user'"
             v-model="attrs[field.field_key]"
-            v-bind="getComponentProps(field)"
+            filterable
+            clearable
+            placeholder="请选择用户"
+            style="width: 100%"
+            @change="onUserFieldChange(field.field_key, $event)"
+          >
+            <el-option
+              v-for="u in userList"
+              :key="u.ID"
+              :label="u.nickName + ' (' + u.userName + ')'"
+              :value="u.ID"
+            />
+          </el-select>
+          <!-- 枚举字段 -->
+          <el-select
+            v-else-if="field.data_type === 'enum'"
+            v-model="attrs[field.field_key]"
+            clearable
             style="width: 100%"
           >
-            <template v-if="field.data_type === 'enum'">
-              <el-option
-                v-for="opt in parseOptions(field.options_json)"
-                :key="opt"
-                :label="opt"
-                :value="opt"
-              />
-            </template>
-          </component>
+            <el-option
+              v-for="opt in parseOptions(field.options_json)"
+              :key="opt"
+              :label="opt"
+              :value="opt"
+            />
+          </el-select>
+          <!-- 布尔字段 -->
+          <el-switch
+            v-else-if="field.data_type === 'bool'"
+            v-model="attrs[field.field_key]"
+          />
+          <!-- 日期字段 -->
+          <el-date-picker
+            v-else-if="field.data_type === 'date'"
+            v-model="attrs[field.field_key]"
+            type="date"
+            value-format="YYYY-MM-DD"
+            style="width: 100%"
+          />
+          <!-- 日期时间字段 -->
+          <el-date-picker
+            v-else-if="field.data_type === 'datetime'"
+            v-model="attrs[field.field_key]"
+            type="datetime"
+            value-format="YYYY-MM-DD HH:mm:ss"
+            style="width: 100%"
+          />
+          <!-- 数字字段 -->
+          <el-input-number
+            v-else-if="['int', 'decimal'].includes(field.data_type)"
+            v-model="attrs[field.field_key]"
+            :precision="field.data_type === 'decimal' ? 2 : 0"
+            controls-position="right"
+            style="width: 100%"
+          />
+          <!-- 多行文本 -->
+          <el-input
+            v-else-if="['text', 'json'].includes(field.data_type)"
+            v-model="attrs[field.field_key]"
+            type="textarea"
+            :rows="field.data_type === 'json' ? 4 : 3"
+          />
+          <!-- 普通字符串 -->
+          <el-input
+            v-else
+            v-model="attrs[field.field_key]"
+          />
         </el-form-item>
       </el-col>
     </el-row>
@@ -30,21 +87,70 @@
         <el-row :gutter="16">
           <el-col v-for="field in extendedFields" :key="field.field_key" :span="getColSpan(field)">
             <el-form-item :label="field.field_label" :prop="'attrs.' + field.field_key">
-              <component
-                :is="getComponent(field)"
+              <el-select
+                v-if="isUserField(field.field_key) || field.data_type === 'user'"
                 v-model="attrs[field.field_key]"
-                v-bind="getComponentProps(field)"
+                filterable
+                clearable
+                placeholder="请选择用户"
+                style="width: 100%"
+                @change="onUserFieldChange(field.field_key, $event)"
+              >
+                <el-option
+                  v-for="u in userList"
+                  :key="u.ID"
+                  :label="u.nickName + ' (' + u.userName + ')'"
+                  :value="u.ID"
+                />
+              </el-select>
+              <el-select
+                v-else-if="field.data_type === 'enum'"
+                v-model="attrs[field.field_key]"
+                clearable
                 style="width: 100%"
               >
-                <template v-if="field.data_type === 'enum'">
-                  <el-option
-                    v-for="opt in parseOptions(field.options_json)"
-                    :key="opt"
-                    :label="opt"
-                    :value="opt"
-                  />
-                </template>
-              </component>
+                <el-option
+                  v-for="opt in parseOptions(field.options_json)"
+                  :key="opt"
+                  :label="opt"
+                  :value="opt"
+                />
+              </el-select>
+              <el-switch
+                v-else-if="field.data_type === 'bool'"
+                v-model="attrs[field.field_key]"
+              />
+              <el-date-picker
+                v-else-if="field.data_type === 'date'"
+                v-model="attrs[field.field_key]"
+                type="date"
+                value-format="YYYY-MM-DD"
+                style="width: 100%"
+              />
+              <el-date-picker
+                v-else-if="field.data_type === 'datetime'"
+                v-model="attrs[field.field_key]"
+                type="datetime"
+                value-format="YYYY-MM-DD HH:mm:ss"
+                style="width: 100%"
+              />
+              <el-input-number
+                v-else-if="['int', 'decimal'].includes(field.data_type)"
+                v-model="attrs[field.field_key]"
+                :precision="field.data_type === 'decimal' ? 2 : 0"
+                controls-position="right"
+                style="width: 100%"
+              />
+              <el-input
+                v-else-if="['text', 'json'].includes(field.data_type)"
+                v-model="attrs[field.field_key]"
+                type="textarea"
+                :rows="field.data_type === 'json' ? 4 : 3"
+              />
+              <el-input
+                v-else
+                v-model="attrs[field.field_key]"
+              />
             </el-form-item>
           </el-col>
         </el-row>
@@ -56,7 +162,8 @@
 <script setup>
 import { ref, watch, onMounted, computed } from 'vue'
 import { getSchema } from '@/api/pmocker/schema'
-import { getCoreFieldKeys } from './coreFields'
+import { getCoreFieldKeys, isUserField } from './coreFields'
+import { getUserList } from '@/api/user'
 
 const props = defineProps({
   entityType: { type: String, required: true },
@@ -65,9 +172,9 @@ const props = defineProps({
 
 const loading = ref(false)
 const allFields = ref([])
+const userList = ref([])
 
 // attrs 直接引用 modelValue.attrs，利用 Vue 3 reactive 深层响应式
-// 不触发 update:modelValue 替换整个对象，避免父组件 const reactive 赋值失败导致响应式断裂
 const attrs = computed(() => {
   if (!props.modelValue.attrs) {
     props.modelValue.attrs = {}
@@ -95,6 +202,28 @@ const extendedFields = computed(() => {
   )
 })
 
+// 加载用户列表
+const loadUsers = async () => {
+  try {
+    const res = await getUserList({ page: 1, pageSize: 999 })
+    if (res.code === 0) {
+      userList.value = res.data.list || []
+    }
+  } catch (e) {
+    console.error('loadUsers error:', e)
+  }
+}
+
+// 人员字段变更时，同步写入 _name 后缀字段（供列表显示用户名）
+const onUserFieldChange = (fieldKey, userId) => {
+  if (!userId) {
+    attrs.value[fieldKey + '_name'] = ''
+    return
+  }
+  const user = userList.value.find(u => u.ID === userId)
+  attrs.value[fieldKey + '_name'] = user ? user.nickName : ''
+}
+
 // 加载 schema
 const loadSchema = async () => {
   if (!props.entityType) return
@@ -103,7 +232,7 @@ const loadSchema = async () => {
     const res = await getSchema(props.entityType)
     if (res.code === 0) {
       allFields.value = res.data.fields || []
-      // 为每个字段设置默认值，直接写入 attrs 对象（深层响应式）
+      // 为每个字段设置默认值
       allFields.value.forEach(f => {
         if (attrs.value[f.field_key] === undefined) {
           if (f.default_value) {
@@ -112,8 +241,17 @@ const loadSchema = async () => {
             attrs.value[f.field_key] = false
           } else if (['int', 'decimal'].includes(f.data_type)) {
             attrs.value[f.field_key] = 0
+          } else if (f.data_type === 'user') {
+            attrs.value[f.field_key] = null
           } else {
             attrs.value[f.field_key] = null
+          }
+        }
+        // 人员字段：初始化 _name
+        if (isUserField(f.field_key) || f.data_type === 'user') {
+          if (attrs.value[f.field_key] && !attrs.value[f.field_key + '_name']) {
+            const user = userList.value.find(u => u.ID === attrs.value[f.field_key])
+            attrs.value[f.field_key + '_name'] = user ? user.nickName : ''
           }
         }
       })
@@ -123,54 +261,6 @@ const loadSchema = async () => {
   } finally {
     loading.value = false
   }
-}
-
-// 组件类型映射
-const getComponent = (field) => {
-  const map = {
-    string: 'el-input',
-    text: 'el-input',
-    int: 'el-input-number',
-    decimal: 'el-input-number',
-    date: 'el-date-picker',
-    datetime: 'el-date-picker',
-    bool: 'el-switch',
-    enum: 'el-select',
-    ref: 'el-input',
-    json: 'el-input'
-  }
-  return map[field.data_type] || 'el-input'
-}
-
-// 组件属性映射
-const getComponentProps = (field) => {
-  const cProps = {}
-  switch (field.data_type) {
-    case 'text':
-      cProps.type = 'textarea'
-      cProps.rows = 3
-      break
-    case 'int':
-      cProps.controlsPosition = 'right'
-      break
-    case 'decimal':
-      cProps.precision = 2
-      cProps.controlsPosition = 'right'
-      break
-    case 'date':
-      cProps.type = 'date'
-      cProps.valueFormat = 'YYYY-MM-DD'
-      break
-    case 'datetime':
-      cProps.type = 'datetime'
-      cProps.valueFormat = 'YYYY-MM-DD HH:mm:ss'
-      break
-    case 'json':
-      cProps.type = 'textarea'
-      cProps.rows = 4
-      break
-  }
-  return cProps
 }
 
 // 栅格宽度：text/json 全宽，其余半宽
@@ -205,7 +295,7 @@ const parseDefaultValue = (field) => {
 }
 
 onMounted(() => {
-  loadSchema()
+  loadUsers().then(() => loadSchema())
 })
 
 watch(() => props.entityType, () => {

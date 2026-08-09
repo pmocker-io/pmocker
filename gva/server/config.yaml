@@ -80,7 +80,7 @@ hua-wei-obs:
     access-key: you-access-key
     secret-key: you-secret-key
 jwt:
-    signing-key: 9e59fe86-b70b-4c37-a5d7-6175524342ff
+    signing-key: 2f087ed1-c1fe-42d0-8427-56ae1624cdbb
     expires-time: 7d
     buffer-time: 1d
     issuer: qmPlus
@@ -224,7 +224,7 @@ sqlite:
 system:
     db-type: sqlite
     oss-type: local
-    router-prefix: "/api"
+    router-prefix: /api
     addr: 8888
     iplimit-count: 15000
     iplimit-time: 3600

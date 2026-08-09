@@ -48,6 +48,7 @@ func (a *Api) Update(c *gin.Context) {
 		response.FailWithMessage("参数错误: "+err.Error(), c)
 		return
 	}
+	e.EntityType = "risk"
 	if err := ServiceGroupApp.UpdateRisk(c.Request.Context(), e); err != nil {
 		response.FailWithMessage("更新失败: "+err.Error(), c)
 		return
@@ -71,8 +72,14 @@ func (a *Api) Find(c *gin.Context) {
 
 func (a *Api) List(c *gin.Context) {
 	projectID, _ := strconv.ParseUint(c.Query("projectId"), 10, 64)
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "20"))
 	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+	if c.Query("page") != "" {
+		offset = (page - 1) * pageSize
+		limit = pageSize
+	}
 	list, total, err := ServiceGroupApp.ListRisks(c.Request.Context(), uint(projectID), offset, limit)
 	if err != nil {
 		response.FailWithMessage("查询失败: "+err.Error(), c)

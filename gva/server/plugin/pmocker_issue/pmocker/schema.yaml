@@ -10,8 +10,8 @@ fields:
   - {field_key: priority, field_label: 优先级, data_type: enum, options_json: '["紧急","高","中","低"]'}
   - {field_key: severity, field_label: 严重程度, data_type: enum, options_json: '["fatal","critical","major","minor","trivial"]'}
   - {field_key: category, field_label: 分类, data_type: enum, options_json: '["bug","performance","usability","process","schedule","resource","communication","other"]'}
-  - {field_key: assigned_to, field_label: 指派给, data_type: ref}
-  - {field_key: reported_by, field_label: 报告人, data_type: ref}
+  - {field_key: assignee, field_label: 指派给, data_type: user}
+  - {field_key: reported_by, field_label: 报告人, data_type: user}
   - {field_key: due_date, field_label: 截止日期, data_type: date}
   - {field_key: resolution, field_label: 解决方案, data_type: text}
   - {field_key: root_cause, field_label: 根本原因, data_type: text}
@@ -25,7 +25,7 @@ fields:
   - {field_key: resolved_date, field_label: 解决日期, data_type: date}
   - {field_key: resolution_effort, field_label: 解决工时, data_type: decimal}
   # --- 验证 ---
-  - {field_key: verified_by, field_label: 验证人, data_type: ref}
+  - {field_key: verified_by, field_label: 验证人, data_type: user}
   - {field_key: verified_date, field_label: 验证日期, data_type: date}
   - {field_key: reopen_count, field_label: 重开次数, data_type: int, default_value: "0"}
 states: [open, assigned, in_progress, resolved, verified, closed, reopened]

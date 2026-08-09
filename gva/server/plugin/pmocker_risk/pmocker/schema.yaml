@@ -14,7 +14,7 @@ fields:
   - {field_key: response_strategy, field_label: 负面风险应对策略, data_type: enum, options_json: '["avoid","mitigate","transfer","accept","escalate"]'}
   - {field_key: response_plan, field_label: 应对计划, data_type: text}
   - {field_key: trigger_condition, field_label: 触发条件, data_type: text}
-  - {field_key: owner_id, field_label: 责任人, data_type: ref}
+  - {field_key: owner_id, field_label: 责任人, data_type: user}
   - {field_key: due_date, field_label: 应对截止日, data_type: date}
   - {field_key: status, field_label: 状态, data_type: enum, options_json: '["identified","assessed","responding","closed","realized"]'}
   # --- 正面风险（机会）策略 ---

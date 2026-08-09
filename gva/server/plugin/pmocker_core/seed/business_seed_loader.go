@@ -122,12 +122,6 @@ type runtimeCtx struct {
 func LoadBusinessSeed(ctx context.Context) error {
 	db := global.GVA_DB.WithContext(ctx)
 
-	var count int64
-	db.Model(&pmocker.PMEntity{}).Where("entity_type = ?", "eps_node").Count(&count)
-	if count >= 3 {
-		return nil
-	}
-
 	data := businessSeedBytes
 	var seed BusinessSeedYAML
 	if err := yaml.Unmarshal(data, &seed); err != nil {
@@ -137,13 +131,32 @@ func LoadBusinessSeed(ctx context.Context) error {
 	rt := &runtimeCtx{db: db}
 	rt.userIdMap, rt.userNick = buildUserMap(db)
 
-	for i := range seed.Projects {
-		if err := createProject(ctx, &seed.Projects[i], rt); err != nil {
-			return fmt.Errorf("项目 %s: %w", seed.Projects[i].Code, err)
+	// 检查是否已有项目种子（eps_node 带 progress_algo 属性的才是项目）
+	var existingProjects []pmocker.PMEntity
+	db.Where("entity_type = ? AND id IN (SELECT entity_id FROM pm_attrs WHERE field_key = ?)", "eps_node", "progress_algo").Find(&existingProjects)
+
+	if len(existingProjects) < len(seed.Projects) {
+		// 首次加载：创建所有项目
+		for i := range seed.Projects {
+			if err := createProject(ctx, &seed.Projects[i], rt); err != nil {
+				return fmt.Errorf("项目 %s: %w", seed.Projects[i].Code, err)
+			}
+		}
+	} else {
+		// 已有项目：加载到 rt.allProjects 供扩展数据使用
+		rt.allProjects = make([]*pmocker.PMEntity, len(existingProjects))
+		for i := range existingProjects {
+			rt.allProjects[i] = &existingProjects[i]
+		}
+		// 设置 rt.leader 为第一个项目的负责人
+		if len(existingProjects) > 0 && existingProjects[0].OwnerID != nil {
+			rt.leader = *existingProjects[0].OwnerID
 		}
 	}
 
 	// V2-4: 派生扩展数据（milestone/baselines/time_entries/cost_actuals/workflows/relations/reports/archive）
+	// 以及团队角色/培训/绩效 + 清理 EPS 组织架构节点
+	// 总是执行：确保扩展数据存在，清理组织节点
 	if err := extendAllProjectsData(ctx, rt); err != nil {
 		return fmt.Errorf("扩展种子数据失败: %w", err)
 	}
@@ -320,6 +333,10 @@ func createProject(_ context.Context, p *ProjectSeedYAML, rt *runtimeCtx) error 
 		eid := newGenericEntity("issue", r.Title, r.Owner, r.Status, r.Priority)
 		createAttrStr(db, eid, "description", r.Description)
 		createAttrStr(db, eid, "severity", r.Severity)
+		// assignee 属性：与 task_center 的 loadAttrAssignedTasks 查询对齐
+		if oid := rt.userIdMap[r.Owner]; oid > 0 {
+			createAttrInt(db, eid, "assignee", int(oid))
+		}
 	}
 	for _, r := range p.Risk {
 		eid := newGenericEntity("risk", r.Title, r.Owner, r.Status, 2)
@@ -341,11 +358,19 @@ func createProject(_ context.Context, p *ProjectSeedYAML, rt *runtimeCtx) error 
 		eid := newGenericEntity("change_request", r.Title, r.Owner, r.Status, r.Priority)
 		createAttrStr(db, eid, "change_type", r.Type)
 		createAttrStr(db, eid, "description", r.Description)
+		// assignee 属性：与 task_center 的 loadAttrAssignedTasks 查询对齐
+		if oid := rt.userIdMap[r.Owner]; oid > 0 {
+			createAttrInt(db, eid, "assignee", int(oid))
+		}
 	}
 	for _, r := range p.Deliverable {
 		eid := newGenericEntity("deliverable", r.Title, r.Owner, r.Status, r.Priority)
 		createAttrStr(db, eid, "code", r.Code)
 		createAttrStr(db, eid, "lock_status", "available")
+		// reviewer 属性：与 task_center 的 loadAttrAssignedTasks 查询对齐
+		if oid := rt.userIdMap[r.Owner]; oid > 0 {
+			createAttrInt(db, eid, "reviewer", int(oid))
+		}
 	}
 
 	// 收集项目实体指针供 extendAllProjectsData 使用

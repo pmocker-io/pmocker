@@ -51,6 +51,7 @@ func (a *Api) update(c *gin.Context, entityType string) {
 		response.FailWithMessage("参数错误: "+err.Error(), c)
 		return
 	}
+	e.EntityType = entityType
 	if err := ServiceGroupApp.Update(c.Request.Context(), entityType, e); err != nil {
 		response.FailWithMessage("更新失败: "+err.Error(), c)
 		return
@@ -74,8 +75,15 @@ func (a *Api) find(c *gin.Context, entityType string) {
 
 func (a *Api) list(c *gin.Context, entityType string) {
 	projectID, _ := strconv.ParseUint(c.Query("projectId"), 10, 64)
+	// 同时兼容两种分页参数：offset/limit（后端约定）和 page/pageSize（前端约定）
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "20"))
 	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+	if c.Query("page") != "" {
+		offset = (page - 1) * pageSize
+		limit = pageSize
+	}
 	list, total, err := ServiceGroupApp.List(c.Request.Context(), entityType, uint(projectID), offset, limit)
 	if err != nil {
 		response.FailWithMessage("查询失败: "+err.Error(), c)

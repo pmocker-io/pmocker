@@ -21,13 +21,30 @@ func extendAllProjectsData(_ context.Context, rt *runtimeCtx) error {
 	if err := archiveOneProject(rt); err != nil {
 		return fmt.Errorf("归档项目失败: %w", err)
 	}
+
+	// 清理 EPS 中的组织架构节点（group/division），EPS 只保留项目节点
+	// 组织架构由 GVA 内置部门管理负责，不应出现在 EPS 中
+	var orgNodeIDs []uint
+	rt.db.Raw("SELECT e.id FROM pm_entities e JOIN pm_attrs a ON a.entity_id = e.id WHERE e.entity_type = 'eps_node' AND a.field_key = 'type' AND a.val_string IN ('group', 'division')").Scan(&orgNodeIDs)
+	for _, id := range orgNodeIDs {
+		rt.db.Where("id = ?", id).Delete(&pmocker.PMEntity{})
+		rt.db.Where("entity_id = ?", id).Delete(&pmocker.PMAttr{})
+	}
 	return nil
 }
 
 // extendProjectData 单项目扩展：milestone/baselines/time_entries/cost_actuals/workflows/relations/reports
+// 幂等：若项目已有 milestone 扩展数据，则跳过（避免重复创建）
 func extendProjectData(rt *runtimeCtx, proj *pmocker.PMEntity) error {
 	db := rt.db
 	projectID := proj.ID
+
+	// 幂等检查：若已有 milestone，说明扩展数据已生成，跳过
+	var milestoneCount int64
+	db.Model(&pmocker.PMEntity{}).Where("project_id = ? AND entity_type = ?", projectID, "milestone").Count(&milestoneCount)
+	if milestoneCount > 0 {
+		return nil
+	}
 
 	// 1. 里程碑（每项目 5 个，从关键任务派生）
 	if err := createMilestones(db, projectID, rt.leader); err != nil {
@@ -63,7 +80,22 @@ func extendProjectData(rt *runtimeCtx, proj *pmocker.PMEntity) error {
 		return fmt.Errorf("关联: %w", err)
 	}
 
-	// 7. 报告快照（dashboard×2 + pmo×1）
+	// 7. 团队角色定义（每项目 5 个标准角色）
+	if err := createTeamRoles(db, projectID, rt.leader); err != nil {
+		return fmt.Errorf("角色定义: %w", err)
+	}
+
+	// 8. 培训记录（每项目 3 条）
+	if err := createTrainings(db, projectID, rt.leader); err != nil {
+		return fmt.Errorf("培训记录: %w", err)
+	}
+
+	// 9. 绩效评估（针对团队成员）
+	if err := createPerformances(db, projectID, rt.leader); err != nil {
+		return fmt.Errorf("绩效评估: %w", err)
+	}
+
+	// 10. 报告快照（dashboard×2 + pmo×1）
 	rptSvc := &pmockerSvc.ReportService{}
 	if err := rptSvc.GenerateReportSnapshot(projectID, "dashboard", "2026-06", rt.leader); err != nil {
 		return fmt.Errorf("仪表盘快照(2026-06): %w", err)
@@ -359,6 +391,7 @@ func createRelations(db *gorm.DB, projectID uint) error {
 
 // archiveOneProject 归档 PROJ_A + 生成结项报告快照（V2-4-f）
 // 直接 SQL 标记归档（绕过 validateArchivable 严格校验），同时生成 close 报告快照
+// 幂等：若项目已归档，则跳过
 func archiveOneProject(rt *runtimeCtx) error {
 	db := rt.db
 	if len(rt.allProjects) == 0 {
@@ -368,6 +401,11 @@ func archiveOneProject(rt *runtimeCtx) error {
 	// 选第一个项目（PROJ_A）归档
 	proj := rt.allProjects[0]
 	projectID := proj.ID
+
+	// 幂等检查：若已归档，跳过
+	if proj.Status == "archived" {
+		return nil
+	}
 
 	// 1. 直接更新项目状态为 archived
 	now := time.Now().Format("2006-01-02 15:04:05")
@@ -428,4 +466,95 @@ func readAttrInt(db *gorm.DB, entityID uint, key string) int64 {
 		return *attr.ValInt
 	}
 	return 0
+}
+
+// createTeamRoles 创建项目角色定义（每项目 5 个标准角色）
+func createTeamRoles(db *gorm.DB, projectID uint, leader uint) error {
+	roles := []struct {
+		title string
+		code  string
+		desc  string
+	}{
+		{"项目经理", "PM", "负责项目整体规划、执行和交付"},
+		{"业务分析师", "BA", "负责需求调研、分析和文档编写"},
+		{"前端开发工程师", "FE_DEV", "负责用户界面和前端交互开发"},
+		{"后端开发工程师", "BE_DEV", "负责服务端 API 和业务逻辑开发"},
+		{"测试工程师", "QA", "负责质量保证和测试执行"},
+	}
+	for _, r := range roles {
+		e := &pmocker.PMEntity{
+			ProjectID:  projectID,
+			EntityType: "team_role",
+			Title:      r.title,
+			Status:     "active",
+			Priority:   2,
+			CreatedBy:  leader,
+		}
+		db.Create(e)
+		createAttrStr(db, e.ID, "role_code", r.code)
+		createAttrStr(db, e.ID, "description", r.desc)
+	}
+	return nil
+}
+
+// createTrainings 创建培训记录（每项目 3 条）
+func createTrainings(db *gorm.DB, projectID uint, leader uint) error {
+	trainings := []struct {
+		title    string
+		category string
+		date     string
+		trainer  string
+	}{
+		{"项目管理基础", "management", "2026-06-10", "内部讲师"},
+		{"技术规范与代码标准", "technical", "2026-06-20", "技术总监"},
+		{"信息安全意识培训", "compliance", "2026-07-05", "安全专员"},
+	}
+	for _, t := range trainings {
+		e := &pmocker.PMEntity{
+			ProjectID:  projectID,
+			EntityType: "training_record",
+			Title:      t.title,
+			Status:     "completed",
+			Priority:   2,
+			CreatedBy:  leader,
+		}
+		db.Create(e)
+		createAttrStr(db, e.ID, "category", t.category)
+		createAttrStr(db, e.ID, "training_date", t.date)
+		createAttrStr(db, e.ID, "trainer", t.trainer)
+	}
+	return nil
+}
+
+// createPerformances 创建绩效评估（针对项目团队成员）
+func createPerformances(db *gorm.DB, projectID uint, leader uint) error {
+	var members []pmocker.PMEntity
+	db.Where("project_id = ? AND entity_type = ?", projectID, "team_member").Find(&members)
+	if len(members) == 0 {
+		return nil
+	}
+	ratings := []string{"excellent", "good", "good", "fair", "excellent"}
+	comments := map[string]string{
+		"excellent": "工作表现出色，超额完成任务目标",
+		"good":      "工作表现良好，达到预期目标",
+		"fair":      "工作表现合格，有待提升",
+	}
+	for i, m := range members {
+		rating := ratings[i%len(ratings)]
+		e := &pmocker.PMEntity{
+			ProjectID:  projectID,
+			EntityType: "performance_review",
+			Title:      m.Title + "-2026Q2绩效评估",
+			Status:     "completed",
+			OwnerID:    m.OwnerID,
+			Priority:   2,
+			CreatedBy:  leader,
+		}
+		db.Create(e)
+		createAttrStr(db, e.ID, "review_period", "2026-Q2")
+		createAttrStr(db, e.ID, "rating", rating)
+		createAttrStr(db, e.ID, "comment", comments[rating])
+		createAttrInt(db, e.ID, "member_id", int(m.ID))
+	}
+	return nil
 }

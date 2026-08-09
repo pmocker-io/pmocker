@@ -1,6 +1,6 @@
 <template>
-  <div class="project-selector-wrap">
-    <span class="label">当前项目：</span>
+  <div :class="wrapClass">
+    <span v-if="variant === 'page'" class="label">当前项目：</span>
     <el-tree-select
       v-model="selectedId"
       :data="treeData"
@@ -10,20 +10,24 @@
       default-expand-all
       clearable
       filterable
-      placeholder="请选择项目"
+      :placeholder="variant === 'header' ? '选择项目' : '请选择项目'"
       :no-data-text="loading ? '加载中...' : '暂无项目'"
       @change="handleChange"
-      style="width: 260px"
+      :style="{ width: variant === 'header' ? '200px' : '260px' }"
     />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { getEPSTree } from '@/api/pmocker/eps'
 import { useProjectStore } from '@/pinia'
 
 defineOptions({ name: 'PmockerProjectSelector' })
+const props = defineProps({
+  // 'page' = 模块列表页样式（带背景/内边距）；'header' = 全局顶栏紧凑样式
+  variant: { type: String, default: 'page' }
+})
 const emit = defineEmits(['change'])
 
 const projectStore = useProjectStore()
@@ -31,6 +35,12 @@ const selectedId = ref(projectStore.projectId || null)
 const treeData = ref([])
 const loading = ref(false)
 const treeProps = { label: 'name', children: 'children' }
+
+const wrapClass = computed(() =>
+  props.variant === 'header'
+    ? 'project-selector-header'
+    : 'project-selector-wrap'
+)
 
 // 判断是否组织节点（不可作为业务项目上下文）
 const isOrgNode = (n) => n.type === 'group' || n.type === 'division'
@@ -109,6 +119,10 @@ onMounted(() => { loadTree() })
   background: #f5f7fa;
   border-radius: 4px;
   margin-bottom: 12px;
+}
+.project-selector-header {
+  display: inline-flex;
+  align-items: center;
 }
 .label {
   font-size: 14px;

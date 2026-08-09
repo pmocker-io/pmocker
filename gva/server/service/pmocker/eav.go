@@ -6,6 +6,7 @@ import (
 
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/pmocker"
+	"github.com/flipped-aurora/gin-vue-admin/server/model/system"
 	eavtypes "github.com/pmocker-io/pmocker/pkg/pmocker/eav"
 )
 
@@ -101,7 +102,7 @@ func (s *EAVService) CreateEntity(ctx context.Context, e eavtypes.Entity) (uint,
 	return entity.ID, nil
 }
 
-// GetEntity 获取实体（含动态字段）
+// GetEntity 获取实体（含动态字段 + 用户名）
 func (s *EAVService) GetEntity(ctx context.Context, id uint) (*eavtypes.Entity, error) {
 	var entity pmocker.PMEntity
 	if err := global.GVA_DB.WithContext(ctx).First(&entity, id).Error; err != nil {
@@ -115,7 +116,7 @@ func (s *EAVService) GetEntity(ctx context.Context, id uint) (*eavtypes.Entity, 
 	for _, a := range attrs {
 		attrMap[a.FieldKey] = s.readAttrValue(a)
 	}
-	return &eavtypes.Entity{
+	e := &eavtypes.Entity{
 		ID:         entity.ID,
 		ProjectID:  entity.ProjectID,
 		EntityType: entity.EntityType,
@@ -125,10 +126,52 @@ func (s *EAVService) GetEntity(ctx context.Context, id uint) (*eavtypes.Entity, 
 		OwnerID:    entity.OwnerID,
 		BaselineID: entity.BaselineID,
 		Seq:        entity.Seq,
+		CreatedBy:  entity.CreatedBy,
 		Attrs:      attrMap,
 		CreatedAt:  entity.CreatedAt,
 		UpdatedAt:  entity.UpdatedAt,
-	}, nil
+	}
+	// 解析用户名
+	userIDs := make(map[uint]bool)
+	if entity.OwnerID != nil {
+		userIDs[*entity.OwnerID] = true
+	}
+	if entity.CreatedBy > 0 {
+		userIDs[entity.CreatedBy] = true
+	}
+	for _, key := range []string{"assignee", "reviewer"} {
+		if v, ok := attrMap[key]; ok {
+			if uid, ok := toUint(v); ok && uid > 0 {
+				userIDs[uid] = true
+			}
+		}
+	}
+	if len(userIDs) > 0 {
+		ids := make([]uint, 0, len(userIDs))
+		for uid := range userIDs {
+			ids = append(ids, uid)
+		}
+		var users []system.SysUser
+		global.GVA_DB.WithContext(ctx).Where("id IN ?", ids).Find(&users)
+		nameMap := make(map[uint]string)
+		for _, u := range users {
+			nameMap[u.ID] = u.NickName
+		}
+		if entity.OwnerID != nil {
+			e.OwnerName = nameMap[*entity.OwnerID]
+		}
+		if entity.CreatedBy > 0 {
+			e.CreatedByName = nameMap[entity.CreatedBy]
+		}
+		for _, key := range []string{"assignee", "reviewer"} {
+			if v, ok := attrMap[key]; ok {
+				if uid, ok := toUint(v); ok && uid > 0 {
+					attrMap[key+"_name"] = nameMap[uid]
+				}
+			}
+		}
+	}
+	return e, nil
 }
 
 // UpdateEntity 更新实体
@@ -156,9 +199,13 @@ func (s *EAVService) DeleteEntity(ctx context.Context, id uint) error {
 }
 
 // ListEntities 列出实体
+// 当 projectID 为 0 时，不按项目过滤（用于全局查询如 EPS 树）
 func (s *EAVService) ListEntities(ctx context.Context, projectID uint, typeCode string, offset, limit int) ([]eavtypes.Entity, int64, error) {
 	db := global.GVA_DB.WithContext(ctx).Model(&pmocker.PMEntity{}).
-		Where("project_id = ? AND entity_type = ?", projectID, typeCode)
+		Where("entity_type = ?", typeCode)
+	if projectID > 0 {
+		db = db.Where("project_id = ?", projectID)
+	}
 	var total int64
 	if err := db.Count(&total).Error; err != nil {
 		return nil, 0, err
@@ -202,19 +249,84 @@ func (s *EAVService) ListEntities(ctx context.Context, projectID uint, typeCode 
 		}
 	}
 	result := make([]eavtypes.Entity, len(entities))
+	// 批量加载用户名（owner_id + created_by）
+	userIDs := make(map[uint]bool)
+	for _, e := range entities {
+		if e.OwnerID != nil {
+			userIDs[*e.OwnerID] = true
+		}
+		if e.CreatedBy > 0 {
+			userIDs[e.CreatedBy] = true
+		}
+	}
+	userNames := make(map[uint]string)
+	if len(userIDs) > 0 {
+		ids := make([]uint, 0, len(userIDs))
+		for id := range userIDs {
+			ids = append(ids, id)
+		}
+		var users []system.SysUser
+		global.GVA_DB.WithContext(ctx).Where("id IN ?", ids).Find(&users)
+		for _, u := range users {
+			userNames[u.ID] = u.NickName
+		}
+	}
+	// 批量加载 assignee/reviewer 用户名（从 attrs 中的 val_int）
+	attrUserIDs := make(map[uint]bool)
+	for _, e := range entities {
+		am := attrMap[e.ID]
+		if am == nil {
+			continue
+		}
+		for _, key := range []string{"assignee", "reviewer"} {
+			if v, ok := am[key]; ok {
+				if uid, ok := toUint(v); ok && uid > 0 {
+					attrUserIDs[uid] = true
+				}
+			}
+		}
+	}
+	if len(attrUserIDs) > 0 {
+		ids := make([]uint, 0, len(attrUserIDs))
+		for id := range attrUserIDs {
+			ids = append(ids, id)
+		}
+		var users []system.SysUser
+		global.GVA_DB.WithContext(ctx).Where("id IN ?", ids).Find(&users)
+		for _, u := range users {
+			userNames[u.ID] = u.NickName
+		}
+	}
 	for i, e := range entities {
 		result[i] = eavtypes.Entity{
-			ID:         e.ID,
-			ProjectID:  e.ProjectID,
-			EntityType: e.EntityType,
-			ParentID:   e.ParentID,
-			Title:      e.Title,
-			Status:     e.Status,
-			OwnerID:    e.OwnerID,
-			Seq:        e.Seq,
-			CreatedAt:  e.CreatedAt,
-			UpdatedAt:  e.UpdatedAt,
-			Attrs:      attrMap[e.ID],
+			ID:           e.ID,
+			ProjectID:    e.ProjectID,
+			EntityType:   e.EntityType,
+			ParentID:     e.ParentID,
+			Title:        e.Title,
+			Status:       e.Status,
+			OwnerID:      e.OwnerID,
+			Seq:          e.Seq,
+			CreatedBy:    e.CreatedBy,
+			CreatedAt:    e.CreatedAt,
+			UpdatedAt:    e.UpdatedAt,
+			Attrs:        attrMap[e.ID],
+		}
+		if e.OwnerID != nil {
+			result[i].OwnerName = userNames[*e.OwnerID]
+		}
+		if e.CreatedBy > 0 {
+			result[i].CreatedByName = userNames[e.CreatedBy]
+		}
+		// 将 assignee/reviewer 用户名注入 attrs 供前端直接显示
+		if am := attrMap[e.ID]; am != nil {
+			for _, key := range []string{"assignee", "reviewer"} {
+				if v, ok := am[key]; ok {
+					if uid, ok := toUint(v); ok && uid > 0 {
+						am[key+"_name"] = userNames[uid]
+					}
+				}
+			}
 		}
 	}
 	return result, total, nil
@@ -256,6 +368,7 @@ func (s *EAVService) setAttr(ctx context.Context, entityID uint, key string, val
 }
 
 // writeAttrValue 根据 Go 类型写入对应列
+// 注意：JSON 数字在 Go interface{} 中解析为 float64，需区分整数和小数
 func (s *EAVService) writeAttrValue(attr *pmocker.PMAttr, val interface{}) {
 	switch v := val.(type) {
 	case string:
@@ -265,8 +378,20 @@ func (s *EAVService) writeAttrValue(attr *pmocker.PMAttr, val interface{}) {
 		attr.ValInt = &i
 	case int64:
 		attr.ValInt = &v
+	case uint:
+		i := int64(v)
+		attr.ValInt = &i
+	case uint64:
+		i := int64(v)
+		attr.ValInt = &i
 	case float64:
-		attr.ValDecimal = &v
+		// JSON 数字解析为 float64：整数值存入 val_int，小数值存入 val_decimal
+		if v == float64(int64(v)) {
+			i := int64(v)
+			attr.ValInt = &i
+		} else {
+			attr.ValDecimal = &v
+		}
 	case bool:
 		attr.ValBool = &v
 	default:
@@ -293,6 +418,24 @@ func (s *EAVService) readAttrValue(attr pmocker.PMAttr) interface{} {
 		return *attr.ValJSON
 	}
 	return nil
+}
+
+// toUint 将 interface{} 转为 uint（用于从 attrs 中提取用户ID）
+func toUint(v interface{}) (uint, bool) {
+	switch n := v.(type) {
+	case int:
+		return uint(n), true
+	case int64:
+		return uint(n), true
+	case uint:
+		return n, true
+	case uint64:
+		return uint(n), true
+	case float64:
+		return uint(n), true
+	default:
+		return 0, false
+	}
 }
 
 // 确保 EAVService 实现了 EAVStore 接口

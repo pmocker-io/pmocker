@@ -33,8 +33,7 @@ func (userService *UserService) Register(ctx context.Context, u system.SysUser) 
 		return userInter, errors.New("用户名已注册")
 	}
 	// 否则 附加uuid 密码hash加密 注册
-	cfg := (&SecurityConfigService{}).Current(ctx)
-	u.MustChangePassword = cfg.ForceNewUserChangePassword
+	u.MustChangePassword = false
 	u.Password = utils.BcryptHash(u.Password)
 	u.UUID = uuid.New()
 	now := time.Now()

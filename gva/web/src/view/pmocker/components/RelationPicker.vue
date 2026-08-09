@@ -58,7 +58,7 @@ const addRelation = async () => {
 }
 
 const removeRelation = async (row) => {
-  await deleteRelation({ id: row.ID })
+  await deleteRelation({ id: row.id })
   load()
 }
 

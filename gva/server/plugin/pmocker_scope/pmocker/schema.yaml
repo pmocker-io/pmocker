@@ -14,8 +14,8 @@ entity_types:
       - {field_key: wbs_code, field_label: WBS编码, data_type: string}
       - {field_key: is_work_package, field_label: 是否工作包, data_type: bool, default_value: "false"}
       # --- RACI 矩阵 ---
-      - {field_key: raci_responsible, field_label: RACI-执行人(R), data_type: ref}
-      - {field_key: raci_accountable, field_label: RACI-负责人(A), data_type: ref}
+      - {field_key: raci_responsible, field_label: RACI-执行人(R), data_type: user}
+      - {field_key: raci_accountable, field_label: RACI-负责人(A), data_type: user}
       - {field_key: raci_consulted, field_label: RACI-咨询人(C), data_type: json}
       - {field_key: raci_informed, field_label: RACI-知会人(I), data_type: json}
       # --- 基线 ---

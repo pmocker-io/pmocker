@@ -1,6 +1,9 @@
 apis:
   - {path: /pmocker/schedule/createTask, description: 创建任务, api_group: 进度管理, method: POST}
+  - {path: /pmocker/schedule/updateTask, description: 更新任务, api_group: 进度管理, method: POST}
   - {path: /pmocker/schedule/listTasks, description: 任务列表, api_group: 进度管理, method: GET}
+  - {path: /pmocker/schedule/findTask, description: 任务详情, api_group: 进度管理, method: GET}
+  - {path: /pmocker/schedule/deleteTask, description: 删除任务, api_group: 进度管理, method: DELETE}
   - {path: /pmocker/schedule/cpm, description: 关键路径计算, api_group: 进度管理, method: POST}
   - {path: /pmocker/schedule/createMilestone, description: 创建里程碑, api_group: 进度管理, method: POST}
   - {path: /pmocker/schedule/listMilestones, description: 里程碑列表, api_group: 进度管理, method: GET}

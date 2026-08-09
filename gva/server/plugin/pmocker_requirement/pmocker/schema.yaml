@@ -29,9 +29,9 @@ fields:
   - field_key: estimated_effort
     field_label: 预估工时(人日)
     data_type: decimal
-  - field_key: assigned_to
+  - field_key: assignee
     field_label: 责任人
-    data_type: ref
+    data_type: user
   - field_key: planned_release
     field_label: 计划发布版本
     data_type: string
@@ -68,7 +68,7 @@ fields:
   # --- 提出人 ---
   - field_key: requested_by
     field_label: 需求提出人
-    data_type: ref
+    data_type: user
   - field_key: requested_date
     field_label: 提出日期
     data_type: date
@@ -83,6 +83,6 @@ fields:
   # --- 干系人 ---
   - field_key: stakeholder_id
     field_label: 干系人
-    data_type: ref
+    data_type: user
 states: [draft, reviewing, approved, rejected, fulfilled]
 workflows: [requirement_review]
