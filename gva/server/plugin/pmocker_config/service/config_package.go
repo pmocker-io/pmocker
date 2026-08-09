@@ -113,3 +113,38 @@ func (s *ConfigPackageService) Publish(ctx context.Context, id uint) error {
 	})
 }
 
+// Archive 归档配置包（published → archived）
+func (s *ConfigPackageService) Archive(ctx context.Context, id uint) error {
+	var pkg pmocker.PMConfigPackage
+	if err := global.GVA_DB.WithContext(ctx).First(&pkg, id).Error; err != nil {
+		return err
+	}
+	if pkg.Status != "published" {
+		return fmt.Errorf("仅 published 可归档（当前 %s）", pkg.Status)
+	}
+	return global.GVA_DB.WithContext(ctx).Model(&pkg).Update("status", "archived").Error
+}
+
+// Restore 恢复为草稿（archived → draft）
+func (s *ConfigPackageService) Restore(ctx context.Context, id uint) error {
+	var pkg pmocker.PMConfigPackage
+	if err := global.GVA_DB.WithContext(ctx).First(&pkg, id).Error; err != nil {
+		return err
+	}
+	if pkg.Status != "archived" {
+		return fmt.Errorf("仅 archived 可恢复（当前 %s）", pkg.Status)
+	}
+	return global.GVA_DB.WithContext(ctx).Model(&pkg).Update("status", "draft").Error
+}
+
+// ListStateDefsPublic 已发布状态流转定义（前端 statusTransitions 读取）
+func (s *ConfigPackageService) ListStateDefsPublic(ctx context.Context, entityType string) ([]pmocker.PMStateDef, error) {
+	var list []pmocker.PMStateDef
+	db := global.GVA_DB.WithContext(ctx).Where("config_status = ?", "published")
+	if entityType != "" {
+		db = db.Where("entity_type = ?", entityType)
+	}
+	err := db.Order("entity_type, sort").Find(&list).Error
+	return list, err
+}
+

@@ -11,169 +11,225 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ConfigApi 初始配置管理 API
+// ConfigApi 初始配置管理 API（配置包模型）
 type ConfigApi struct{}
 
-var (
-	cfgSvc    = configService.ConfigService{}
-	stateSvc  = configService.StateMachineService{}
-	exportSvc = configService.ExportService{}
-)
+var pkgSvc = &configService.ConfigPackageService{}
+var verSvc = &configService.ConfigVersionService{}
+var exportSvc = &configService.ExportService{}
 
-// ListEntityTypes
-// @Tags      PMockerConfig
-// @Summary   实体类型列表
-// @Security  ApiKeyAuth
-// @accept    application/json
-// @Produce   application/json
-// @Param     includeDraft query string false "是否包含草稿(true/false)"
-// @Success   200  {object}  response.Response{data=[]pmocker.PMEntityType,msg=string}  "返回实体类型列表"
-// @Router    /pmocker/config/entityTypes [get]
-func (a *ConfigApi) ListEntityTypes(c *gin.Context) {
+// ListPackages 配置包列表
+// @Summary 配置包列表
+// @Tags 初始配置
+// @Security ApiKeyAuth
+// @Param includeDraft query bool false "包含草稿"
+// @Success 200 {object} response.Response{data=[]pmocker.PMConfigPackage,msg=string}
+// @Router /pmocker/config/packages [get]
+func (a *ConfigApi) ListPackages(c *gin.Context) {
 	includeDraft := c.Query("includeDraft") == "true"
-	list, err := cfgSvc.ListEntityTypes(c.Request.Context(), includeDraft)
+	list, err := pkgSvc.List(c.Request.Context(), includeDraft)
 	if err != nil {
-		response.FailWithMessage("查询失败: "+err.Error(), c)
+		response.FailWithMessage(err.Error(), c)
 		return
 	}
 	response.OkWithData(list, c)
 }
 
-// CreateEntityType
-// @Tags      PMockerConfig
-// @Summary   新增实体类型
-// @Security  ApiKeyAuth
-// @accept    application/json
-// @Produce   application/json
-// @Param     data  body      pmocker.PMEntityType  true  "实体类型定义"
-// @Success   200   {object}  response.Response{msg=string}  "创建成功"
-// @Router    /pmocker/config/entityType [post]
-func (a *ConfigApi) CreateEntityType(c *gin.Context) {
-	var et pmocker.PMEntityType
-	if err := c.ShouldBindJSON(&et); err != nil {
-		response.FailWithMessage("参数错误: "+err.Error(), c)
+// CreatePackage 新建配置包（draft）
+// @Summary 新建配置包
+// @Tags 初始配置
+// @Security ApiKeyAuth
+// @Param data body pmocker.PMConfigPackage true "配置包"
+// @Success 200 {object} response.Response{msg=string}
+// @Router /pmocker/config/package [post]
+func (a *ConfigApi) CreatePackage(c *gin.Context) {
+	var pkg pmocker.PMConfigPackage
+	if err := c.ShouldBindJSON(&pkg); err != nil {
+		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	if err := cfgSvc.CreateEntityType(c.Request.Context(), et); err != nil {
-		response.FailWithMessage("创建失败: "+err.Error(), c)
+	if err := pkgSvc.Create(c.Request.Context(), pkg); err != nil {
+		response.FailWithMessage(err.Error(), c)
 		return
 	}
 	response.OkWithMessage("创建成功", c)
 }
 
-// Transition
-// @Tags      PMockerConfig
-// @Summary   配置状态流转
-// @Security  ApiKeyAuth
-// @accept    application/json
-// @Produce   application/json
-// @Param     table  query  string  true  "配置表名"
-// @Param     id     query  integer  true  "配置ID"
-// @Param     from   query  string  true  "源状态"
-// @Param     to     query  string  true  "目标状态(delete 表示删除草稿)"
-// @Success   200    {object}  response.Response{msg=string}  "状态流转成功"
-// @Router    /pmocker/config/transition [post]
-func (a *ConfigApi) Transition(c *gin.Context) {
-	table := c.Query("table")
-	id, err := strconv.ParseUint(c.Query("id"), 10, 64)
+// GetPackage 获取配置包详情
+// @Summary 获取配置包详情
+// @Tags 初始配置
+// @Security ApiKeyAuth
+// @Param id path int true "配置包ID"
+// @Success 200 {object} response.Response{data=pmocker.PMConfigPackage,msg=string}
+// @Router /pmocker/config/package/{id} [get]
+func (a *ConfigApi) GetPackage(c *gin.Context) {
+	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
+	pkg, err := pkgSvc.Get(c.Request.Context(), uint(id))
 	if err != nil {
-		response.FailWithMessage("参数错误: id 必填", c)
+		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	from := c.Query("from")
+	response.OkWithData(pkg, c)
+}
+
+// UpdatePackageSeed 更新配置包 seed_yaml
+// @Summary 更新配置包种子数据
+// @Tags 初始配置
+// @Security ApiKeyAuth
+// @Param id path int true "配置包ID"
+// @Param data body object true "seedYaml"
+// @Success 200 {object} response.Response{msg=string}
+// @Router /pmocker/config/package/{id} [put]
+func (a *ConfigApi) UpdatePackageSeed(c *gin.Context) {
+	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
+	var req struct {
+		SeedYAML string `json:"seedYaml"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	if err := pkgSvc.UpdateSeed(c.Request.Context(), uint(id), req.SeedYAML); err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	response.OkWithMessage("更新成功", c)
+}
+
+// CopyPackage 复制为草稿
+// @Summary 复制配置包为草稿
+// @Tags 初始配置
+// @Security ApiKeyAuth
+// @Param id path int true "配置包ID"
+// @Success 200 {object} response.Response{msg=string}
+// @Router /pmocker/config/package/{id}/copy [post]
+func (a *ConfigApi) CopyPackage(c *gin.Context) {
+	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err := pkgSvc.CopyAsDraft(c.Request.Context(), uint(id)); err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	response.OkWithMessage("已复制为草稿", c)
+}
+
+// PublishPackage 发布配置包（同步 DB）
+// @Summary 发布配置包
+// @Tags 初始配置
+// @Security ApiKeyAuth
+// @Param id path int true "配置包ID"
+// @Success 200 {object} response.Response{msg=string}
+// @Router /pmocker/config/package/{id}/publish [post]
+func (a *ConfigApi) PublishPackage(c *gin.Context) {
+	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err := pkgSvc.Publish(c.Request.Context(), uint(id)); err != nil {
+		response.FailWithMessage("发布失败: "+err.Error(), c)
+		return
+	}
+	response.OkWithMessage("发布成功", c)
+}
+
+// TransitionPackage 配置包状态流转（archive/restore）
+// @Summary 配置包状态流转
+// @Tags 初始配置
+// @Security ApiKeyAuth
+// @Param id path int true "配置包ID"
+// @Param to query string true "目标状态 archived/restore"
+// @Success 200 {object} response.Response{msg=string}
+// @Router /pmocker/config/package/{id}/transition [post]
+func (a *ConfigApi) TransitionPackage(c *gin.Context) {
+	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
 	to := c.Query("to")
-	if to == "delete" {
-		if err := stateSvc.DeleteDraft(global.GVA_DB, table, uint(id)); err != nil {
-			response.FailWithMessage("删除失败: "+err.Error(), c)
+	switch to {
+	case "archived":
+		if err := pkgSvc.Archive(c.Request.Context(), uint(id)); err != nil {
+			response.FailWithMessage(err.Error(), c)
 			return
 		}
-		response.OkWithMessage("删除成功", c)
+	case "restore":
+		if err := pkgSvc.Restore(c.Request.Context(), uint(id)); err != nil {
+			response.FailWithMessage(err.Error(), c)
+			return
+		}
+	default:
+		response.FailWithMessage("不支持的流转目标: "+to, c)
 		return
 	}
-	if err := stateSvc.Transition(global.GVA_DB, table, uint(id), from, to); err != nil {
-		response.FailWithMessage("状态流转失败: "+err.Error(), c)
-		return
-	}
-	response.OkWithMessage("状态流转成功", c)
+	response.OkWithMessage("流转成功", c)
 }
 
-// CopyAsDraft
-// @Tags      PMockerConfig
-// @Summary   复制为草稿
-// @Security  ApiKeyAuth
-// @accept    application/json
-// @Produce   application/json
-// @Param     table  query  string  true  "配置表名"
-// @Param     id     query  integer  true  "配置ID"
-// @Success   200    {object}  response.Response{msg=string}  "复制成功"
-// @Router    /pmocker/config/copy [post]
-func (a *ConfigApi) CopyAsDraft(c *gin.Context) {
-	table := c.Query("table")
-	id, err := strconv.ParseUint(c.Query("id"), 10, 64)
+// DeletePackage 删除配置包（仅 draft）
+// @Summary 删除配置包
+// @Tags 初始配置
+// @Security ApiKeyAuth
+// @Param id path int true "配置包ID"
+// @Success 200 {object} response.Response{msg=string}
+// @Router /pmocker/config/package/{id} [delete]
+func (a *ConfigApi) DeletePackage(c *gin.Context) {
+	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err := pkgSvc.Delete(c.Request.Context(), uint(id)); err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	response.OkWithMessage("删除成功", c)
+}
+
+// ListPackageVersions 配置包版本历史
+// @Summary 配置包版本历史
+// @Tags 初始配置
+// @Security ApiKeyAuth
+// @Param id path int true "配置包ID"
+// @Success 200 {object} response.Response{data=[]pmocker.PMConfigVersion,msg=string}
+// @Router /pmocker/config/package/{id}/versions [get]
+func (a *ConfigApi) ListPackageVersions(c *gin.Context) {
+	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
+	versions, err := verSvc.ListVersions(c.Request.Context(), uint(id))
 	if err != nil {
-		response.FailWithMessage("参数错误: id 必填", c)
+		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	if err := cfgSvc.CopyAsDraft(c.Request.Context(), table, uint(id)); err != nil {
-		response.FailWithMessage("复制失败: "+err.Error(), c)
-		return
-	}
-	response.OkWithMessage("复制成功", c)
+	response.OkWithData(versions, c)
 }
 
-// ListStateDefsPublic
-// @Tags      PMockerConfig
-// @Summary   已发布状态流转
-// @Security  ApiKeyAuth
-// @accept    application/json
-// @Produce   application/json
-// @Param     entityType  query  string  false  "实体类型"
-// @Success   200         {object}  response.Response{data=[]pmocker.PMStateDef,msg=string}  "返回已发布状态流转定义"
-// @Router    /pmocker/config/stateDefs/public [get]
+// RollbackPackage 回滚到指定版本
+// @Summary 配置包回滚
+// @Tags 初始配置
+// @Security ApiKeyAuth
+// @Param id path int true "配置包ID"
+// @Param versionId query int true "版本ID"
+// @Success 200 {object} response.Response{msg=string}
+// @Router /pmocker/config/package/{id}/rollback [post]
+func (a *ConfigApi) RollbackPackage(c *gin.Context) {
+	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
+	versionID, _ := strconv.ParseUint(c.Query("versionId"), 10, 64)
+	if err := verSvc.Rollback(c.Request.Context(), uint(id), uint(versionID)); err != nil {
+		response.FailWithMessage("回滚失败: "+err.Error(), c)
+		return
+	}
+	response.OkWithMessage("回滚成功", c)
+}
+
+// ListStateDefsPublic 已发布状态流转（前端 statusTransitions 读取）
+// @Summary 已发布状态流转
+// @Tags 初始配置
+// @Security ApiKeyAuth
+// @Param entityType query string false "实体类型"
+// @Success 200 {object} response.Response{data=[]pmocker.PMStateDef,msg=string}
+// @Router /pmocker/config/stateDefs/public [get]
 func (a *ConfigApi) ListStateDefsPublic(c *gin.Context) {
-	entityType := c.Query("entityType")
-	list, err := cfgSvc.ListStateDefs(c.Request.Context(), entityType, false)
+	list, err := pkgSvc.ListStateDefsPublic(c.Request.Context(), c.Query("entityType"))
 	if err != nil {
-		response.FailWithMessage("查询失败: "+err.Error(), c)
+		response.FailWithMessage(err.Error(), c)
 		return
 	}
 	response.OkWithData(list, c)
 }
 
-// ListSeedEntities
-// @Tags      PMockerConfig
-// @Summary   业务种子列表
-// @Security  ApiKeyAuth
-// @accept    application/json
-// @Produce   application/json
-// @Param     projectId   query  integer  false  "项目ID"
-// @Param     entityType  query  string  true  "实体类型"
-// @Param     page        query  integer  false  "页码"
-// @Param     pageSize    query  integer  false  "每页数量"
-// @Success   200         {object}  response.Response{data=gin.H{list=[]pmocker.PMEntity,total=int64},msg=string}  "返回列表与总数"
-// @Router    /pmocker/config/seedEntities [get]
-func (a *ConfigApi) ListSeedEntities(c *gin.Context) {
-	projectID, _ := strconv.ParseUint(c.Query("projectId"), 10, 64)
-	entityType := c.Query("entityType")
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "20"))
-	offset := (page - 1) * pageSize
-	list, total, err := cfgSvc.ListSeedEntities(c.Request.Context(), uint(projectID), entityType, offset, pageSize)
-	if err != nil {
-		response.FailWithMessage("查询失败: "+err.Error(), c)
-		return
-	}
-	response.OkWithDetailed(gin.H{"list": list, "total": total}, "查询成功", c)
-}
-
-// Export
-// @Tags      PMockerConfig
-// @Summary   导出配置YAML
-// @Security  ApiKeyAuth
-// @accept    application/json
-// @Produce   application/json
-// @Success   200  {object}  response.Response{msg=string}  "导出成功"
-// @Router    /pmocker/config/export [post]
+// Export 导出配置 YAML 到镜像源
+// @Summary 导出配置YAML到镜像源
+// @Tags 初始配置
+// @Security ApiKeyAuth
+// @Success 200 {object} response.Response{msg=string}
+// @Router /pmocker/config/export [post]
 func (a *ConfigApi) Export(c *gin.Context) {
 	destDir := os.Getenv("PMOCKER_EXPORT_DIR")
 	if destDir == "" {
@@ -185,3 +241,5 @@ func (a *ConfigApi) Export(c *gin.Context) {
 	}
 	response.OkWithMessage("导出成功: "+destDir, c)
 }
+
+var _ = global.GVA_DB

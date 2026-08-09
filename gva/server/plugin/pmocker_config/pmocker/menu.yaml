@@ -5,52 +5,24 @@ menus:
     sort: 90
     title: 初始配置
     icon: setting
-  - path: entityType
-    name: pmockerConfigEntityType
+  - path: packageList
+    name: pmockerConfigPackageList
     parent_name: pmockerConfig
-    component: view/pmocker/config/entityType.vue
+    component: view/pmocker/config/packageList.vue
     sort: 1
-    title: 实体类型
-    icon: document
-  - path: fieldDef
-    name: pmockerConfigFieldDef
+    title: 配置包
+    icon: box
+  - path: packageEditor
+    name: pmockerConfigPackageEditor
     parent_name: pmockerConfig
-    component: view/pmocker/config/fieldDef.vue
+    component: view/pmocker/config/packageEditor.vue
     sort: 2
-    title: 字段定义
-    icon: list
-  - path: dictionary
-    name: pmockerConfigDictionary
-    parent_name: pmockerConfig
-    component: view/pmocker/config/dictionary.vue
-    sort: 3
-    title: 字典
-    icon: files
-  - path: stateDef
-    name: pmockerConfigStateDef
-    parent_name: pmockerConfig
-    component: view/pmocker/config/stateDef.vue
-    sort: 4
-    title: 状态流转
-    icon: refresh
-  - path: workflow
-    name: pmockerConfigWorkflow
-    parent_name: pmockerConfig
-    component: view/pmocker/config/workflow.vue
-    sort: 5
-    title: 工作流
-    icon: set-up
-  - path: seedEntity
-    name: pmockerConfigSeedEntity
-    parent_name: pmockerConfig
-    component: view/pmocker/config/seedEntity.vue
-    sort: 6
-    title: 业务种子
-    icon: list
+    title: 配置编辑
+    icon: edit
   - path: org
     name: pmockerConfigOrg
     parent_name: pmockerConfig
     component: view/pmocker/config/orgEntry.vue
-    sort: 7
+    sort: 3
     title: 组织权限
     icon: user

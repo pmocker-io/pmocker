@@ -1,8 +1,13 @@
 apis:
-  - {path: /pmocker/config/entityTypes, description: 实体类型列表, api_group: 初始配置, method: GET}
-  - {path: /pmocker/config/entityType, description: 新增实体类型, api_group: 初始配置, method: POST}
-  - {path: /pmocker/config/transition, description: 配置状态流转, api_group: 初始配置, method: POST}
-  - {path: /pmocker/config/copy, description: 复制为草稿, api_group: 初始配置, method: POST}
+  - {path: /pmocker/config/packages, description: 配置包列表, api_group: 初始配置, method: GET}
+  - {path: /pmocker/config/package, description: 新建配置包, api_group: 初始配置, method: POST}
+  - {path: /pmocker/config/package/:id, description: 配置包详情, api_group: 初始配置, method: GET}
+  - {path: /pmocker/config/package/:id, description: 更新配置包seed, api_group: 初始配置, method: PUT}
+  - {path: /pmocker/config/package/:id, description: 删除配置包, api_group: 初始配置, method: DELETE}
+  - {path: /pmocker/config/package/:id/copy, description: 复制配置包, api_group: 初始配置, method: POST}
+  - {path: /pmocker/config/package/:id/publish, description: 发布配置包, api_group: 初始配置, method: POST}
+  - {path: /pmocker/config/package/:id/transition, description: 配置包归档/恢复, api_group: 初始配置, method: POST}
+  - {path: /pmocker/config/package/:id/versions, description: 配置包版本历史, api_group: 初始配置, method: GET}
+  - {path: /pmocker/config/package/:id/rollback, description: 配置包回滚, api_group: 初始配置, method: POST}
   - {path: /pmocker/config/stateDefs/public, description: 已发布状态流转, api_group: 初始配置, method: GET}
-  - {path: /pmocker/config/seedEntities, description: 业务种子列表, api_group: 初始配置, method: GET}
   - {path: /pmocker/config/export, description: 导出配置YAML, api_group: 初始配置, method: POST}
