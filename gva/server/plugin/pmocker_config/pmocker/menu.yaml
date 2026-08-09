@@ -19,3 +19,12 @@ menus:
     sort: 2
     title: 组织权限
     icon: user
+  # 配置编辑页：隐藏菜单项，仅从配置包列表"编辑"按钮进入（保留路由 name 供跳转）
+  - path: packageEditor
+    name: pmockerConfigPackageEditor
+    parent_name: pmockerConfig
+    component: view/pmocker/config/packageEditor.vue
+    sort: 3
+    title: 配置编辑
+    icon: edit
+    hidden: true
