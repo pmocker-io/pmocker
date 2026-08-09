@@ -41,12 +41,14 @@
 ## 当前进展
 
 - 2026-08-09：完成 brainstorm，设计全部确认，待写 spec
+- 2026-08-09：spec + plan 已完成并提交
+- 2026-08-09：M13 全部 Task 完成并端到端验证通过（元表 status + pm_state_defs + 状态机 + ConfigService + ExportService + 插件API/Router + published过滤 + 前端7子页 + statusTransitions改读API + 导出路径env覆盖）
 
 ## 后续待办
 
-- [ ] 写 spec 文档到 `docs/superpowers/specs/2026-08-09-m13-config-manager-design.md` 并提交
-- [ ] spec 用户审阅
-- [ ] writing-plans 生成实施计划（M13-A 数据模型+状态机+CRUD 后端；M13-B 前端配置页；M13-C 导出+published 过滤+测试）
+- [ ] 状态流转 pm_state_defs 种子数据灌入（当前 stateDefs/public 为 0，需各模块状态流转配置入库）
+- [ ] 更新 README 里程碑（M13 完成）
+- [ ] 用户基于配置模块更新种子数据 → v1.1 升级
 
 ## 更新规则
 
