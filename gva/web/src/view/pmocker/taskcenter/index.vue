@@ -76,6 +76,26 @@ const loadStats = async () => {
   if (res.code === 0) Object.assign(stats, res.data)
 }
 
+const fetchTabCount = async (tabName) => {
+  try {
+    let res
+    if (tabName === 'focused') {
+      res = await getFocusedTasks()
+    } else {
+      res = await getMyTasks({ status: tabName })
+    }
+    return res.code === 0 ? (res.data?.length ?? 0) : 0
+  } catch {
+    return 0
+  }
+}
+
+const preloadCounts = async () => {
+  const others = tabs.value.filter(t => t.name !== activeTab.value)
+  const results = await Promise.all(others.map(t => fetchTabCount(t.name)))
+  results.forEach((cnt, i) => { others[i].count = cnt })
+}
+
 const loadTasks = async () => {
   loading.value = true
   try {
@@ -100,7 +120,7 @@ const sourceTag = (s) => ({ project_task: '', issue_task: 'warning', change_task
 const priorityLabel = (p) => ({ 0: 'P0 紧急', 1: 'P1 高', 2: 'P2 中', 3: 'P3 低' }[p] || 'P2 中')
 const priorityTag = (p) => ({ 0: 'danger', 1: 'warning', 2: 'info', 3: 'info' }[p] || 'info')
 
-onMounted(() => { loadStats(); loadTasks() })
+onMounted(() => { loadStats(); preloadCounts(); loadTasks() })
 </script>
 
 <style scoped>
