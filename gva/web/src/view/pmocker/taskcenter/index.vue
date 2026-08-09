@@ -9,35 +9,43 @@
       <el-col :span="6"><el-card shadow="hover"><div class="stat"><span>进行中</span><b style="color:#409EFF">{{ stats.doingCount }}</b></div></el-card></el-col>
     </el-row>
 
-    <el-tabs v-model="activeTab" tab-position="left" class="task-tabs" @tab-change="loadTasks">
-      <el-tab-pane label="我的待办" name="todo" />
-      <el-tab-pane label="进行中" name="doing" />
-      <el-tab-pane label="已完成" name="done" />
-      <el-tab-pane label="已逾期" name="overdue" />
-      <el-tab-pane label="我关注的" name="focused" />
-      <template #addIcon />
-      <el-table :data="tasks" border size="small" style="margin-left: 12px">
-        <el-table-column prop="title" label="任务名称" min-width="180" />
-        <el-table-column label="来源" width="110">
-          <template #default="{ row }">
-            <el-tag size="small" :type="sourceTag(row.sourceType)">{{ sourceLabel(row.sourceType) }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="projectName" label="所属项目" width="160" />
-        <el-table-column label="优先级" width="90">
-          <template #default="{ row }">
-            <el-tag size="small" :type="priorityTag(row.priority)">{{ priorityLabel(row.priority) }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="status" label="状态" width="100" />
-        <el-table-column prop="endDate" label="截止日期" width="120" />
-        <el-table-column label="进度" width="140">
-          <template #default="{ row }">
-            <el-progress :percentage="row.progress" :status="row.overdue ? 'exception' : ''" />
-          </template>
-        </el-table-column>
-      </el-table>
-    </el-tabs>
+    <div class="task-body">
+      <div class="task-tabs">
+        <div
+          v-for="t in tabs"
+          :key="t.name"
+          class="tab-item"
+          :class="{ active: activeTab === t.name }"
+          @click="switchTab(t.name)"
+        >
+          {{ t.label }}
+          <span v-if="t.count !== null" class="tab-badge">{{ t.count }}</span>
+        </div>
+      </div>
+      <div class="task-content">
+        <el-table :data="tasks" border size="small" v-loading="loading">
+          <el-table-column prop="title" label="任务名称" min-width="180" />
+          <el-table-column label="来源" width="110">
+            <template #default="{ row }">
+              <el-tag size="small" :type="sourceTag(row.sourceType)">{{ sourceLabel(row.sourceType) }}</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="projectName" label="所属项目" width="160" />
+          <el-table-column label="优先级" width="90">
+            <template #default="{ row }">
+              <el-tag size="small" :type="priorityTag(row.priority)">{{ priorityLabel(row.priority) }}</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="status" label="状态" width="100" />
+          <el-table-column prop="endDate" label="截止日期" width="120" />
+          <el-table-column label="进度" width="140">
+            <template #default="{ row }">
+              <el-progress :percentage="row.progress" :status="row.overdue ? 'exception' : ''" />
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -47,7 +55,21 @@ import { getMyTasks, getFocusedTasks, getTaskStats } from '@/api/pmocker/taskCen
 
 const activeTab = ref('todo')
 const tasks = ref([])
+const loading = ref(false)
 const stats = reactive({ total: 0, done: 0, doneRate: 0, overdueCount: 0, todoCount: 0, doingCount: 0 })
+
+const tabs = ref([
+  { name: 'todo', label: '我的待办', count: null },
+  { name: 'doing', label: '进行中', count: null },
+  { name: 'done', label: '已完成', count: null },
+  { name: 'overdue', label: '已逾期', count: null },
+  { name: 'focused', label: '我关注的', count: null }
+])
+
+const switchTab = (name) => {
+  activeTab.value = name
+  loadTasks()
+}
 
 const loadStats = async () => {
   const res = await getTaskStats()
@@ -55,12 +77,21 @@ const loadStats = async () => {
 }
 
 const loadTasks = async () => {
-  if (activeTab.value === 'focused') {
-    const res = await getFocusedTasks()
-    if (res.code === 0) tasks.value = res.data || []
-  } else {
-    const res = await getMyTasks({ status: activeTab.value })
-    if (res.code === 0) tasks.value = res.data || []
+  loading.value = true
+  try {
+    let res
+    if (activeTab.value === 'focused') {
+      res = await getFocusedTasks()
+    } else {
+      res = await getMyTasks({ status: activeTab.value })
+    }
+    if (res.code === 0) {
+      tasks.value = res.data || []
+      const cur = tabs.value.find(t => t.name === activeTab.value)
+      if (cur) cur.count = tasks.value.length
+    }
+  } finally {
+    loading.value = false
   }
 }
 
@@ -76,8 +107,66 @@ onMounted(() => { loadStats(); loadTasks() })
 .task-center { padding: 16px; }
 .stat { display: flex; justify-content: space-between; align-items: center; }
 .stat b { font-size: 24px; }
-.task-tabs { margin-top: 16px; min-height: 500px; }
-.task-tabs :deep(.el-tabs__header) { width: 120px; }
-.task-tabs :deep(.el-tabs__item) { width: 100%; justify-content: flex-start; padding: 0 16px; height: 44px; line-height: 44px; }
-.task-tabs :deep(.el-tabs__content) { overflow: visible; }
+
+.task-body {
+  display: flex;
+  margin-top: 16px;
+  min-height: 500px;
+  border: 1px solid #e4e7ed;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.task-tabs {
+  width: 140px;
+  flex-shrink: 0;
+  background: #fafafa;
+  border-right: 1px solid #e4e7ed;
+}
+.tab-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  height: 44px;
+  line-height: 44px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  color: #606266;
+  transition: all 0.2s;
+  user-select: none;
+}
+.tab-item:hover {
+  background: #ecf5ff;
+  color: #409eff;
+}
+.tab-item.active {
+  background: #409eff;
+  color: #fff;
+  font-weight: 500;
+}
+.tab-item.active:hover {
+  background: #409eff;
+  color: #fff;
+}
+.tab-badge {
+  display: inline-block;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  line-height: 18px;
+  text-align: center;
+  font-size: 11px;
+  border-radius: 9px;
+  background: #f0f0f0;
+  color: #909399;
+}
+.tab-item.active .tab-badge {
+  background: rgba(255, 255, 255, 0.3);
+  color: #fff;
+}
+.task-content {
+  flex: 1;
+  padding: 12px;
+  overflow: auto;
+}
 </style>
