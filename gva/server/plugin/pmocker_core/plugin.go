@@ -90,6 +90,9 @@ func registerTables() {
 		pmocker.PMCostActual{},
 		pmocker.PMApprovalRecord{},
 		pmocker.PMReportSnapshot{},
+		pmocker.PMStateDef{},
+		pmocker.PMConfigPackage{},
+		pmocker.PMConfigVersion{},
 	}
 	global.GVA_DB.AutoMigrate(tables...)
 }
