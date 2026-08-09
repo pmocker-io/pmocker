@@ -117,6 +117,10 @@ func buildTreeFromEntities(entities []eavtypes.Entity) []TreeNode {
 		if name == "" {
 			name = e.Title
 		}
+		// 跳过无名称节点（脏数据/残缺记录），避免 fullPath="" 覆盖正常节点
+		if name == "" {
+			continue
+		}
 		fullPath := joinPath(pp, name)
 		nodeMap[fullPath] = &TreeNode{
 			ID:   e.ID,
