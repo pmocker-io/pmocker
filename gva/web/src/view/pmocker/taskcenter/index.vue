@@ -9,35 +9,35 @@
       <el-col :span="6"><el-card shadow="hover"><div class="stat"><span>进行中</span><b style="color:#409EFF">{{ stats.doingCount }}</b></div></el-card></el-col>
     </el-row>
 
-    <el-tabs v-model="activeTab" style="margin-top: 16px" @tab-change="loadTasks">
+    <el-tabs v-model="activeTab" tab-position="left" class="task-tabs" @tab-change="loadTasks">
       <el-tab-pane label="我的待办" name="todo" />
       <el-tab-pane label="进行中" name="doing" />
       <el-tab-pane label="已完成" name="done" />
       <el-tab-pane label="已逾期" name="overdue" />
       <el-tab-pane label="我关注的" name="focused" />
+      <template #addIcon />
+      <el-table :data="tasks" border size="small" style="margin-left: 12px">
+        <el-table-column prop="title" label="任务名称" min-width="180" />
+        <el-table-column label="来源" width="110">
+          <template #default="{ row }">
+            <el-tag size="small" :type="sourceTag(row.sourceType)">{{ sourceLabel(row.sourceType) }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="projectName" label="所属项目" width="160" />
+        <el-table-column label="优先级" width="90">
+          <template #default="{ row }">
+            <el-tag size="small" :type="priorityTag(row.priority)">{{ priorityLabel(row.priority) }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="status" label="状态" width="100" />
+        <el-table-column prop="endDate" label="截止日期" width="120" />
+        <el-table-column label="进度" width="140">
+          <template #default="{ row }">
+            <el-progress :percentage="row.progress" :status="row.overdue ? 'exception' : ''" />
+          </template>
+        </el-table-column>
+      </el-table>
     </el-tabs>
-
-    <el-table :data="tasks" border size="small">
-      <el-table-column prop="title" label="任务名称" min-width="180" />
-      <el-table-column label="来源" width="110">
-        <template #default="{ row }">
-          <el-tag size="small" :type="sourceTag(row.sourceType)">{{ sourceLabel(row.sourceType) }}</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column prop="projectName" label="所属项目" width="160" />
-      <el-table-column label="优先级" width="90">
-        <template #default="{ row }">
-          <el-tag size="small" :type="priorityTag(row.priority)">{{ priorityLabel(row.priority) }}</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column prop="status" label="状态" width="100" />
-      <el-table-column prop="endDate" label="截止日期" width="120" />
-      <el-table-column label="进度" width="140">
-        <template #default="{ row }">
-          <el-progress :percentage="row.progress" :status="row.overdue ? 'exception' : ''" />
-        </template>
-      </el-table-column>
-    </el-table>
   </div>
 </template>
 
@@ -76,4 +76,8 @@ onMounted(() => { loadStats(); loadTasks() })
 .task-center { padding: 16px; }
 .stat { display: flex; justify-content: space-between; align-items: center; }
 .stat b { font-size: 24px; }
+.task-tabs { margin-top: 16px; min-height: 500px; }
+.task-tabs :deep(.el-tabs__header) { width: 120px; }
+.task-tabs :deep(.el-tabs__item) { width: 100%; justify-content: flex-start; padding: 0 16px; height: 44px; line-height: 44px; }
+.task-tabs :deep(.el-tabs__content) { overflow: visible; }
 </style>
