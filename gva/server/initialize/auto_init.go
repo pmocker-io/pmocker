@@ -274,8 +274,10 @@ func insertPMockerCasbinRules() error {
 	}
 
 	// 2. 授予 PMocker API 权限
+	// 路径匹配两种模式：sys_api 表中的 path 可能存为 "/pmocker/xxx" 或 "/api/pmocker/xxx"
+	// 早期版本注册为 /pmocker/xxx，后期 pmocker_core 路由统一改为 /api/pmocker/xxx，需要两者都匹配
 	var pmockerAPIs []sysModel.SysApi
-	if err := db.Where("path LIKE ?", "/pmocker/%").Find(&pmockerAPIs).Error; err != nil {
+	if err := db.Where("path LIKE ? OR path LIKE ?", "/pmocker/%", "/api/pmocker/%").Find(&pmockerAPIs).Error; err != nil {
 		return err
 	}
 	for _, api := range pmockerAPIs {
