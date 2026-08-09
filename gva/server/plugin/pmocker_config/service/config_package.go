@@ -7,6 +7,7 @@ import (
 
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/pmocker"
+	"gorm.io/gorm"
 )
 
 type ConfigPackageService struct{}
@@ -80,3 +81,32 @@ func (s *ConfigPackageService) Delete(ctx context.Context, id uint) error {
 	}
 	return global.GVA_DB.WithContext(ctx).Delete(&pkg).Error
 }
+
+// Publish 发布配置包：状态机校验 + 解析 seed_yaml + 同步运行表 + 版本号递增 + 版本快照
+// draft/reviewing → published
+func (s *ConfigPackageService) Publish(ctx context.Context, id uint) error {
+	db := global.GVA_DB.WithContext(ctx)
+	var pkg pmocker.PMConfigPackage
+	if err := db.First(&pkg, id).Error; err != nil {
+		return err
+	}
+	if pkg.Status != "draft" && pkg.Status != "reviewing" {
+		return fmt.Errorf("非法发布：当前状态 %s（仅 draft/reviewing 可发布）", pkg.Status)
+	}
+	seed, err := ParseSeedYAML([]byte(pkg.SeedYAML))
+	if err != nil {
+		return fmt.Errorf("seed_yaml 解析失败: %w", err)
+	}
+	// 事务：同步运行表 + 状态流转 + 版本递增
+	return db.Transaction(func(tx *gorm.DB) error {
+		syncSvc := &SeedSyncService{}
+		if err := syncSvc.Sync(ctx, tx, seed); err != nil {
+			return fmt.Errorf("同步运行表失败: %w", err)
+		}
+		if err := tx.Model(&pkg).Update("status", "published").Error; err != nil {
+			return err
+		}
+		return tx.Model(&pkg).Update("version", pkg.Version+1).Error
+	})
+}
+
