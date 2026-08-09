@@ -41,14 +41,14 @@
 ## 当前进展
 
 - 2026-08-09：方向修正确认——从「6 类对象各自 CRUD」改为「聚合配置包模型」，推翻重建
-- 2026-08-09：EPS 项目编辑存在 bug（前端传参 name/title 不匹配），待修复
+- 2026-08-09：EPS 项目编辑 bug 确认（前端传参 name/title 不匹配 + 缺 entityType）
+- 2026-08-09：**聚合配置包重建完成**——pm_config_packages/versions 表 + SeedParser + ConfigPackageService + 发布同步DB(SeedSyncService) + 版本快照/回滚 + 配置包API + 前端列表/编辑页 + EPS项目修复（传参对齐 + BuildEPSTree排除组织节点 + 跳过空名节点）
+- 2026-08-09：端到端验证通过（创建→发布→DB同步→版本v2→回滚→归档→恢复 + EPS新增项目显示在树）
 
 ## 后续待办
 
-- [ ] 重写 spec（`docs/superpowers/specs/2026-08-09-m13-config-manager-design.md`）
-- [ ] 重写 plan（`docs/superpowers/plans/2026-08-09-m13-config-manager.md`）
-- [ ] 重建实现：pm_config_packages/versions 表 + seed_yaml + 发布同步 + 配置包编辑前端 + EPS 项目编辑修复
-- [ ] 端到端验证 + 版本回滚验证
+- [ ] 现有 3 项目业务种子迁移为配置包（EPS包 + 各业务包 seed_yaml）
+- [ ] 更新 README 里程碑（M13 聚合配置包模型）
 - [ ] 用户基于配置包更新种子数据 → v1.1 升级
 
 ## 更新规则
