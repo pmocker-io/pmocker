@@ -2,49 +2,57 @@
   <div class="workbench">
     <el-page-header content="项目工作台" />
 
-    <el-tabs v-model="activeTab" style="margin-top: 12px" @tab-change="loadData">
-      <el-tab-pane label="我创建的" name="created" />
-      <el-tab-pane label="我负责的" name="lead" />
-      <el-tab-pane label="我参与的" name="involved" />
-      <el-tab-pane label="我关注的" name="focused" />
-    </el-tabs>
+    <div style="margin-top: 16px">
+      <VerticalTabLayout
+        :active-tab="activeTab"
+        :tabs="tabs"
+        @tab-change="switchTab"
+      >
+        <template #toolbar>
+          <div class="toolbar-bar">
+            <span class="status-label">状态筛选：</span>
+            <el-radio-group v-model="statusFilter" size="small" @change="loadData">
+              <el-radio-button label="">全部</el-radio-button>
+              <el-radio-button label="initiating">立项中</el-radio-button>
+              <el-radio-button label="active">进行中</el-radio-button>
+              <el-radio-button label="archived">已归档</el-radio-button>
+              <el-radio-button label="paused">已暂停</el-radio-button>
+            </el-radio-group>
+          </div>
+        </template>
 
-    <el-radio-group v-model="statusFilter" size="small" style="margin-bottom: 12px" @change="loadData">
-      <el-radio-button label="">全部</el-radio-button>
-      <el-radio-button label="initiating">立项中</el-radio-button>
-      <el-radio-button label="active">进行中</el-radio-button>
-      <el-radio-button label="archived">已归档</el-radio-button>
-      <el-radio-button label="paused">已暂停</el-radio-button>
-    </el-radio-group>
-
-    <el-row :gutter="12">
-      <el-col v-for="card in cards" :key="card.projectId" :span="8" style="margin-bottom: 12px">
-        <el-card shadow="hover" :body-style="{ padding: '16px' }" class="proj-card" @click="enterProject(card)">
-          <div class="card-head">
-            <span class="dot" :class="card.health" />
-            <span class="proj-name">{{ card.projectName }}</span>
-            <el-tag size="small" :type="priorityTag(card.priority)" style="margin-left: auto">{{ priorityLabel(card.priority) }}</el-tag>
-          </div>
-          <el-progress :percentage="Math.round(card.progress)" :color="healthColor(card.health)" style="margin: 8px 0" />
-          <div class="card-row">
-            <span>成本偏差：</span>
-            <b :class="card.costVariance > 0 ? 'red' : 'green'">{{ card.costVariance > 0 ? '+' : '' }}{{ (card.costVariance || 0).toFixed(2) }}</b>
-          </div>
-          <div class="card-row">
-            <span>风险数：</span><b>{{ card.riskCount }}</b>
-            <span style="margin-left: 16px">负责人：</span><b>{{ card.leaderName }}</b>
-          </div>
-        </el-card>
-      </el-col>
-    </el-row>
+        <el-row :gutter="12">
+          <el-col v-for="card in cards" :key="card.projectId" :span="8" style="margin-bottom: 12px">
+            <el-card shadow="hover" :body-style="{ padding: '16px' }" class="proj-card" @click="enterProject(card)">
+              <div class="card-head">
+                <span class="dot" :class="card.health" />
+                <span class="proj-name">{{ card.projectName }}</span>
+                <el-tag size="small" :type="priorityTag(card.priority)" style="margin-left: auto">{{ priorityLabel(card.priority) }}</el-tag>
+              </div>
+              <el-progress :percentage="Math.round(card.progress)" :color="healthColor(card.health)" style="margin: 8px 0" />
+              <div class="card-row">
+                <span>成本偏差：</span>
+                <b :class="card.costVariance > 0 ? 'red' : 'green'">{{ card.costVariance > 0 ? '+' : '' }}{{ (card.costVariance || 0).toFixed(2) }}</b>
+              </div>
+              <div class="card-row">
+                <span>风险数：</span><b>{{ card.riskCount }}</b>
+                <span style="margin-left: 16px">负责人：</span><b>{{ card.leaderName }}</b>
+              </div>
+            </el-card>
+          </el-col>
+        </el-row>
+        <el-empty v-if="cards.length === 0" description="暂无数据" />
+      </VerticalTabLayout>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getMyProjects, getFocusedProjects } from '@/api/pmocker/projectWorkbench'
 import { useProjectStore } from '@/pinia'
+import VerticalTabLayout from '../components/VerticalTabLayout.vue'
 
 const router = useRouter()
 const projectStore = useProjectStore()
@@ -52,7 +60,18 @@ const activeTab = ref('created')
 const statusFilter = ref('')
 const cards = ref([])
 
-// 点击项目卡片：设置项目上下文并跳转项目仪表盘
+const tabs = computed(() => [
+  { name: 'created', label: '我创建的', count: null },
+  { name: 'lead', label: '我负责的', count: null },
+  { name: 'involved', label: '我参与的', count: null },
+  { name: 'focused', label: '我关注的', count: null }
+])
+
+const switchTab = (name) => {
+  activeTab.value = name
+  loadData()
+}
+
 const enterProject = (card) => {
   projectStore.setProject(card.projectId, card.projectName)
   router.push({ name: 'pmockerDashboard' })
@@ -66,7 +85,6 @@ const loadData = async () => {
     const params = statusFilter.value ? { status: statusFilter.value } : {}
     const res = await getMyProjects(params)
     if (res.code === 0) {
-      // 非过滤状态时返回 {created, lead, involved}，按 tab 取对应分类
       if (statusFilter.value) {
         cards.value = res.data || []
       } else {
@@ -97,4 +115,14 @@ onMounted(() => { loadData() })
 .card-row { font-size: 13px; margin: 4px 0; }
 .red { color: #F56C6C; }
 .green { color: #67C23A; }
+.toolbar-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.status-label {
+  font-size: 13px;
+  color: #606266;
+  white-space: nowrap;
+}
 </style>

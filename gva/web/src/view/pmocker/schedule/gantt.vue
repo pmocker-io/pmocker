@@ -27,24 +27,23 @@
         </el-button>
       </div>
 
-      <!-- 按状态分组展示 -->
-      <div v-for="group in groupedData" :key="group.status" class="status-group">
-        <div class="group-header">
-          <div class="group-title">
-            <el-tag :type="group.tagType">{{ group.label }}</el-tag>
-            <span class="count">({{ group.items.length }})</span>
-          </div>
-          <div class="group-actions" v-if="group.actions.length > 0">
-            <el-button v-for="action in group.actions" :key="action.label"
+      <VerticalTabLayout
+        :active-tab="activeTab"
+        :tabs="tabs"
+        @tab-change="switchTab"
+      >
+        <template #toolbar>
+          <div class="batch-actions">
+            <el-button v-for="action in (currentGroup?.actions || [])" :key="action.label"
               :type="action.type" size="small"
-              :disabled="!selectedMap[group.status] || selectedMap[group.status].length === 0"
-              @click="handleBatchAction(group, action)">
+              :disabled="selectedRows.length === 0"
+              @click="handleBatchAction(action)">
               {{ action.label }}
             </el-button>
           </div>
-        </div>
-        <el-table :data="group.items" row-key="id" size="small"
-          @selection-change="(val) => onSelectionChange(group.status, val)">
+        </template>
+        <el-table :data="currentItems" row-key="id" size="small"
+          @selection-change="onSelectionChange">
           <el-table-column type="selection" width="40" />
           <el-table-column label="ID" prop="id" width="70" />
           <el-table-column label="任务名称" prop="title" min-width="200" />
@@ -91,9 +90,8 @@
             </template>
           </el-table-column>
         </el-table>
-      </div>
-
-      <el-empty v-if="groupedData.length === 0" description="暂无数据" />
+        <el-empty v-if="currentItems.length === 0" description="暂无数据" />
+      </VerticalTabLayout>
     </div>
 
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="800px">
@@ -117,8 +115,9 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { getScheduleTasks, createScheduleTask, updateTask, deleteTask, transitionTask } from '@/api/pmocker/schedule'
 import DynamicForm from '../components/DynamicForm.vue'
 import ProjectSelector from '../components/ProjectSelector.vue'
+import VerticalTabLayout from '../components/VerticalTabLayout.vue'
 import { useProjectStore } from '@/pinia'
-import { groupByStatus } from '../components/statusTransitions.js'
+import { getTransitions } from '../components/statusTransitions.js'
 
 defineOptions({ name: 'PmockerScheduleGantt' })
 
@@ -132,9 +131,12 @@ const dialogTitle = ref('')
 const formRef = ref(null)
 const dialogType = ref('add')
 
-const selectedMap = ref({})
+const selectedRows = ref([])
 
 const form = reactive({ id: null, title: '', status: 'planned', attrs: {} })
+
+const activeTab = ref('planned')
+const transitionConfig = getTransitions('task')
 
 const getAttr = (row, key) => (row.attrs && row.attrs[key] !== undefined ? row.attrs[key] : (row[key] || ''))
 
@@ -146,8 +148,15 @@ const dependencyLabel = (type) => {
   return map[type] || type || '—'
 }
 
-// 按状态分组
-const groupedData = computed(() => groupByStatus(tableData.value, 'task'))
+const tabs = computed(() => transitionConfig.map(g => ({
+  name: g.status,
+  label: g.label,
+  count: tableData.value.filter(item => item.status === g.status).length
+})))
+
+const currentGroup = computed(() => transitionConfig.find(g => g.status === activeTab.value))
+
+const currentItems = computed(() => tableData.value.filter(item => item.status === activeTab.value))
 
 // API 函数映射
 const apiMap = { transitionTask, updateTask }
@@ -163,13 +172,18 @@ const getTableData = async () => {
 const onSubmit = () => { getTableData() }
 const onReset = () => { searchInfo.value = {}; getTableData() }
 
-const onSelectionChange = (status, selection) => {
-  selectedMap.value = { ...selectedMap.value, [status]: selection }
+const onSelectionChange = (selection) => {
+  selectedRows.value = selection
+}
+
+const switchTab = (name) => {
+  activeTab.value = name
+  selectedRows.value = []
 }
 
 // 批量状态流转
-const handleBatchAction = async (group, action) => {
-  const selected = selectedMap.value[group.status] || []
+const handleBatchAction = async (action) => {
+  const selected = selectedRows.value
   if (selected.length === 0) return
   try {
     await ElMessageBox.confirm(`确认将选中的 ${selected.length} 条记录执行「${action.label}」操作？`, '提示', { type: 'warning' })
@@ -182,7 +196,7 @@ const handleBatchAction = async (group, action) => {
     })
     await Promise.all(promises)
     ElMessage.success(`成功${action.label} ${selected.length} 条记录`)
-    selectedMap.value[group.status] = []
+    selectedRows.value = []
     getTableData()
   } catch (e) {
     if (e !== 'cancel') ElMessage.error('操作失败')
@@ -249,30 +263,7 @@ getTableData()
 </script>
 
 <style scoped>
-.status-group {
-  margin-bottom: 16px;
-  border: 1px solid #ebeef5;
-  border-radius: 4px;
-  overflow: hidden;
-}
-.group-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 16px;
-  background: #f5f7fa;
-  border-bottom: 1px solid #ebeef5;
-}
-.group-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.count {
-  color: #909399;
-  font-size: 13px;
-}
-.group-actions {
+.batch-actions {
   display: flex;
   gap: 8px;
 }
