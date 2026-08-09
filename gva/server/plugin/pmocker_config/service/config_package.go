@@ -53,6 +53,36 @@ func (s *ConfigPackageService) UpdateSeed(ctx context.Context, id uint, seedYAML
 	return global.GVA_DB.WithContext(ctx).Model(&pkg).Update("seed_yaml", seedYAML).Error
 }
 
+// GetSeedStruct 解析配置包 seed_yaml 为结构化 JSON（供前端层级编辑器）
+func (s *ConfigPackageService) GetSeedStruct(ctx context.Context, id uint) (*ConfigPackageSeed, error) {
+	var pkg pmocker.PMConfigPackage
+	if err := global.GVA_DB.WithContext(ctx).First(&pkg, id).Error; err != nil {
+		return nil, err
+	}
+	seed, err := ParseSeedYAML([]byte(pkg.SeedYAML))
+	if err != nil {
+		return nil, err
+	}
+	return seed, nil
+}
+
+// UpdateSeedStruct 接收结构化 seed JSON，序列化为 seed_yaml 存库
+func (s *ConfigPackageService) UpdateSeedStruct(ctx context.Context, id uint, seed *ConfigPackageSeed) error {
+	var pkg pmocker.PMConfigPackage
+	if err := global.GVA_DB.WithContext(ctx).First(&pkg, id).Error; err != nil {
+		return err
+	}
+	if pkg.Status == "archived" {
+		return errors.New("archived 状态不可编辑，请先恢复为草稿")
+	}
+	// 校验并序列化为 YAML
+	seedYAML, err := SerializeSeedYAML(seed)
+	if err != nil {
+		return err
+	}
+	return global.GVA_DB.WithContext(ctx).Model(&pkg).Update("seed_yaml", seedYAML).Error
+}
+
 // CopyAsDraft 复制为 draft：code 加 -copy，seed_yaml 原样复制
 func (s *ConfigPackageService) CopyAsDraft(ctx context.Context, id uint) error {
 	var src pmocker.PMConfigPackage

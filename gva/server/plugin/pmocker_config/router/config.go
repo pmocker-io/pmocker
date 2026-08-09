@@ -16,6 +16,8 @@ func (r *ConfigRouter) InitConfig(public, private *gin.RouterGroup) {
 		group.POST("package", api.ApiGroupApp.ConfigApi.CreatePackage)
 		group.GET("package/:id", api.ApiGroupApp.ConfigApi.GetPackage)
 		group.PUT("package/:id", api.ApiGroupApp.ConfigApi.UpdatePackageSeed)
+		group.GET("package/:id/seed", api.ApiGroupApp.ConfigApi.GetPackageSeedStruct)
+		group.PUT("package/:id/seed", api.ApiGroupApp.ConfigApi.UpdatePackageSeedStruct)
 		group.POST("package/:id/copy", api.ApiGroupApp.ConfigApi.CopyPackage)
 		group.POST("package/:id/publish", api.ApiGroupApp.ConfigApi.PublishPackage)
 		group.POST("package/:id/transition", api.ApiGroupApp.ConfigApi.TransitionPackage)

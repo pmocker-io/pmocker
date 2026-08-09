@@ -75,3 +75,18 @@ func ParseSeedYAML(bytes []byte) (*ConfigPackageSeed, error) {
 	}
 	return &seed, nil
 }
+
+// SerializeSeedYAML 将结构化配置包序列化为 seed_yaml（前端层级编辑器保存用）
+func SerializeSeedYAML(seed *ConfigPackageSeed) (string, error) {
+	if seed == nil || len(seed.Modules) == 0 {
+		return "", errors.New("seed 无 modules（至少一个模块）")
+	}
+	if seed.Name == "" {
+		seed.Name = "未命名配置包"
+	}
+	b, err := yaml.Marshal(seed)
+	if err != nil {
+		return "", err
+	}
+	return string(b), nil
+}

@@ -3,6 +3,8 @@ apis:
   - {path: /pmocker/config/package, description: 新建配置包, api_group: 初始配置, method: POST}
   - {path: /pmocker/config/package/:id, description: 配置包详情, api_group: 初始配置, method: GET}
   - {path: /pmocker/config/package/:id, description: 更新配置包seed, api_group: 初始配置, method: PUT}
+  - {path: /pmocker/config/package/:id/seed, description: 配置包结构化种子, api_group: 初始配置, method: GET}
+  - {path: /pmocker/config/package/:id/seed, description: 保存配置包结构化种子, api_group: 初始配置, method: PUT}
   - {path: /pmocker/config/package/:id, description: 删除配置包, api_group: 初始配置, method: DELETE}
   - {path: /pmocker/config/package/:id/copy, description: 复制配置包, api_group: 初始配置, method: POST}
   - {path: /pmocker/config/package/:id/publish, description: 发布配置包, api_group: 初始配置, method: POST}

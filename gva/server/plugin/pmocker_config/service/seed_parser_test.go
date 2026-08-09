@@ -94,6 +94,40 @@ func TestParseSeedYAMLInvalid(t *testing.T) {
 	}
 }
 
+func TestSerializeSeedYAMLRoundTrip(t *testing.T) {
+	seed, err := ParseSeedYAML([]byte(testSeedYAML))
+	if err != nil {
+		t.Fatal(err)
+	}
+	y, err := SerializeSeedYAML(seed)
+	if err != nil {
+		t.Fatalf("Serialize: %v", err)
+	}
+	// 反序列化应一致
+	seed2, err := ParseSeedYAML([]byte(y))
+	if err != nil {
+		t.Fatalf("Reparse: %v", err)
+	}
+	if len(seed2.Modules) != 2 {
+		t.Fatalf("roundtrip modules = %d, want 2", len(seed2.Modules))
+	}
+	if seed2.Modules["requirement"].EntityType != "requirement" {
+		t.Fatalf("roundtrip requirement.entityType = %s", seed2.Modules["requirement"].EntityType)
+	}
+	if len(seed2.Modules["requirement"].Projects) != 1 {
+		t.Fatalf("roundtrip projects = %d", len(seed2.Modules["requirement"].Projects))
+	}
+}
+
+func TestSerializeSeedYAMLInvalid(t *testing.T) {
+	if _, err := SerializeSeedYAML(&ConfigPackageSeed{}); err == nil {
+		t.Fatal("空 seed 序列化应报错")
+	}
+	if _, err := SerializeSeedYAML(nil); err == nil {
+		t.Fatal("nil seed 序列化应报错")
+	}
+}
+
 func TestParseSeedYAMLEPSTree(t *testing.T) {
 	epsYAML := `
 name: 组织配置

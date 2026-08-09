@@ -18,6 +18,18 @@ export const getPackage = (id) => {
   return service({ url: `/pmocker/config/package/${id}`, method: 'get' })
 }
 
+// @Summary 配置包结构化种子
+// @Router /pmocker/config/package/:id/seed [get]
+export const getPackageSeedStruct = (id) => {
+  return service({ url: `/pmocker/config/package/${id}/seed`, method: 'get' })
+}
+
+// @Summary 保存配置包结构化种子
+// @Router /pmocker/config/package/:id/seed [put]
+export const updatePackageSeedStruct = (id, data) => {
+  return service({ url: `/pmocker/config/package/${id}/seed`, method: 'put', data })
+}
+
 // @Summary 更新配置包seed
 // @Router /pmocker/config/package/:id [put]
 export const updatePackageSeed = (id, data) => {

@@ -242,4 +242,43 @@ func (a *ConfigApi) Export(c *gin.Context) {
 	response.OkWithMessage("导出成功: "+destDir, c)
 }
 
+// GetPackageSeedStruct 获取配置包结构化种子（前端层级编辑器）
+// @Summary 获取配置包结构化种子
+// @Tags 初始配置
+// @Security ApiKeyAuth
+// @Param id path int true "配置包ID"
+// @Success 200 {object} response.Response{data=object,msg=string}
+// @Router /pmocker/config/package/{id}/seed [get]
+func (a *ConfigApi) GetPackageSeedStruct(c *gin.Context) {
+	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
+	seed, err := pkgSvc.GetSeedStruct(c.Request.Context(), uint(id))
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	response.OkWithData(seed, c)
+}
+
+// UpdatePackageSeedStruct 保存配置包结构化种子（前端层级编辑器）
+// @Summary 保存配置包结构化种子
+// @Tags 初始配置
+// @Security ApiKeyAuth
+// @Param id path int true "配置包ID"
+// @Param data body object true "结构化 seed"
+// @Success 200 {object} response.Response{msg=string}
+// @Router /pmocker/config/package/{id}/seed [put]
+func (a *ConfigApi) UpdatePackageSeedStruct(c *gin.Context) {
+	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
+	var seed configService.ConfigPackageSeed
+	if err := c.ShouldBindJSON(&seed); err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	if err := pkgSvc.UpdateSeedStruct(c.Request.Context(), uint(id), &seed); err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	response.OkWithMessage("已保存", c)
+}
+
 var _ = global.GVA_DB
