@@ -84,6 +84,7 @@ type PMWorkflowDef struct {
 	EntityType     string `json:"entityType" gorm:"size:64;comment:实体类型"`
 	Trigger        string `json:"trigger" gorm:"size:32;comment:触发条件"`
 	DefinitionJSON string `json:"definitionJson" gorm:"type:text;comment:定义JSON"`
+	Status         string `json:"status" gorm:"size:16;default:published;comment:配置状态"`
 }
 
 func (PMWorkflowDef) TableName() string { return "pm_workflow_defs" }

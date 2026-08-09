@@ -74,6 +74,7 @@ func registerTables() {
 		pmocker.PMFieldDef{},
 		pmocker.PMRelationType{},
 		pmocker.PMFieldVersion{},
+		pmocker.PMStateDef{},
 		pmocker.PMEntity{},
 		pmocker.PMAttr{},
 		pmocker.PMRelation{},

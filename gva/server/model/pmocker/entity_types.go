@@ -12,6 +12,7 @@ type PMEntityType struct {
 	Name       string `json:"name" gorm:"size:128;comment:名称"`
 	Icon       string `json:"icon" gorm:"size:64;comment:图标"`
 	IconColor  string `json:"iconColor" gorm:"size:16;comment:图标颜色"`
+	Status     string `json:"status" gorm:"size:16;default:published;comment:配置状态 draft/reviewing/published/archived"`
 }
 
 func (PMEntityType) TableName() string { return "pm_entity_types" }
@@ -26,6 +27,7 @@ type PMFieldDef struct {
 	OptionsJSON   string `json:"optionsJson" gorm:"type:text;comment:选项JSON"`
 	DefaultValue  string `json:"defaultValue" gorm:"type:text;comment:默认值"`
 	Validators    string `json:"validators" gorm:"type:text;comment:校验规则JSON"`
+	Status        string `json:"status" gorm:"size:16;default:published;comment:配置状态 draft/reviewing/published/archived"`
 }
 
 func (PMFieldDef) TableName() string { return "pm_field_defs" }
@@ -38,6 +40,7 @@ type PMRelationType struct {
 	SrcType     string `json:"srcType" gorm:"size:64;comment:源实体类型"`
 	DstType     string `json:"dstType" gorm:"size:64;comment:目标实体类型"`
 	Directional bool   `json:"directional" gorm:"default:true;comment:是否有向"`
+	Status      string `json:"status" gorm:"size:16;default:published;comment:配置状态 draft/reviewing/published/archived"`
 }
 
 func (PMRelationType) TableName() string { return "pm_relation_types" }
