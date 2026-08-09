@@ -35,7 +35,50 @@ func TestReadAttrDecimalCompatibleWithValInt(t *testing.T) {
 	}
 }
 
-// TestCalcByCountCompletedStatus 验证任务完成度按 completed 状态统计（对齐 schema states）。
+// TestCalcProjectProgressWBSFallsBackToHours 验证 wbs 算法在无 pm_wbs_nodes 时回退工时算法。
+func TestCalcProjectProgressWBSFallsBackToHours(t *testing.T) {
+	db := testutil.NewMemoryDB(t, &pmocker.PMEntity{}, &pmocker.PMAttr{}, &pmocker.PMWBSNode{})
+
+	// 项目指定 wbs 算法
+	p := &pmocker.PMEntity{ProjectID: 0, EntityType: "eps_node", Title: "P", Status: "active"}
+	if err := db.Create(p).Error; err != nil {
+		t.Fatal(err)
+	}
+	if err := writeAttrString(p.ID, "progress_algo", "wbs"); err != nil {
+		t.Fatal(err)
+	}
+
+	// 2 个任务：hours=100 progress=100, hours=100 progress=50
+	for _, tt := range []struct {
+		title string
+		h, pr float64
+	}{
+		{"t1", 100, 100},
+		{"t2", 100, 50},
+	} {
+		tk := &pmocker.PMEntity{ProjectID: p.ID, EntityType: "task", Title: tt.title, Status: "in_progress"}
+		if err := db.Create(tk).Error; err != nil {
+			t.Fatal(err)
+		}
+		if err := writeAttrDecimal(tk.ID, "estimated_hours", tt.h); err != nil {
+			t.Fatal(err)
+		}
+		if err := writeAttrDecimal(tk.ID, "progress", tt.pr); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	s := &ProgressService{}
+	got, err := s.CalcProjectProgress(p.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// 工时加权：(100*100/100 + 100*50/100) / 200 * 100 = 75
+	if got != 75 {
+		t.Fatalf("CalcProjectProgress(wbs fallback) = %v, want 75", got)
+	}
+}
+
 func TestCalcByCountCompletedStatus(t *testing.T) {
 	db := testutil.NewMemoryDB(t, &pmocker.PMEntity{})
 

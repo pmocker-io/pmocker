@@ -118,7 +118,15 @@ func (s *ProgressService) CalcProjectProgress(projectID uint) (float64, error) {
 	case "hours":
 		return s.CalcByHours(projectID)
 	case "wbs":
-		return s.CalcByWBS(projectID)
+		p, err := s.CalcByWBS(projectID)
+		if err != nil {
+			return 0, err
+		}
+		if p > 0 {
+			return p, nil
+		}
+		// 无 pm_wbs_nodes（种子直插未建 WBS 树）时回退工时算法，避免完成度恒为 0
+		return s.CalcByHours(projectID)
 	case "count":
 		return s.CalcByCount(projectID)
 	default:
