@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sort"
 
 	"github.com/flipped-aurora/gin-vue-admin/server/model/pmocker"
 	"gorm.io/gorm"
@@ -12,35 +13,47 @@ import (
 // SeedSyncService 配置包发布时同步 seed_yaml 到运行表
 type SeedSyncService struct{}
 
-// Sync 发布同步：seed_yaml → pm_entity_types/pm_field_defs/pm_state_defs/pm_entities/pm_attrs
+// Sync 发布同步：遍历所有模块，seed_yaml → pm_entity_types/pm_field_defs/pm_state_defs/pm_entities/pm_attrs
 func (s *SeedSyncService) Sync(ctx context.Context, db *gorm.DB, seed *ConfigPackageSeed) error {
-	if err := s.SyncEntityType(ctx, db, seed); err != nil {
+	// 模块名排序，保证确定性（EPS 先同步，业务模块后）
+	for _, module := range sortedModuleKeys(seed.Modules) {
+		ms := seed.Modules[module]
+		if err := s.syncModule(ctx, db, module, &ms); err != nil {
+			return fmt.Errorf("模块 %s 同步失败: %w", module, err)
+		}
+	}
+	return nil
+}
+
+// syncModule 同步单个模块（实体类型/字段/状态/项目种子）
+func (s *SeedSyncService) syncModule(ctx context.Context, db *gorm.DB, module string, ms *ModuleSeed) error {
+	if err := s.SyncEntityType(ctx, db, module, ms); err != nil {
 		return err
 	}
-	if err := s.SyncFields(ctx, db, seed); err != nil {
+	if err := s.SyncFields(ctx, db, ms); err != nil {
 		return err
 	}
-	if err := s.SyncStates(ctx, db, seed); err != nil {
+	if err := s.SyncStates(ctx, db, ms); err != nil {
 		return err
 	}
-	return s.SyncProjectEntities(ctx, db, seed)
+	return s.SyncProjectEntities(ctx, db, module, ms)
 }
 
 // SyncEntityType 同步实体类型（upsert，published）
-func (s *SeedSyncService) SyncEntityType(ctx context.Context, db *gorm.DB, seed *ConfigPackageSeed) error {
+func (s *SeedSyncService) SyncEntityType(ctx context.Context, db *gorm.DB, module string, ms *ModuleSeed) error {
 	et := pmocker.PMEntityType{
-		TypeCode:   seed.EntityType,
-		ModuleCode: seed.Module,
-		Name:       seed.Name,
+		TypeCode:   ms.EntityType,
+		ModuleCode: module,
+		Name:       ms.Name,
 		Status:     "published",
 	}
-	return db.Where(pmocker.PMEntityType{TypeCode: seed.EntityType}).
-		Assign(et).FirstOrCreate(&pmocker.PMEntityType{TypeCode: seed.EntityType}).Error
+	return db.Where(pmocker.PMEntityType{TypeCode: ms.EntityType}).
+		Assign(et).FirstOrCreate(&pmocker.PMEntityType{TypeCode: ms.EntityType}).Error
 }
 
 // SyncFields 同步字段定义（upsert，published）
-func (s *SeedSyncService) SyncFields(ctx context.Context, db *gorm.DB, seed *ConfigPackageSeed) error {
-	for _, f := range seed.Fields {
+func (s *SeedSyncService) SyncFields(ctx context.Context, db *gorm.DB, ms *ModuleSeed) error {
+	for _, f := range ms.Fields {
 		optionsJSON := ""
 		if len(f.Options) > 0 {
 			b, err := json.Marshal(f.Options)
@@ -50,7 +63,7 @@ func (s *SeedSyncService) SyncFields(ctx context.Context, db *gorm.DB, seed *Con
 			optionsJSON = string(b)
 		}
 		fd := pmocker.PMFieldDef{
-			EntityType:   seed.EntityType,
+			EntityType:   ms.EntityType,
 			FieldKey:     f.Key,
 			FieldLabel:   f.Label,
 			DataType:     f.DataType,
@@ -58,8 +71,8 @@ func (s *SeedSyncService) SyncFields(ctx context.Context, db *gorm.DB, seed *Con
 			DefaultValue: f.Default,
 			Status:       "published",
 		}
-		if err := db.Where(pmocker.PMFieldDef{EntityType: seed.EntityType, FieldKey: f.Key}).
-			Assign(fd).FirstOrCreate(&pmocker.PMFieldDef{EntityType: seed.EntityType, FieldKey: f.Key}).Error; err != nil {
+		if err := db.Where(pmocker.PMFieldDef{EntityType: ms.EntityType, FieldKey: f.Key}).
+			Assign(fd).FirstOrCreate(&pmocker.PMFieldDef{EntityType: ms.EntityType, FieldKey: f.Key}).Error; err != nil {
 			return err
 		}
 	}
@@ -67,10 +80,10 @@ func (s *SeedSyncService) SyncFields(ctx context.Context, db *gorm.DB, seed *Con
 }
 
 // SyncStates 同步状态定义 + 流转规则到 pm_state_defs（upsert）
-func (s *SeedSyncService) SyncStates(ctx context.Context, db *gorm.DB, seed *ConfigPackageSeed) error {
-	for _, st := range seed.States {
+func (s *SeedSyncService) SyncStates(ctx context.Context, db *gorm.DB, ms *ModuleSeed) error {
+	for _, st := range ms.States {
 		var actions []map[string]interface{}
-		for _, tr := range seed.Transitions {
+		for _, tr := range ms.Transitions {
 			if tr.From != st.Status {
 				continue
 			}
@@ -90,15 +103,15 @@ func (s *SeedSyncService) SyncStates(ctx context.Context, db *gorm.DB, seed *Con
 			actionsJSON = string(b)
 		}
 		sd := pmocker.PMStateDef{
-			EntityType:   seed.EntityType,
+			EntityType:   ms.EntityType,
 			Status:       st.Status,
 			Label:        st.Label,
 			TagType:      st.TagType,
 			ActionsJSON:  actionsJSON,
 			ConfigStatus: "published",
 		}
-		if err := db.Where("entity_type = ? AND status = ?", seed.EntityType, st.Status).
-			Assign(sd).FirstOrCreate(&pmocker.PMStateDef{EntityType: seed.EntityType, Status: st.Status}).Error; err != nil {
+		if err := db.Where("entity_type = ? AND status = ?", ms.EntityType, st.Status).
+			Assign(sd).FirstOrCreate(&pmocker.PMStateDef{EntityType: ms.EntityType, Status: st.Status}).Error; err != nil {
 			return err
 		}
 	}
@@ -106,10 +119,10 @@ func (s *SeedSyncService) SyncStates(ctx context.Context, db *gorm.DB, seed *Con
 }
 
 // SyncProjectEntities 同步项目实体种子（pm_entities + pm_attrs）
-// EPS 配置包的 projects 为树层级（仅建 EPS 节点）；业务配置包通过 project_id/project_code + entities 建业务实体。
-func (s *SeedSyncService) SyncProjectEntities(ctx context.Context, db *gorm.DB, seed *ConfigPackageSeed) error {
-	for _, p := range seed.Projects {
-		if seed.EntityType == "eps_node" {
+// EPS 模块的 projects 为树层级（仅建 EPS 节点）；业务模块通过 project_code/project_id + entities 建业务实体。
+func (s *SeedSyncService) SyncProjectEntities(ctx context.Context, db *gorm.DB, module string, ms *ModuleSeed) error {
+	for _, p := range ms.Projects {
+		if ms.EntityType == "eps_node" {
 			if err := s.syncEPSTree(ctx, db, &p, 0); err != nil {
 				return err
 			}
@@ -126,7 +139,7 @@ func (s *SeedSyncService) SyncProjectEntities(ctx context.Context, db *gorm.DB, 
 		}
 		for _, entities := range p.Entities {
 			for _, ent := range entities {
-				if err := s.syncEntity(ctx, db, seed.EntityType, projectID, ent); err != nil {
+				if err := s.syncEntity(ctx, db, ms.EntityType, projectID, ent); err != nil {
 					return err
 				}
 			}
@@ -145,6 +158,26 @@ func resolveProjectID(db *gorm.DB, code string) (uint, error) {
 		return 0, fmt.Errorf("项目编码 %s 未找到对应 EPS 项目: %w", code, err)
 	}
 	return node.ID, nil
+}
+
+// sortedModuleKeys 模块名排序（EPS 优先，其余按字母序）
+func sortedModuleKeys(mods map[string]ModuleSeed) []string {
+	keys := make([]string, 0, len(mods))
+	for k := range mods {
+		keys = append(keys, k)
+	}
+	// 简单排序：eps 放最前，其余保持插入序（map 遍历无序，但 sync 幂等，顺序影响仅 EPS 先建项目）
+	// 用稳定排序保证 EPS 模块优先
+	sort.Slice(keys, func(i, j int) bool {
+		if keys[i] == "eps" {
+			return true
+		}
+		if keys[j] == "eps" {
+			return false
+		}
+		return keys[i] < keys[j]
+	})
+	return keys
 }
 
 // syncEPSTree 递归创建 EPS 树节点
@@ -193,7 +226,6 @@ func (s *SeedSyncService) syncEPSTree(ctx context.Context, db *gorm.DB, p *Proje
 // syncEntity 创建/更新单个业务实体（含 attrs），按 entity_type+project_id+title 幂等
 func (s *SeedSyncService) syncEntity(ctx context.Context, db *gorm.DB, entityType string, projectID uint, ent map[string]interface{}) error {
 	title, _ := ent["title"].(string)
-	// 兼容 name/username 字段作为标题（业务种子常用字段名）
 	if title == "" {
 		if v, ok := ent["name"].(string); ok {
 			title = v

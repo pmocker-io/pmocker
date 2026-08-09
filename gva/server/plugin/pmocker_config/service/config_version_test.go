@@ -56,7 +56,7 @@ func TestRollbackRestoresSeedYAML(t *testing.T) {
 	}
 
 	// 修改 seed_yaml 并再次发布（v2）
-	newSeed := "entity_type: risk\nmodule: risk\nname: 风险管理V2\n"
+	newSeed := "name: 风险管理V2\nmodules:\n  risk:\n    entity_type: risk\n    name: 风险管理V2\n    fields: []\n    states: []\n    transitions: []\n"
 	if err := s.UpdateSeed(ctx, pkg.ID, newSeed); err != nil {
 		t.Fatal(err)
 	}

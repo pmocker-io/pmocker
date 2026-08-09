@@ -43,14 +43,21 @@ type BusinessProject struct {
 
 // ===== 配置包 seed_yaml 结构 =====
 
+// ConfigSeed 聚合配置包：一个配置包 = 所有模块的完整种子集合
 type ConfigSeed struct {
-	EntityType  string          `yaml:"entity_type"`
-	Module      string          `yaml:"module"`
-	Name        string          `yaml:"name"`
-	Fields      []FieldSeed     `yaml:"fields"`
-	States      []StateSeed     `yaml:"states"`
+	Name        string                `yaml:"name"`
+	Description string                `yaml:"description,omitempty"`
+	Modules     map[string]ModuleSeed `yaml:"modules"`
+}
+
+// ModuleSeed 单个模块种子定义
+type ModuleSeed struct {
+	EntityType  string           `yaml:"entity_type"`
+	Name        string           `yaml:"name"`
+	Fields      []FieldSeed      `yaml:"fields"`
+	States      []StateSeed      `yaml:"states"`
 	Transitions []TransitionSeed `yaml:"transitions"`
-	Projects    []ProjectSeed   `yaml:"projects"`
+	Projects    []ProjectSeed    `yaml:"projects"`
 }
 
 type FieldSeed struct {
@@ -177,27 +184,36 @@ func main() {
 	}
 	fmt.Printf("读取 %d 个项目\n", len(seed.Projects))
 
-	// 生成 EPS 配置包（树层级）
-	epsSeed := buildEPSCofig(seed.Projects)
-	writePackage("eps", epsSeed)
-
-	// 生成各业务模块配置包
-	for module, et := range moduleEntityType {
-		schema, err := loadSchema(root, module, et)
-		if err != nil {
-			fmt.Printf("跳过 %s: %v\n", module, err)
-			continue
-		}
-		pkg := buildModuleConfig(module, et, schema, seed.Projects)
-		writePackage(module, pkg)
+	// 生成单个聚合配置包（所有模块的完整种子集合）
+	agg := buildAggregateConfig(seed.Projects, root)
+	b, err := yaml.Marshal(agg)
+	if err != nil {
+		fmt.Println("marshal 失败:", err)
+		os.Exit(1)
 	}
-	fmt.Println("配置包 seed_yaml 已写入 gva/server/plugin/pmocker_config/seed/")
+	writePackage("pmbok6-hybrid", b)
+	fmt.Println("聚合配置包 seed_yaml 已写入 gva/server/plugin/pmocker_config/seed/")
 }
 
-// buildEPSCofig 生成 EPS 配置包 seed_yaml
-func buildEPSCofig(projects []BusinessProject) []byte {
-	cfg := ConfigSeed{
-		EntityType: "eps_node", Module: "eps", Name: "组织EPS",
+// buildAggregateConfig 生成聚合配置包：一个配置包 = 所有模块的完整种子
+func buildAggregateConfig(projects []BusinessProject, root string) *ConfigSeed {
+	agg := &ConfigSeed{
+		Name:        "PMBOK 第六版混合型配置",
+		Description: "PMocker 默认配置包：包含全部 10 个模块的实体类型/字段/状态/流转/项目种子",
+		Modules:     map[string]ModuleSeed{},
+	}
+
+	// 1. EPS 模块（树层级）
+	epsProjects := []ProjectSeed{}
+	for _, p := range projects {
+		epsProjects = append(epsProjects, ProjectSeed{
+			Code: p.Code, Name: p.Name, Type: "project",
+			Status: p.Status, Priority: p.Priority,
+		})
+	}
+	agg.Modules["eps"] = ModuleSeed{
+		EntityType: "eps_node",
+		Name:       "组织EPS",
 		Fields: []FieldSeed{
 			{Key: "type", Label: "节点类型", DataType: "enum", Options: []string{"group", "division", "program", "project", "subproject"}},
 			{Key: "code", Label: "编码", DataType: "string"},
@@ -209,15 +225,50 @@ func buildEPSCofig(projects []BusinessProject) []byte {
 			{Status: "archived", Label: "已归档", TagType: "info"},
 			{Status: "paused", Label: "已暂停", TagType: "warning"},
 		},
+		Projects: epsProjects,
 	}
-	for _, p := range projects {
-		cfg.Projects = append(cfg.Projects, ProjectSeed{
-			Code: p.Code, Name: p.Name, Type: "project",
-			Status: p.Status, Priority: p.Priority,
-		})
+
+	// 2. 各业务模块
+	for module, et := range moduleEntityType {
+		schema, err := loadSchema(root, module, et)
+		if err != nil {
+			fmt.Printf("跳过模块 %s: %v\n", module, err)
+			continue
+		}
+		ms := ModuleSeed{
+			EntityType:  et,
+			Name:        moduleName[module],
+			Fields:      []FieldSeed{},
+			States:      []StateSeed{},
+			Transitions: []TransitionSeed{},
+			Projects:    []ProjectSeed{},
+		}
+		// 字段
+		for _, f := range schema.Fields {
+			fs := FieldSeed{Key: f.FieldKey, Label: f.FieldLabel, DataType: f.DataType, Default: f.DefaultValue}
+			if f.OptionsJSON != "" {
+				var opts []string
+				if err := json.Unmarshal([]byte(f.OptionsJSON), &opts); err == nil {
+					fs.Options = opts
+				}
+			}
+			ms.Fields = append(ms.Fields, fs)
+		}
+		// 状态
+		for _, s := range schema.States {
+			ms.States = append(ms.States, StateSeed{Status: s, Label: stateLabelFor(s), TagType: stateTag(s)})
+		}
+		// 简化流转
+		ms.Transitions = buildDefaultTransitions(schema.States)
+		// 项目实体种子
+		for _, p := range projects {
+			ps := ProjectSeed{ProjectCode: p.Code, Name: p.Name, Type: "project", Status: p.Status, Priority: p.Priority, Entities: map[string][]map[string]interface{}{}}
+			ps.Entities[et] = extractEntities(module, p)
+			ms.Projects = append(ms.Projects, ps)
+		}
+		agg.Modules[module] = ms
 	}
-	b, _ := yaml.Marshal(cfg)
-	return b
+	return agg
 }
 
 // loadSchema 读取模块 schema.yaml 的字段/状态
@@ -244,39 +295,6 @@ func loadSchema(root, module, entityType string) (*SchemaYaml, error) {
 		return &schema, nil
 	}
 	return nil, fmt.Errorf("schema.yaml 中无 entity_type=%s", entityType)
-}
-
-// buildModuleConfig 生成业务模块配置包
-func buildModuleConfig(module, entityType string, schema *SchemaYaml, projects []BusinessProject) []byte {
-	cfg := ConfigSeed{
-		EntityType: entityType, Module: module, Name: moduleName[module],
-		Fields: []FieldSeed{}, States: []StateSeed{}, Transitions: []TransitionSeed{},
-	}
-	// 字段
-	for _, f := range schema.Fields {
-		fs := FieldSeed{Key: f.FieldKey, Label: f.FieldLabel, DataType: f.DataType, Default: f.DefaultValue}
-		if f.OptionsJSON != "" {
-			var opts []string
-			if err := json.Unmarshal([]byte(f.OptionsJSON), &opts); err == nil {
-				fs.Options = opts
-			}
-		}
-		cfg.Fields = append(cfg.Fields, fs)
-	}
-	// 状态
-	for _, s := range schema.States {
-		cfg.States = append(cfg.States, StateSeed{Status: s, Label: stateLabelFor(s), TagType: stateTag(s)})
-	}
-	// 简化流转（draft→reviewing→published + 退回）
-	cfg.Transitions = buildDefaultTransitions(schema.States)
-	// 项目实体种子
-	for _, p := range projects {
-		ps := ProjectSeed{ProjectCode: p.Code, Name: p.Name, Type: "project", Status: p.Status, Priority: p.Priority, Entities: map[string][]map[string]interface{}{}}
-		ps.Entities[entityType] = extractEntities(module, p)
-		cfg.Projects = append(cfg.Projects, ps)
-	}
-	b, _ := yaml.Marshal(cfg)
-	return b
 }
 
 // extractEntities 从项目提取该模块的实体种子

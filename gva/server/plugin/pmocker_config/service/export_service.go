@@ -23,8 +23,8 @@ func (s *ExportService) Export(ctx context.Context, destDir string) error {
 		return err
 	}
 
-	// 2. 聚合每个配置包的 seed_yaml 到 schema（实体类型/字段/状态/流转）
-	schemas := make([]map[string]interface{}, 0, len(pkgs))
+	// 2. 聚合每个配置包的所有模块到 schema（实体类型/字段/状态/流转）
+	schemas := make([]map[string]interface{}, 0)
 	allSeeds := make([]string, 0, len(pkgs))
 	for _, pkg := range pkgs {
 		if pkg.SeedYAML == "" {
@@ -35,14 +35,17 @@ func (s *ExportService) Export(ctx context.Context, destDir string) error {
 			return err
 		}
 		allSeeds = append(allSeeds, pkg.SeedYAML)
-		schemas = append(schemas, map[string]interface{}{
-			"entity_type": seed.EntityType,
-			"module":      seed.Module,
-			"name":        seed.Name,
-			"fields":      seed.Fields,
-			"states":      seed.States,
-			"transitions": seed.Transitions,
-		})
+		// 每个模块生成一个 schema 段
+		for mod, ms := range seed.Modules {
+			schemas = append(schemas, map[string]interface{}{
+				"entity_type": ms.EntityType,
+				"module":      mod,
+				"name":        ms.Name,
+				"fields":      ms.Fields,
+				"states":      ms.States,
+				"transitions": ms.Transitions,
+			})
+		}
 	}
 
 	// 3. 写 schema.yaml（配置包聚合定义）

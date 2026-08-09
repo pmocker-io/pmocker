@@ -27,19 +27,21 @@ func TestPublishWithProjectCode(t *testing.T) {
 
 	// 2. 建 schedule 配置包（project_code: PROJ_A）
 	seed := `
-entity_type: task
-module: schedule
-name: 进度管理
-fields:
-  - {key: code, label: 任务编号, data_type: string}
-states:
-  - {status: planned, label: 计划中, tag_type: info}
-transitions: []
-projects:
-  - project_code: PROJ_A
-    entities:
-      task:
-        - {title: 需求调研, status: planned, priority: 2}
+name: 进度配置
+modules:
+  schedule:
+    entity_type: task
+    name: 进度管理
+    fields:
+      - {key: code, label: 任务编号, data_type: string}
+    states:
+      - {status: planned, label: 计划中, tag_type: info}
+    transitions: []
+    projects:
+      - project_code: PROJ_A
+        entities:
+          task:
+            - {title: 需求调研, status: planned, priority: 2}
 `
 	s := &ConfigPackageService{}
 	if err := s.Create(ctx, pmocker.PMConfigPackage{

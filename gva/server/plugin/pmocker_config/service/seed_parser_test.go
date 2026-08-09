@@ -5,27 +5,37 @@ import (
 )
 
 const testSeedYAML = `
-entity_type: requirement
-module: requirement
-name: 需求管理
-fields:
-  - {key: code, label: 需求编码, data_type: string}
-  - {key: priority, label: 优先级, data_type: enum, options: [P0,P1,P2,P3], default: P2}
-  - {key: source, label: 来源, data_type: enum, options: [客户,市场,内部,合规]}
-states:
-  - {status: draft, label: 草稿, tag_type: info}
-  - {status: reviewing, label: 评审中, tag_type: warning}
-  - {status: published, label: 已发布, tag_type: success}
-transitions:
-  - {from: draft, to: reviewing, action: submit}
-  - {from: reviewing, to: published, action: approve}
-  - {from: reviewing, to: draft, action: reject, rollback: true}
-projects:
-  - project_id: 3
-    entities:
-      requirement:
-        - {title: 排产算法, status: published, priority: P0}
-        - {title: 可视化看板, status: draft, priority: P1}
+name: 测试配置包
+modules:
+  requirement:
+    entity_type: requirement
+    name: 需求管理
+    fields:
+      - {key: code, label: 需求编码, data_type: string}
+      - {key: priority, label: 优先级, data_type: enum, options: [P0,P1,P2,P3], default: P2}
+      - {key: source, label: 来源, data_type: enum, options: [客户,市场,内部,合规]}
+    states:
+      - {status: draft, label: 草稿, tag_type: info}
+      - {status: reviewing, label: 评审中, tag_type: warning}
+      - {status: published, label: 已发布, tag_type: success}
+    transitions:
+      - {from: draft, to: reviewing, action: submit}
+      - {from: reviewing, to: published, action: approve}
+      - {from: reviewing, to: draft, action: reject, rollback: true}
+    projects:
+      - project_code: PROJ_A
+        entities:
+          requirement:
+            - {title: 排产算法, status: published, priority: P0}
+            - {title: 可视化看板, status: draft, priority: P1}
+  schedule:
+    entity_type: task
+    name: 进度管理
+    fields:
+      - {key: progress, label: 完成度, data_type: decimal}
+    states:
+      - {status: planned, label: 计划中, tag_type: info}
+    transitions: []
 `
 
 func TestParseSeedYAML(t *testing.T) {
@@ -33,36 +43,42 @@ func TestParseSeedYAML(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ParseSeedYAML: %v", err)
 	}
-	if seed.EntityType != "requirement" {
-		t.Fatalf("EntityType = %s, want requirement", seed.EntityType)
+	if seed.Name != "测试配置包" {
+		t.Fatalf("Name = %s, want 测试配置包", seed.Name)
 	}
-	if len(seed.Fields) != 3 {
-		t.Fatalf("Fields count = %d, want 3", len(seed.Fields))
+	if len(seed.Modules) != 2 {
+		t.Fatalf("Modules count = %d, want 2", len(seed.Modules))
 	}
-	if seed.Fields[1].Key != "priority" || len(seed.Fields[1].Options) != 4 || seed.Fields[1].Default != "P2" {
-		t.Fatalf("priority 字段解析错误: %+v", seed.Fields[1])
+	req := seed.Modules["requirement"]
+	if req.EntityType != "requirement" {
+		t.Fatalf("requirement.entityType = %s", req.EntityType)
 	}
-	if len(seed.States) != 3 {
-		t.Fatalf("States count = %d, want 3", len(seed.States))
+	if len(req.Fields) != 3 {
+		t.Fatalf("requirement fields count = %d, want 3", len(req.Fields))
 	}
-	if len(seed.Transitions) != 3 {
-		t.Fatalf("Transitions count = %d, want 3", len(seed.Transitions))
+	if req.Fields[1].Key != "priority" || len(req.Fields[1].Options) != 4 || req.Fields[1].Default != "P2" {
+		t.Fatalf("priority 字段解析错误: %+v", req.Fields[1])
 	}
-	if !seed.Transitions[2].Rollback {
+	if len(req.States) != 3 {
+		t.Fatalf("requirement states count = %d, want 3", len(req.States))
+	}
+	if len(req.Transitions) != 3 {
+		t.Fatalf("requirement transitions count = %d, want 3", len(req.Transitions))
+	}
+	if !req.Transitions[2].Rollback {
 		t.Fatal("reject 应标记 rollback=true")
 	}
-	if len(seed.Projects) != 1 {
-		t.Fatalf("Projects count = %d, want 1", len(seed.Projects))
+	if len(req.Projects) != 1 {
+		t.Fatalf("requirement projects count = %d, want 1", len(req.Projects))
 	}
-	if seed.Projects[0].ProjectID != 3 {
-		t.Fatalf("ProjectID = %d, want 3", seed.Projects[0].ProjectID)
-	}
-	reqs := seed.Projects[0].Entities["requirement"]
+	reqs := req.Projects[0].Entities["requirement"]
 	if len(reqs) != 2 {
 		t.Fatalf("requirement entities count = %d, want 2", len(reqs))
 	}
-	if reqs[0]["title"] != "排产算法" {
-		t.Fatalf("entity title = %v, want 排产算法", reqs[0]["title"])
+	// schedule 模块
+	sch := seed.Modules["schedule"]
+	if sch.EntityType != "task" {
+		t.Fatalf("schedule.entityType = %s, want task", sch.EntityType)
 	}
 }
 
@@ -73,41 +89,46 @@ func TestParseSeedYAMLInvalid(t *testing.T) {
 	if _, err := ParseSeedYAML([]byte("")); err == nil {
 		t.Fatal("空 YAML 应返回错误")
 	}
+	if _, err := ParseSeedYAML([]byte("name: x\nmodules: {}\n")); err == nil {
+		t.Fatal("空 modules 应返回错误")
+	}
 }
 
 func TestParseSeedYAMLEPSTree(t *testing.T) {
 	epsYAML := `
-entity_type: eps_node
-module: eps
-name: 组织EPS
-fields:
-  - {key: type, label: 节点类型, data_type: enum, options: [group,division,program,project]}
-  - {key: code, label: 编码, data_type: string}
-states:
-  - {status: active, label: 进行中, tag_type: success}
-transitions: []
-projects:
-  - code: GROUP_HQ
-    name: 集团总部
-    type: group
-    children:
-      - code: PROJ_A
-        name: 智能排产系统研发
-        type: project
-        status: active
-        priority: 1
+name: 组织配置
+modules:
+  eps:
+    entity_type: eps_node
+    name: 组织EPS
+    fields:
+      - {key: type, label: 节点类型, data_type: enum, options: [group,division,program,project]}
+    states:
+      - {status: active, label: 进行中, tag_type: success}
+    transitions: []
+    projects:
+      - code: GROUP_HQ
+        name: 集团总部
+        type: group
+        children:
+          - code: PROJ_A
+            name: 智能排产系统研发
+            type: project
+            status: active
+            priority: 1
 `
 	seed, err := ParseSeedYAML([]byte(epsYAML))
 	if err != nil {
 		t.Fatalf("ParseSeedYAML(eps): %v", err)
 	}
-	if seed.EntityType != "eps_node" {
-		t.Fatalf("EntityType = %s, want eps_node", seed.EntityType)
+	eps := seed.Modules["eps"]
+	if eps.EntityType != "eps_node" {
+		t.Fatalf("eps.entityType = %s, want eps_node", eps.EntityType)
 	}
-	if len(seed.Projects) != 1 {
-		t.Fatalf("Projects count = %d, want 1", len(seed.Projects))
+	if len(eps.Projects) != 1 {
+		t.Fatalf("eps projects count = %d, want 1", len(eps.Projects))
 	}
-	root := seed.Projects[0]
+	root := eps.Projects[0]
 	if root.Code != "GROUP_HQ" || root.Type != "group" {
 		t.Fatalf("root = %+v", root)
 	}

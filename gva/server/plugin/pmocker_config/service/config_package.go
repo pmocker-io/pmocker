@@ -158,16 +158,30 @@ func (s *ConfigPackageService) LoadSeedPackage(ctx context.Context, code string,
 	if count > 0 {
 		return nil
 	}
-	// 从 seed_yaml 解析基本信息
+	// 从 seed_yaml 解析基本信息（聚合包：EntityType/Module 取首个非 eps 模块）
 	seed, err := ParseSeedYAML([]byte(seedYAML))
 	if err != nil {
 		return err
 	}
+	entityType, module := "", ""
+	for mod, ms := range seed.Modules {
+		if ms.EntityType == "eps_node" {
+			continue
+		}
+		entityType, module = ms.EntityType, mod
+		break
+	}
+	if entityType == "" {
+		for mod, ms := range seed.Modules {
+			entityType, module = ms.EntityType, mod
+			break
+		}
+	}
 	pkg := pmocker.PMConfigPackage{
 		Code:       code,
 		Name:       seed.Name,
-		EntityType: seed.EntityType,
-		Module:     seed.Module,
+		EntityType: entityType,
+		Module:     module,
 		Status:     "draft",
 		SeedYAML:   seedYAML,
 	}
