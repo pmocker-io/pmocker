@@ -15,9 +15,10 @@ type Service struct{}
 
 var ScopeService = new(Service)
 
-// CreateScopeItem 创建范围项
-func (s *Service) CreateScopeItem(ctx context.Context, projectID uint, title string, attrs map[string]interface{}, creatorID uint) (uint, error) {
-	return pmservice.ServiceGroupApp.CreateEntity(ctx, eavtypes.Entity{
+// CreateScopeItem 创建范围项并同时插入 WBS 节点（保证 GetWBS 能查到）。
+// parentID 为 0 表示根节点；非 0 表示作为某 WBS 节点的子节点。
+func (s *Service) CreateScopeItem(ctx context.Context, projectID uint, title string, attrs map[string]interface{}, creatorID uint, parentID uint) (uint, error) {
+	entityID, err := pmservice.ServiceGroupApp.CreateEntity(ctx, eavtypes.Entity{
 		ProjectID:  projectID,
 		EntityType: "scope_item",
 		Title:      title,
@@ -25,6 +26,39 @@ func (s *Service) CreateScopeItem(ctx context.Context, projectID uint, title str
 		CreatedBy:  creatorID,
 		Attrs:      attrs,
 	})
+	if err != nil {
+		return 0, err
+	}
+	// 创建 WBS 节点并关联到新建的 scope_item
+	if _, err := s.ensureWBSNode(ctx, projectID, parentID, entityID); err != nil {
+		// WBS 节点创建失败不影响 entity 已创建的事实，前端可重试或通过 updateScopeItem 补建
+		return entityID, fmt.Errorf("scope_item created(id=%d) but wbs node failed: %w", entityID, err)
+	}
+	return entityID, nil
+}
+
+// ensureWBSNode 创建 WBS 节点：parentID==0 为根节点，否则为子节点。
+func (s *Service) ensureWBSNode(ctx context.Context, projectID uint, parentID uint, entityID uint) (uint, error) {
+	if parentID == 0 {
+		// 根节点：path = 当前项目根节点数量+1, level = 1
+		var rootCount int64
+		if err := global.GVA_DB.WithContext(ctx).Model(&pmocker.PMWBSNode{}).
+			Where("project_id = ? AND parent_id IS NULL", projectID).Count(&rootCount).Error; err != nil {
+			return 0, err
+		}
+		node := pmocker.PMWBSNode{
+			ProjectID: projectID,
+			Path:      fmt.Sprintf("%d", rootCount+1),
+			Level:     1,
+			EntityID:  entityID,
+		}
+		if err := global.GVA_DB.WithContext(ctx).Create(&node).Error; err != nil {
+			return 0, err
+		}
+		return node.ID, nil
+	}
+	// 子节点：依赖父节点 path/level 推导
+	return s.AddWBSChild(ctx, parentID, entityID)
 }
 
 // ListScopeItems 列出项目下的范围项

@@ -29,6 +29,8 @@ entity_types:
       # --- 发起人 + EPS层级 ---
       - {field_key: sponsor_id, field_label: 发起人, data_type: user}
       - {field_key: level, field_label: EPS层级, data_type: int}
+      # --- 项目节点专用：完成率算法（BuildEPSTree 仅展示带此属性的项目节点） ---
+      - {field_key: progress_algo, field_label: 完成率算法, data_type: enum, options_json: '["work_hour_weighted","wbs_level_weighted","task_count_average"]'}
     states: [draft, active, inactive]
     workflows: [eps_node_approve]
 

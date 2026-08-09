@@ -15,12 +15,13 @@ func (a *Api) CreateItem(c *gin.Context) {
 		Title     string                 `json:"title"`
 		Attrs     map[string]interface{} `json:"attrs"`
 		CreatorID uint                   `json:"creatorId"`
+		ParentID  uint                   `json:"parentId"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.FailWithMessage("参数错误: "+err.Error(), c)
 		return
 	}
-	id, err := ServiceGroupApp.CreateScopeItem(c.Request.Context(), req.ProjectID, req.Title, req.Attrs, req.CreatorID)
+	id, err := ServiceGroupApp.CreateScopeItem(c.Request.Context(), req.ProjectID, req.Title, req.Attrs, req.CreatorID, req.ParentID)
 	if err != nil {
 		response.FailWithMessage("创建失败: "+err.Error(), c)
 		return

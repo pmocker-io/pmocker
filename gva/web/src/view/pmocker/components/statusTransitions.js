@@ -69,6 +69,10 @@ export const transitions = {
 
   // 变更管理
   change_request: [
+    // draft: 后端 CreateChangeRequest 强制设为 draft，需经"提交"进入 submitted
+    { status: 'draft', label: '草稿', tagType: 'info', actions: [
+      { label: '提交', target: 'submitted', apiFn: 'updateChange', type: 'primary' },
+    ]},
     { status: 'submitted', label: '已提交', tagType: 'info', actions: [
       { label: '影响分析', target: 'analyzing', apiFn: 'analyzeChange', type: 'primary' },
     ]},
@@ -85,12 +89,14 @@ export const transitions = {
     ]},
     { status: 'rejected', label: '已驳回', tagType: 'danger', actions: [] },
     { status: 'implementing', label: '实施中', tagType: 'primary', actions: [
-      { label: '提交验证', target: 'verifying', apiFn: 'verifyChange', type: 'warning' },
+      // 状态机 verify_pass 后 status=verified（非 verifying）
+      { label: '验证', target: 'verified', apiFn: 'verifyChange', type: 'warning' },
     ]},
-    { status: 'verifying', label: '验证中', tagType: 'warning', actions: [
+    { status: 'verified', label: '已验证', tagType: 'success', actions: [
       { label: '关闭', target: 'closed', apiFn: 'closeChange', type: 'success' },
     ]},
     { status: 'closed', label: '已关闭', tagType: '', actions: [] },
+    { status: 'cancelled', label: '已取消', tagType: '', actions: [] },
   ],
 
   // 风险管理

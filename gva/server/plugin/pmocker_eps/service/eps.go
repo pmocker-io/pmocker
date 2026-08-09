@@ -21,7 +21,37 @@ type TreeNode struct {
 	Children []TreeNode `json:"children"`
 }
 
-func (s *Service) CreateEPSNode(ctx context.Context, projectID uint, name string, attrs map[string]interface{}, creatorID uint) (uint, error) {
+// CreateEPSNode 创建 EPS 节点并自动写入 parent_path 属性，保证 BuildEPSTree 能正确构建层级。
+// parentID 为 0 表示根节点；非 0 表示作为某 EPS 节点的子节点。
+func (s *Service) CreateEPSNode(ctx context.Context, projectID uint, name string, attrs map[string]interface{}, creatorID uint, parentID uint) (uint, error) {
+	if attrs == nil {
+		attrs = map[string]interface{}{}
+	}
+	// 确保 name 字段同步到 attrs（buildTreeFromEntities 优先使用 attrs.name，回退到 Title）
+	if _, ok := attrs["name"]; !ok {
+		attrs["name"] = name
+	}
+	// 计算 parent_path：
+	//   根节点: "/"
+	//   子节点: 父节点 parent_path + 父节点 name + "/"
+	// buildTreeFromEntities 用 joinPath(parent_path, name) 计算 fullPath，
+	// 因此子节点的 parent_path 必须等于父节点的 fullPath。
+	parentPath := "/"
+	if parentID != 0 {
+		parent, err := s.GetEPSNode(ctx, parentID)
+		if err != nil {
+			return 0, fmt.Errorf("parent eps_node not found: %w", err)
+		}
+		parentName := ""
+		if v, ok := parent.Attrs["name"].(string); ok && v != "" {
+			parentName = v
+		} else {
+			parentName = parent.Title
+		}
+		parentParentPath := normalizePath(getStrAttr(parent.Attrs, "parent_path"))
+		parentPath = joinPath(parentParentPath, parentName)
+	}
+	attrs["parent_path"] = parentPath
 	return pmservice.ServiceGroupApp.CreateEntity(ctx, eavtypes.Entity{
 		ProjectID: projectID, EntityType: "eps_node", Title: name, Status: "draft", CreatedBy: creatorID, Attrs: attrs,
 	})
