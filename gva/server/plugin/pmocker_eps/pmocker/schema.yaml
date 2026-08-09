@@ -10,7 +10,7 @@ entity_types:
       - {field_key: type, field_label: 类型, data_type: enum, options_json: '["group","division","department","project_group","project"]'}
       - {field_key: parent_path, field_label: 父路径, data_type: string}
       - {field_key: sort, field_label: 排序, data_type: int}
-      - {field_key: manager_id, field_label: 负责人, data_type: ref}
+      - {field_key: manager_id, field_label: 负责人, data_type: user}
       - {field_key: description, field_label: 描述, data_type: text}
       - {field_key: is_active, field_label: 是否启用, data_type: bool, default_value: true}
       # --- 治理类型 ---
@@ -27,7 +27,7 @@ entity_types:
       - {field_key: health_status, field_label: 健康度, data_type: enum, options_json: '["red","amber","green"]'}
       - {field_key: methodology, field_label: 方法论, data_type: enum, options_json: '["agile","waterfall","hybrid"]'}
       # --- 发起人 + EPS层级 ---
-      - {field_key: sponsor_id, field_label: 发起人, data_type: ref}
+      - {field_key: sponsor_id, field_label: 发起人, data_type: user}
       - {field_key: level, field_label: EPS层级, data_type: int}
     states: [draft, active, inactive]
     workflows: [eps_node_approve]

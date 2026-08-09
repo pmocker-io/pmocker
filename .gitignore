@@ -49,12 +49,21 @@ gva/web/dist/
 .pmock/
 .pmocker*/
 *.pmi
+images/index.json
+images/sha256_*/
 
 # PMocker 二进制/数据目录
 gva/server/bin/
 
 # 临时文件
 /tmp/
+
+# 临时调试脚本（项目为 Go 单一语言栈，禁止入库 Python/Shell 临时脚本）
+*.py
+*.pyc
+__pycache__/
+debug_*.sh
+test_*.sh
 
 # PMocker 实例运行时生成的 MCP Token 文件
 mcp_token.txt
