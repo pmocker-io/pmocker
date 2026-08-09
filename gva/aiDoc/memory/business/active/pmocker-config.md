@@ -31,6 +31,8 @@
 - 架构：方案 A——EAV 元表直接 CRUD + 导出生成 YAML（复用现有表/loader/动态表单）
 - 生效机制：直写 DB，**仅 published 配置生效**（状态机驱动）；动态表单/列表读取时按 published 过滤，提供 `?includeDraft=true` 供配置页预览
 - 状态机：所有配置项统一 `draft → reviewing → published → archived`，archived 可恢复 draft；draft 可删除；简化单人流转（无多人审批）
+- **默认值恒 published**：初始配置管理模块新建配置默认即 published（创建即生效），此默认行为不可修改；已有配置可改状态控制是否生效
+- **自动灌入机制**：运行时动态生效——published 配置被业务查询读取（生效），非 published 被过滤（不生效），改状态立即生效无需重启
 - 复用语义：一键复制为 draft（从任意状态配置复制）
 - 组织架构/岗位/角色/用户/权限：入口跳转 gva superAdmin，不重复建设
 - 导出产物：YAML 三件套写 `images/pmbok6-hybrid/`，供 rebuild 镜像 → v1.1 upgrade

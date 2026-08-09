@@ -38,6 +38,8 @@ PMocker M1-M12 完成，10 模块 + 聚合视图已落地。但项目管理的**
 | 8 | 导出产物 | YAML 三件套（schema.yaml/seed.yaml/menu.yaml）到镜像源 |
 | 9 | 状态管理 | 配置项统一状态机 `draft → reviewing → published → archived`，archived 可恢复 draft，draft 可删除；简化单人流转 |
 | 10 | 复用语义 | 一键复制为 draft |
+| 11 | 默认值恒 published | **初始配置管理模块新建配置默认状态即 `published`（创建即生效），此默认行为不可修改**；已有配置可改状态（draft/reviewing/archived）以控制是否生效 |
+| 12 | 自动灌入机制 | **运行时动态生效**：published 配置被业务查询读取（生效），非 published 被过滤（不生效），改状态立即生效，无需重启 |
 
 ---
 
@@ -166,11 +168,12 @@ gva/server/plugin/pmocker_config/
 | POST | `/config/export` | 导出 YAML 三件套到镜像源 |
 | GET | `/config/stateDefs/public` | 已发布状态流转（前端 statusTransitions 读取） |
 
-### 3.6 published 过滤生效链路
+### 3.6 published 过滤生效链路（运行时动态生效）
 
-- `GetSchema`/`ListEntities`（eav.go）查询时**默认只返回 `status='published'`** 的配置
-- 新增查询参数 `includeDraft=true` 供配置管理页预览全部
+- **生效机制**：`GetSchema`/`ListEntities`（eav.go）查询时**默认只返回 `status='published'`** 的配置；非 published 配置被过滤，**改状态立即生效，无需重启**
+- 新增查询参数 `includeDraft=true` 供配置管理页预览全部（含 draft/reviewing/archived）
 - loader 灌入时标记 `status='published'`
+- **新建配置默认即 published**：初始配置管理模块创建配置时 `status` 默认 `published`（创建即生效），该默认行为在模块内固定，不提供"默认 draft"选项；需要暂不生效时由用户在创建后手动流转为 draft/archived
 
 ---
 
