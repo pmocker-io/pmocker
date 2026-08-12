@@ -145,10 +145,10 @@ const handleSave = async () => {
         status: form.status || 'active'
       })
     } else {
-      // 后端 UpdateNode 期望 Entity{ID, entityType, title, attrs, status}
+      // 后端 UpdateNode 期望 eavtypes.Entity（json tag: id/entity_type/title/attrs/status）
       res = await updateEPSNode({
-        ID: form.ID,
-        entityType: 'eps_node',
+        id: form.ID,
+        entity_type: 'eps_node',
         title: form.title,
         attrs: { ...form.attrs },
         status: form.status || 'active'
@@ -165,7 +165,7 @@ const handleSave = async () => {
 const handleDelete = (data) => {
   ElMessageBox.confirm(`确认删除「${data.name}」及其子节点吗？`, '提示', { type: 'warning' })
     .then(async () => {
-      const res = await deleteEPSNode({ ID: data.id })
+      const res = await deleteEPSNode({ id: data.id })
       if (res.code === 0) {
         ElMessage.success('删除成功')
         loadTree()

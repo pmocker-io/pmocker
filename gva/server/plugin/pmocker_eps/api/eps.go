@@ -135,6 +135,22 @@ func (a *Api) GetTree(c *gin.Context) {
 	response.OkWithData(tree, c)
 }
 
+// FindNode 获取 EPS 节点详情（含 attrs）
+// GET /pmocker/eps/find?ID=xxx
+func (a *Api) FindNode(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Query("ID"), 10, 64)
+	if err != nil || id == 0 {
+		response.FailWithMessage("参数错误: ID 必填", c)
+		return
+	}
+	node, err := ServiceGroupApp.GetEPSNode(c.Request.Context(), uint(id))
+	if err != nil {
+		response.FailWithMessage("查询失败: "+err.Error(), c)
+		return
+	}
+	response.OkWithData(node, c)
+}
+
 func (a *Api) MoveNode(c *gin.Context) {
 	var req struct {
 		NodeID        uint   `json:"nodeId"`

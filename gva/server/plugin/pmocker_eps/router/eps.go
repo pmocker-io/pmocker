@@ -22,5 +22,6 @@ func (r *Eps) Init(public, private *gin.RouterGroup) {
 		g.GET("listNodes", ApiGroupApp.ListNodes)
 		g.GET("listMembers", ApiGroupApp.ListMembers)
 		g.GET("tree", ApiGroupApp.GetTree)
+		g.GET("find", ApiGroupApp.FindNode)
 	}
 }
