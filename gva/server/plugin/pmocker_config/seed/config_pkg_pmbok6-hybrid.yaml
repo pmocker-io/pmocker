@@ -139,12 +139,8 @@ modules:
               action: reject
               rollback: true
         projects:
-            - code: ""
-              project_code: PROJ_A
-              name: 智能排产系统研发
-              type: project
-              status: active
-              priority: 1
+            - project_code: PROJ_A
+              priority: 0
               entities:
                 change_request:
                     - description: 增加换型时间约束
@@ -207,11 +203,7 @@ modules:
                       status: submitted
                       title: 验收标准调整
                       type: process
-            - code: ""
-              project_code: PROJ_B
-              name: 新建厂房工程
-              type: project
-              status: active
+            - project_code: PROJ_B
               priority: 0
               entities:
                 change_request:
@@ -275,12 +267,8 @@ modules:
                       status: submitted
                       title: 验收流程调整
                       type: process
-            - code: ""
-              project_code: PROJ_C
-              name: 高精度温度传感器研发
-              type: project
-              status: active
-              priority: 1
+            - project_code: PROJ_C
+              priority: 0
               entities:
                 change_request:
                     - description: 3x3→4x4
@@ -456,12 +444,8 @@ modules:
               tag_type: info
         transitions: []
         projects:
-            - code: ""
-              project_code: PROJ_A
-              name: 智能排产系统研发
-              type: project
-              status: active
-              priority: 1
+            - project_code: PROJ_A
+              priority: 0
               entities:
                 cost_item:
                     - amount: 150000
@@ -504,11 +488,7 @@ modules:
                       code: C10
                       cost_type: other
                       name: 其他杂费
-            - code: ""
-              project_code: PROJ_B
-              name: 新建厂房工程
-              type: project
-              status: active
+            - project_code: PROJ_B
               priority: 0
               entities:
                 cost_item:
@@ -552,12 +532,8 @@ modules:
                       code: B10
                       cost_type: other
                       name: 其他
-            - code: ""
-              project_code: PROJ_C
-              name: 高精度温度传感器研发
-              type: project
-              status: active
-              priority: 1
+            - project_code: PROJ_C
+              priority: 0
               entities:
                 cost_item:
                     - amount: 108000
@@ -723,12 +699,8 @@ modules:
               action: reject
               rollback: true
         projects:
-            - code: ""
-              project_code: PROJ_A
-              name: 智能排产系统研发
-              type: project
-              status: active
-              priority: 1
+            - project_code: PROJ_A
+              priority: 0
               entities:
                 deliverable:
                     - code: D01
@@ -831,11 +803,7 @@ modules:
                       priority: 1
                       status: draft
                       title: 结项报告
-            - code: ""
-              project_code: PROJ_B
-              name: 新建厂房工程
-              type: project
-              status: active
+            - project_code: PROJ_B
               priority: 0
               entities:
                 deliverable:
@@ -939,12 +907,8 @@ modules:
                       priority: 1
                       status: draft
                       title: 结项报告
-            - code: ""
-              project_code: PROJ_C
-              name: 高精度温度传感器研发
-              type: project
-              status: active
-              priority: 1
+            - project_code: PROJ_C
+              priority: 0
               entities:
                 deliverable:
                     - code: K01
@@ -1090,19 +1054,16 @@ modules:
         transitions: []
         projects:
             - code: PROJ_A
-              project_code: ""
               name: 智能排产系统研发
               type: project
               status: active
               priority: 1
             - code: PROJ_B
-              project_code: ""
               name: 新建厂房工程
               type: project
               status: active
               priority: 0
             - code: PROJ_C
-              project_code: ""
               name: 高精度温度传感器研发
               type: project
               status: active
@@ -1230,12 +1191,8 @@ modules:
               tag_type: danger
         transitions: []
         projects:
-            - code: ""
-              project_code: PROJ_A
-              name: 智能排产系统研发
-              type: project
-              status: active
-              priority: 1
+            - project_code: PROJ_A
+              priority: 0
               entities:
                 issue:
                     - description: 10000订单计算超时10s
@@ -1298,11 +1255,7 @@ modules:
                       severity: minor
                       status: open
                       title: 移动端布局
-            - code: ""
-              project_code: PROJ_B
-              name: 新建厂房工程
-              type: project
-              status: active
+            - project_code: PROJ_B
               priority: 0
               entities:
                 issue:
@@ -1366,12 +1319,8 @@ modules:
                       severity: normal
                       status: open
                       title: 验收标准变动
-            - code: ""
-              project_code: PROJ_C
-              name: 高精度温度传感器研发
-              type: project
-              status: active
-              priority: 1
+            - project_code: PROJ_C
+              priority: 0
               entities:
                 issue:
                     - description: 高低温封装开裂
@@ -1569,12 +1518,8 @@ modules:
               action: reject
               rollback: true
         projects:
-            - code: ""
-              project_code: PROJ_A
-              name: 智能排产系统研发
-              type: project
-              status: active
-              priority: 1
+            - project_code: PROJ_A
+              priority: 0
               entities:
                 requirement:
                     - description: 核心排产算法支持多目标优化
@@ -1627,11 +1572,7 @@ modules:
                       priority: 3
                       status: reviewing
                       title: 多工厂支持
-            - code: ""
-              project_code: PROJ_B
-              name: 新建厂房工程
-              type: project
-              status: active
+            - project_code: PROJ_B
               priority: 0
               entities:
                 requirement:
@@ -1685,12 +1626,8 @@ modules:
                       priority: 3
                       status: reviewing
                       title: 光伏发电
-            - code: ""
-              project_code: PROJ_C
-              name: 高精度温度传感器研发
-              type: project
-              status: active
-              priority: 1
+            - project_code: PROJ_C
+              priority: 0
               entities:
                 requirement:
                     - description: -40~+125度
@@ -1865,12 +1802,8 @@ modules:
               tag_type: info
         transitions: []
         projects:
-            - code: ""
-              project_code: PROJ_A
-              name: 智能排产系统研发
-              type: project
-              status: active
-              priority: 1
+            - project_code: PROJ_A
+              priority: 0
               entities:
                 risk:
                     - impact: 0.9
@@ -1933,11 +1866,7 @@ modules:
                       response: 严格工时审批
                       status: identified
                       title: 成本超支
-            - code: ""
-              project_code: PROJ_B
-              name: 新建厂房工程
-              type: project
-              status: active
+            - project_code: PROJ_B
               priority: 0
               entities:
                 risk:
@@ -2001,12 +1930,8 @@ modules:
                       response: 应急预案
                       status: identified
                       title: 极端天气
-            - code: ""
-              project_code: PROJ_C
-              name: 高精度温度传感器研发
-              type: project
-              status: active
-              priority: 1
+            - project_code: PROJ_C
+              priority: 0
               entities:
                 risk:
                     - impact: 0.8
@@ -2173,12 +2098,8 @@ modules:
               tag_type: danger
         transitions: []
         projects:
-            - code: ""
-              project_code: PROJ_A
-              name: 智能排产系统研发
-              type: project
-              status: active
-              priority: 1
+            - project_code: PROJ_A
+              priority: 0
               entities:
                 task:
                     - end_date: "2026-01-20"
@@ -2331,11 +2252,7 @@ modules:
                       start_date: "2026-06-25"
                       status: planned
                       title: 项目结项
-            - code: ""
-              project_code: PROJ_B
-              name: 新建厂房工程
-              type: project
-              status: active
+            - project_code: PROJ_B
               priority: 0
               entities:
                 task:
@@ -2487,12 +2404,8 @@ modules:
                       start_date: "2026-12-15"
                       status: planned
                       title: 项目结项
-            - code: ""
-              project_code: PROJ_C
-              name: 高精度温度传感器研发
-              type: project
-              status: active
-              priority: 1
+            - project_code: PROJ_C
+              priority: 0
               entities:
                 task:
                     - end_date: "2025-12-20"
@@ -2718,12 +2631,8 @@ modules:
               tag_type: info
         transitions: []
         projects:
-            - code: ""
-              project_code: PROJ_A
-              name: 智能排产系统研发
-              type: project
-              status: active
-              priority: 1
+            - project_code: PROJ_A
+              priority: 0
               entities:
                 scope_item:
                     - code: S1
@@ -2741,11 +2650,7 @@ modules:
                     - code: S5
                       name: 5.测试验收
                       parent: S1
-            - code: ""
-              project_code: PROJ_B
-              name: 新建厂房工程
-              type: project
-              status: active
+            - project_code: PROJ_B
               priority: 0
               entities:
                 scope_item:
@@ -2767,12 +2672,8 @@ modules:
                     - code: W6
                       name: 验收交付
                       parent: ""
-            - code: ""
-              project_code: PROJ_C
-              name: 高精度温度传感器研发
-              type: project
-              status: active
-              priority: 1
+            - project_code: PROJ_C
+              priority: 0
               entities:
                 scope_item:
                     - code: C1
@@ -2903,12 +2804,8 @@ modules:
               tag_type: info
         transitions: []
         projects:
-            - code: ""
-              project_code: PROJ_A
-              name: 智能排产系统研发
-              type: project
-              status: active
-              priority: 1
+            - project_code: PROJ_A
+              priority: 0
               entities:
                 team_member:
                     - allocation: 1
@@ -2931,11 +2828,7 @@ modules:
                       hourly_rate: 100
                       role: QA
                       username: proj_a_qa
-            - code: ""
-              project_code: PROJ_B
-              name: 新建厂房工程
-              type: project
-              status: active
+            - project_code: PROJ_B
               priority: 0
               entities:
                 team_member:
@@ -2959,12 +2852,8 @@ modules:
                       hourly_rate: 93.75
                       role: QS
                       username: proj_b_qs
-            - code: ""
-              project_code: PROJ_C
-              name: 高精度温度传感器研发
-              type: project
-              status: active
-              priority: 1
+            - project_code: PROJ_C
+              priority: 0
               entities:
                 team_member:
                     - allocation: 1

@@ -32,15 +32,15 @@ type TransitionSeed struct {
 
 // ProjectSeed 项目种子（EPS 树节点或业务项目引用）
 type ProjectSeed struct {
-	Code        string                 `yaml:"code" json:"code"`
-	Name        string                 `yaml:"name" json:"name"`
-	Type        string                 `yaml:"type" json:"type"`
-	ProjectID   uint                   `yaml:"project_id" json:"projectId"`
-	ProjectCode string                 `yaml:"project_code" json:"projectCode"`
-	Status      string                 `yaml:"status" json:"status"`
-	Priority    int                    `yaml:"priority" json:"priority"`
-	Children    []ProjectSeed          `yaml:"children" json:"children"`
-	Entities    map[string][]map[string]interface{} `yaml:"entities" json:"entities"`
+	Code        string                 `yaml:"code,omitempty" json:"code"`
+	Name        string                 `yaml:"name,omitempty" json:"name"`
+	Type        string                 `yaml:"type,omitempty" json:"type"`
+	ProjectID   uint                   `yaml:"project_id,omitempty" json:"projectId"`
+	ProjectCode string                 `yaml:"project_code,omitempty" json:"projectCode"`
+	Status      string                 `yaml:"status,omitempty" json:"status"`
+	Priority    int                    `yaml:"priority,omitempty" json:"priority"`
+	Children    []ProjectSeed          `yaml:"children,omitempty" json:"children"`
+	Entities    map[string][]map[string]interface{} `yaml:"entities,omitempty" json:"entities"`
 }
 
 // ConfigPackageSeed 配置包种子（聚合所有模块）

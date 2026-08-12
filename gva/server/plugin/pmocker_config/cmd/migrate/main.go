@@ -82,11 +82,11 @@ type TransitionSeed struct {
 }
 
 type ProjectSeed struct {
-	Code        string                                `yaml:"code" json:"code"`
-	ProjectCode string                                `yaml:"project_code" json:"project_code"`
-	Name        string                                `yaml:"name" json:"name"`
-	Type        string                                `yaml:"type" json:"type"`
-	Status      string                                `yaml:"status" json:"status"`
+	Code        string                                `yaml:"code,omitempty" json:"code"`
+	ProjectCode string                                `yaml:"project_code,omitempty" json:"project_code"`
+	Name        string                                `yaml:"name,omitempty" json:"name"`
+	Type        string                                `yaml:"type,omitempty" json:"type"`
+	Status      string                                `yaml:"status,omitempty" json:"status"`
 	Priority    int                                   `yaml:"priority" json:"priority"`
 	Entities    map[string][]map[string]interface{}   `yaml:"entities,omitempty" json:"entities"`
 }
@@ -260,9 +260,9 @@ func buildAggregateConfig(projects []BusinessProject, root string) *ConfigSeed {
 		}
 		// 简化流转
 		ms.Transitions = buildDefaultTransitions(schema.States)
-		// 项目实体种子
+		// 项目实体种子：只保留 project_code 引用 + 实体（项目名/状态/优先级由 EPS 模块唯一定义）
 		for _, p := range projects {
-			ps := ProjectSeed{ProjectCode: p.Code, Name: p.Name, Type: "project", Status: p.Status, Priority: p.Priority, Entities: map[string][]map[string]interface{}{}}
+			ps := ProjectSeed{ProjectCode: p.Code, Entities: map[string][]map[string]interface{}{}}
 			ps.Entities[et] = extractEntities(module, p)
 			ms.Projects = append(ms.Projects, ps)
 		}

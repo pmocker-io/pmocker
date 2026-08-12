@@ -176,18 +176,18 @@
               <!-- 项目种子 -->
               <el-tab-pane label="项目种子">
                 <div class="flex justify-between mb-2">
-                  <span class="text-sm text-gray-500">项目引用（{{ seed.modules[key].projects?.length || 0 }}）—— 项目 + 实体种子</span>
+                  <span class="text-sm text-gray-500">项目引用（{{ seed.modules[key].projects?.length || 0 }}）—— 项目名由 EPS 模块定义，此处仅引用</span>
                   <el-button type="primary" size="small" @click="openAddProject(key)">添加项目</el-button>
                 </div>
                 <el-table :data="seed.modules[key].projects || []" size="small" border>
                   <el-table-column label="项目编码" width="120">
                     <template #default="{ row }">
-                      <el-input v-model="row.projectCode" size="small" placeholder="如 PROJ_A" />
+                      <el-input v-model="row.projectCode" size="small" placeholder="如 PROJ_A" @change="syncProjectFromEps(row)" />
                     </template>
                   </el-table-column>
-                  <el-table-column label="项目名" width="160">
+                  <el-table-column label="项目名（EPS）" width="160">
                     <template #default="{ row }">
-                      <el-input v-model="row.name" size="small" />
+                      <el-tag size="small" type="info">{{ epsProjectName(row.projectCode) }}</el-tag>
                     </template>
                   </el-table-column>
                   <el-table-column label="实体数" width="80">
@@ -357,6 +357,24 @@ const stateValues = (key) => {
 const moduleName = (key) => seed.value.modules[key]?.name || moduleNames[key] || key
 const moduleIcon = (key) => moduleIcons[key] || 'lucide:box'
 
+// 从 EPS 模块读取项目（唯一真源）：code → {name, status, priority}
+const epsProjectMap = computed(() => {
+  const map = {}
+  const eps = seed.value.modules?.['eps']
+  const walk = (projs) => {
+    for (const p of projs || []) {
+      if (p.code) map[p.code] = { name: p.name, status: p.status, priority: p.priority }
+      if (p.children && p.children.length) walk(p.children)
+    }
+  }
+  walk(eps?.projects || [])
+  return map
+})
+
+// 项目编码 → 项目名（来自 EPS 模块，保持对齐）
+const epsProjectName = (code) => epsProjectMap.value[code]?.name || code || ''
+
+
 const entityCount = (entities) => {
   if (!entities) return 0
   return Object.values(entities).reduce((sum, arr) => sum + (arr?.length || 0), 0)
@@ -488,10 +506,12 @@ const openAddProject = (key) => {
 }
 const confirmAddProject = () => {
   if (!newProject.value.projectCode) { ElMessage.warning('项目编码不能为空'); return }
+  if (!epsProjectName(newProject.value.projectCode)) {
+    ElMessage.warning(`项目编码 ${newProject.value.projectCode} 不存在于 EPS 模块，请先在 EPS 模块添加项目`)
+    return
+  }
   seed.value.modules[projectModuleKey].projects.push({
     projectCode: newProject.value.projectCode,
-    name: newProject.value.name,
-    type: 'project',
     entities: {}
   })
   projectDialogVisible.value = false
@@ -500,6 +520,13 @@ const confirmAddProject = () => {
 const removeProject = (key, idx) => {
   seed.value.modules[key].projects.splice(idx, 1)
   ElMessage.success('项目已删除')
+}
+
+// projectCode 变更时校验 EPS 存在
+const syncProjectFromEps = (row) => {
+  if (row.projectCode && !epsProjectName(row.projectCode)) {
+    ElMessage.warning(`项目编码 ${row.projectCode} 不存在于 EPS 模块`)
+  }
 }
 
 // 实体编辑
@@ -513,7 +540,7 @@ const currentEntities = ref([])
 const openEntities = (key, project) => {
   entitiesModuleKey = key
   entitiesProject = project
-  entitiesProjectName.value = `${project.name || project.projectCode}`
+  entitiesProjectName.value = `${epsProjectName(project.projectCode) || project.projectCode}`
   newEntity.value = { entityType: '' }
   // 加载所有实体类型的数据（JSON 行）
   const rows = []
