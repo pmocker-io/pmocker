@@ -48,12 +48,15 @@
 - 2026-08-09：修复配置包发布数据权限（WithSystem）+ project_code 引用 + name/username 兼容
 - 2026-08-09：**配置包模型纠正——改为聚合配置包**：一个配置包记录 = 所有模块的完整种子数据集合（modules map），而非每模块一包。重构 seed_parser/seed_sync/migrate/export，生成单一 `pmbok6-hybrid` 聚合配置包（10 模块），发布验证全部模块正确同步 3 项目
 - 2026-08-09：**配置编辑改为层级嵌套可视化编辑器**——配置包(基本信息+添加/删除模块) → 模块(基本信息+字段/状态/流转/项目种子 tab) → 字段(编辑弹窗 key/label/type/options/default)，像代码生成器逐级定义，不再用 YAML 文本编辑。后端新增 GET/PUT /package/:id/seed 结构化 API
+- 2026-08-09：修复状态/流转/项目种子 tab 不可编辑（改为行内可编辑）+ 项目种子与 EPS 对齐（项目名由 EPS 唯一真源）
+- 2026-08-12：修复 EPS 编辑报错（后端 find 端点 + 前端 json tag 对齐）+ EAV nil 值污染（setAttr 跳过 nil）
+- 2026-08-12：**v1.0 遗留清理完成**——README M13 描述更新、需求文档 r6、清理 52 个重复组织节点 + 修复 id=99 title、全量回归通过
 
 ## 后续待办
 
-- [ ] 更新 README 里程碑（M13 聚合配置包模型 + 层级编辑器）
-- [ ] 用户基于配置包层级编辑器调整种子 → 保存/发布同步 → 导出 → v1.1 升级
-- [ ] 清理历史重复组织节点（eps_node project_id=0 的 group/division 41 个，seed 多次重建累积）
+- [ ] **v1.1 评估结论**：核心升级基础已具备（配置包管理闭环 + 镜像构建 + CLI upgrade/diff），但 v1.1 Hub 功能（pull/push/login/search + Git 仓库驱动）**未开发**，是 v1.1 主体工作量。用户选择先完善 v1.0，暂不做 Hub
+- [ ] 用户基于配置包层级编辑器调整种子 → 保存/发布同步 → 导出 → 未来 v1.1 升级
+- [ ] 可选：将 dual-code-review skill 纳入版本管理（当前 .agents/ 被 gitignore，仅本地）
 
 ## 更新规则
 
