@@ -52,4 +52,5 @@
 
 - 代码语义检索优先用 **codegraph MCP**（`codegraph_search`/`codegraph_context`/`codegraph_callers`/`codegraph_impact`），再配合 Read/Grep 确认细节
 - 创造性工作（新功能/组件/流程）先走 `brainstorming` skill；多步骤任务先 `writing-plans`；改 bug 先 `systematic-debugging`；写代码前先 `test-driven-development`
+- 大功能/合并 main 前的高质量代码审查用 `dual-code-review` skill（并行架构+ocr 双审查，第三方仲裁）；日常小改动用 `open-code-review`（ocr）单路审查
 - 本仓库业务技术背景见 `README.md`（PMocker：项目管理系统的 Docker，EAV + 10 模块插件 + MCP + .pmi 镜像）
