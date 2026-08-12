@@ -371,6 +371,10 @@ func (s *EAVService) ListRelations(ctx context.Context, entityID uint) ([]eavtyp
 
 // setAttr 设置属性值（upsert）
 func (s *EAVService) setAttr(ctx context.Context, entityID uint, key string, val interface{}) error {
+	// nil 值跳过写入：前端未填字段提交 null，不应污染为 "<nil>" 字符串
+	if val == nil {
+		return nil
+	}
 	var attr pmocker.PMAttr
 	s.writeAttrValue(&attr, val)
 	return global.GVA_DB.WithContext(ctx).

@@ -126,3 +126,28 @@ func TestLoadFieldDefsFiltersStatus(t *testing.T) {
 		t.Fatalf("includeDraft=true 应返回 2 个字段，got %d", len(all))
 	}
 }
+
+// TestSetAttrSkipsNil 验证 setAttr 对 nil 值跳过写入（不产生 "<nil>" 字符串）
+func TestSetAttrSkipsNil(t *testing.T) {
+	db := testutil.NewMemoryDB(t, &pmocker.PMAttr{})
+	eid := uint(1)
+	if err := (&EAVService{}).setAttr(context.Background(), eid, "priority", nil); err != nil {
+		t.Fatalf("setAttr(nil) 应成功跳过: %v", err)
+	}
+	var count int64
+	db.Model(&pmocker.PMAttr{}).Where("entity_id = ?", eid).Count(&count)
+	if count != 0 {
+		t.Fatalf("nil 值不应写入 attr，count=%d", count)
+	}
+	// 非 nil 正常写入
+	if err := (&EAVService{}).setAttr(context.Background(), eid, "priority", "P0"); err != nil {
+		t.Fatal(err)
+	}
+	var attr pmocker.PMAttr
+	if err := db.Where("entity_id = ? AND field_key = ?", eid, "priority").First(&attr).Error; err != nil {
+		t.Fatal(err)
+	}
+	if attr.ValString == nil || *attr.ValString != "P0" {
+		t.Fatalf("非 nil 值写入失败: %+v", attr)
+	}
+}

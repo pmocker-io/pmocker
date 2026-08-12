@@ -270,6 +270,10 @@ func (s *SeedSyncService) syncEntity(ctx context.Context, db *gorm.DB, entityTyp
 
 // setAttr 写入 EAV attr（upsert，按类型）
 func setAttr(db *gorm.DB, entityID uint, key string, val interface{}) error {
+	// nil 值跳过写入：避免 "<nil>" 字符串污染
+	if val == nil {
+		return nil
+	}
 	var attr pmocker.PMAttr
 	switch v := val.(type) {
 	case string:
