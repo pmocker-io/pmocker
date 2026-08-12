@@ -73,6 +73,7 @@ import { ElMessage } from 'element-plus'
 import { getDashboard, generateSnapshot } from '@/api/pmocker/dashboard'
 import { useProjectStore } from '@/pinia'
 import service from '@/utils/request'
+import { cssVar } from '@/utils/theme'
 
 const projectStore = useProjectStore()
 // 优先从全局项目上下文初始化（由 EPS/工作台"进入项目"时设置）
@@ -126,6 +127,10 @@ const loadData = async () => {
 }
 
 const renderCharts = () => {
+  const primary = cssVar('--el-color-primary', '#409eff')
+  const success = cssVar('--el-color-success', '#67c23a')
+  const warning = cssVar('--el-color-warning', '#e6a23c')
+  const danger = cssVar('--el-color-danger', '#f56c6c')
   // 进度环形图
   if (pChart) pChart.dispose()
   pChart = echarts.init(progressChart.value)
@@ -163,7 +168,7 @@ const renderCharts = () => {
     tooltip: { trigger: 'axis' },
     xAxis: { type: 'category', data: issueStatuses.length ? issueStatuses : ['open', 'in_progress', 'closed'] },
     yAxis: { type: 'value' },
-    series: [{ type: 'bar', data: issueStatuses.length ? Object.values(dash.issueSummary.byStatus) : [dash.issueSummary.open, 0, dash.issueSummary.closed], itemStyle: { color: '#409EFF' } }]
+    series: [{ type: 'bar', data: issueStatuses.length ? Object.values(dash.issueSummary.byStatus) : [dash.issueSummary.open, 0, dash.issueSummary.closed], itemStyle: { color: primary } }]
   })
   // 风险矩阵散点图（概率 vs 影响）
   if (rChart) rChart.dispose()
@@ -176,12 +181,12 @@ const renderCharts = () => {
       type: 'scatter',
       symbolSize: 20,
       data: (dash.riskSummary.bySeverity ? [] : []),
-      itemStyle: { color: '#F56C6C' }
+      itemStyle: { color: danger }
     }],
     visualMap: { show: false, pieces: [
-      { gte: 0, lt: 4, color: '#67C23A' },
-      { gte: 4, lt: 9, color: '#E6A23C' },
-      { gte: 9, color: '#F56C6C' }
+      { gte: 0, lt: 4, color: success },
+      { gte: 4, lt: 9, color: warning },
+      { gte: 9, color: danger }
     ], dimension: 2, min: 0, max: 25 }
   })
 }

@@ -79,6 +79,15 @@ function checkFile(file) {
     problems.push(`[内联style] ${at(lineIdx)}: ${ctx(lineIdx)}  → 静态样式换 UnoCSS 原子类（w-full/mt-4/...）`)
   }
 
+  // 5. JS / ECharts 里的硬编码颜色（cssVar fallback 与 template #default 除外）
+  lines.forEach((ln, i) => {
+    if (ln.includes('cssVar(')) return // fallback 参数，合法
+    const m = ln.match(/#[0-9A-Fa-f]{3,8}/)
+    if (m && m[0].toUpperCase() !== '#DEFA') {
+      problems.push(`[JS颜色] ${at(i)}: ${ctx(i)}  → 改 cssVar('--el-color-xxx') 读取主题色（见 src/utils/theme.js）`)
+    }
+  })
+
   return { rel, problems }
 }
 

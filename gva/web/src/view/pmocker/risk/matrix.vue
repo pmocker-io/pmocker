@@ -24,6 +24,7 @@
 import { ref, onMounted, nextTick, onBeforeUnmount } from 'vue'
 import * as echarts from 'echarts'
 import { getRiskMatrix } from '@/api/pmocker/risk'
+import { cssVar } from '@/utils/theme'
 
 defineOptions({ name: 'PmockerRiskMatrix' })
 
@@ -50,6 +51,9 @@ const renderChart = (data) => {
   if (chartInstance) chartInstance.dispose()
   if (!chartRef.value) return
   chartInstance = echarts.init(chartRef.value)
+  const success = cssVar('--el-color-success', '#67c23a')
+  const warning = cssVar('--el-color-warning', '#e6a23c')
+  const danger = cssVar('--el-color-danger', '#f56c6c')
 
   const xLabels = ['1', '2', '3', '4', '5']
   const yLabels = ['1', '2', '3', '4', '5']
@@ -85,7 +89,7 @@ const renderChart = (data) => {
       orient: 'horizontal',
       left: 'center',
       bottom: '5%',
-      inRange: { color: ['#67c23a', '#e6a23c', '#f56c6c'] }
+      inRange: { color: [success, warning, danger] }
     },
     series: [
       {
@@ -99,7 +103,7 @@ const renderChart = (data) => {
         type: 'scatter',
         data: scatterData,
         symbolSize: 20,
-        itemStyle: { color: '#000' }
+        itemStyle: { color: cssVar('--el-text-color-primary', '#000') }
       }
     ]
   })

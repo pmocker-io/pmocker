@@ -23,6 +23,7 @@
 - `page.js`: 页面标题生成
 - `asyncRouter.js`: 异步路由处理
 - `btnAuth.js`: 按钮级权限控制
+- `theme.js`: 主题 CSS 变量读取（`cssVar('--el-color-success')`），供 ECharts 等无法直接用原子类的场景取主题色，**禁止在 JS/图表里散写 `#xxx` 硬编码色**
 
 ## 强制使用场景
 

@@ -30,6 +30,7 @@
 import { ref, onMounted, nextTick, onBeforeUnmount } from 'vue'
 import * as echarts from 'echarts'
 import { analyzeScheduleCPM } from '@/api/pmocker/schedule'
+import { cssVar } from '@/utils/theme'
 
 defineOptions({ name: 'PmockerScheduleCritical' })
 
@@ -76,7 +77,7 @@ const renderChart = (data) => {
       edgeSymbol: ['none', 'arrow'],
       data: nodes,
       links: links,
-      lineStyle: { color: '#333', curveness: 0.3 }
+      lineStyle: { color: cssVar('--el-text-color-secondary', '#333'), curveness: 0.3 }
     }]
   })
 }

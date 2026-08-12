@@ -122,8 +122,8 @@ const onTabClick = (name) => {
 }
 .vtab-toolbar {
   padding: 12px;
-  border-bottom: 1px solid #ebeef5;
-  background: var(--el-color-white);
+  border-bottom: 1px solid var(--el-border-color-lighter);
+  background: var(--el-bg-color);
 }
 .vtab-body {
   flex: 1;

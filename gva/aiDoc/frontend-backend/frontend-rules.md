@@ -57,6 +57,7 @@
     组件宽度 `{ width: tabWidth + 'px' }`、Element Plus 组件 `:body-style` 等
   - 组件级微调：`margin-left: auto` 这类单值间距（等价原子类为 `ml-auto`，可换可不换）
 - 纯静态、可静态化的内联（`width: 100%`、`margin-top: 16px`、`color:#xxx` 等）**必须**换 UnoCSS 原子类 / 语义 token
+- **JS / ECharts 里的硬编码色**（柱状图、热力图、连线等）也**必须**改用 `cssVar('--el-color-xxx')`（`@/utils/theme`）读取主题变量，禁止散写 `#67C23A` / `#F56C6C` 等——否则暗色/换肤下图表不跟随
 - 主题相关能力优先通过 CSS 变量控制
 - 反例：用 `<div class="scenario-bar">` + scoped `.scenario-bar { display: flex; gap: 8px; align-items: center }`；正例：直接 `<div class="flex items-center gap-2">`
 

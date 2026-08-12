@@ -46,6 +46,7 @@ import { ref, nextTick, onBeforeUnmount } from 'vue'
 import * as echarts from 'echarts'
 import { ElMessage } from 'element-plus'
 import { calcVariance, getAlerts } from '@/api/pmocker/variance'
+import { cssVar } from '@/utils/theme'
 const projectId = ref('')
 const spiRef = ref(null)
 const cpiRef = ref(null)
@@ -69,6 +70,8 @@ const renderGauge = (dom, value, name) => {
 }
 const renderBar = (dom, sv, cv) => {
   if (!dom) return
+  const success = cssVar('--el-color-success', '#67c23a')
+  const danger = cssVar('--el-color-danger', '#f56c6c')
   const inst = echarts.init(dom)
   charts.push(inst)
   inst.setOption({
@@ -78,8 +81,8 @@ const renderBar = (dom, sv, cv) => {
     series: [{
       type: 'bar', barWidth: 40,
       data: [
-        { value: Number(sv.toFixed(2)), itemStyle: { color: sv >= 0 ? '#67C23A' : '#F56C6C' } },
-        { value: Number(cv.toFixed(2)), itemStyle: { color: cv >= 0 ? '#67C23A' : '#F56C6C' } }
+        { value: Number(sv.toFixed(2)), itemStyle: { color: sv >= 0 ? success : danger } },
+        { value: Number(cv.toFixed(2)), itemStyle: { color: cv >= 0 ? success : danger } }
       ]
     }]
   })
