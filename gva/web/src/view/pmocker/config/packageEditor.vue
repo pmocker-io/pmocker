@@ -105,13 +105,27 @@
               <!-- 状态 -->
               <el-tab-pane label="状态定义">
                 <div class="flex justify-between mb-2">
-                  <span class="text-sm text-gray-500">模块状态（{{ seed.modules[key].states?.length || 0 }}）</span>
+                  <span class="text-sm text-gray-500">模块状态（{{ seed.modules[key].states?.length || 0 }}）—— 行内可编辑</span>
                   <el-button type="primary" size="small" @click="addState(key)">添加状态</el-button>
                 </div>
                 <el-table :data="seed.modules[key].states || []" size="small" border>
-                  <el-table-column prop="status" label="状态值" width="140" />
-                  <el-table-column prop="label" label="显示名" width="140" />
-                  <el-table-column prop="tagType" label="标签类型" width="120" />
+                  <el-table-column label="状态值" width="150">
+                    <template #default="{ row }">
+                      <el-input v-model="row.status" size="small" placeholder="如 draft" />
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="显示名" width="150">
+                    <template #default="{ row }">
+                      <el-input v-model="row.label" size="small" placeholder="如 草稿" />
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="标签类型" width="130">
+                    <template #default="{ row }">
+                      <el-select v-model="row.tagType" size="small" style="width: 100%">
+                        <el-option v-for="t in tagTypes" :key="t" :label="t || '默认'" :value="t" />
+                      </el-select>
+                    </template>
+                  </el-table-column>
                   <el-table-column label="操作" width="120">
                     <template #default="{ row, $index }">
                       <el-button link type="danger" size="small" @click="removeState(key, $index)">删除</el-button>
@@ -123,16 +137,32 @@
               <!-- 流转 -->
               <el-tab-pane label="流转规则">
                 <div class="flex justify-between mb-2">
-                  <span class="text-sm text-gray-500">流转规则（{{ seed.modules[key].transitions?.length || 0 }}）</span>
+                  <span class="text-sm text-gray-500">流转规则（{{ seed.modules[key].transitions?.length || 0 }}）—— 行内可编辑</span>
                   <el-button type="primary" size="small" @click="addTransition(key)">添加流转</el-button>
                 </div>
                 <el-table :data="seed.modules[key].transitions || []" size="small" border>
-                  <el-table-column prop="from" label="源状态" width="120" />
-                  <el-table-column prop="to" label="目标状态" width="120" />
-                  <el-table-column prop="action" label="动作" width="120" />
+                  <el-table-column label="源状态" width="140">
+                    <template #default="{ row }">
+                      <el-select v-model="row.from" size="small" filterable allow-create style="width: 100%">
+                        <el-option v-for="s in stateValues(key)" :key="s" :label="s" :value="s" />
+                      </el-select>
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="目标状态" width="140">
+                    <template #default="{ row }">
+                      <el-select v-model="row.to" size="small" filterable allow-create style="width: 100%">
+                        <el-option v-for="s in stateValues(key)" :key="s" :label="s" :value="s" />
+                      </el-select>
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="动作" width="140">
+                    <template #default="{ row }">
+                      <el-input v-model="row.action" size="small" placeholder="如 approve" />
+                    </template>
+                  </el-table-column>
                   <el-table-column label="退回" width="90">
                     <template #default="{ row }">
-                      <el-tag v-if="row.rollback" type="warning" size="small">退回</el-tag>
+                      <el-switch v-model="row.rollback" size="small" />
                     </template>
                   </el-table-column>
                   <el-table-column label="操作" width="120">
@@ -145,18 +175,35 @@
 
               <!-- 项目种子 -->
               <el-tab-pane label="项目种子">
-                <div class="text-sm text-gray-500 mb-2">项目引用（{{ seed.modules[key].projects?.length || 0 }}）</div>
+                <div class="flex justify-between mb-2">
+                  <span class="text-sm text-gray-500">项目引用（{{ seed.modules[key].projects?.length || 0 }}）—— 项目 + 实体种子</span>
+                  <el-button type="primary" size="small" @click="openAddProject(key)">添加项目</el-button>
+                </div>
                 <el-table :data="seed.modules[key].projects || []" size="small" border>
-                  <el-table-column prop="projectCode" label="项目编码" width="120" />
-                  <el-table-column prop="name" label="项目名" width="160" />
-                  <el-table-column label="实体数" width="90">
+                  <el-table-column label="项目编码" width="120">
+                    <template #default="{ row }">
+                      <el-input v-model="row.projectCode" size="small" placeholder="如 PROJ_A" />
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="项目名" width="160">
+                    <template #default="{ row }">
+                      <el-input v-model="row.name" size="small" />
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="实体数" width="80">
                     <template #default="{ row }">
                       <el-tag size="small">{{ entityCount(row.entities) }}</el-tag>
                     </template>
                   </el-table-column>
-                  <el-table-column label="实体预览" min-width="200">
+                  <el-table-column label="实体" min-width="220">
                     <template #default="{ row }">
-                      <span class="text-xs text-gray-500">{{ entityPreview(row.entities) }}</span>
+                      <el-button link type="primary" size="small" @click="openEntities(key, row)">编辑实体</el-button>
+                      <span class="text-xs text-gray-500 ml-2">{{ entityPreview(row.entities) }}</span>
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="操作" width="90">
+                    <template #default="{ row, $index }">
+                      <el-button link type="danger" size="small" @click="removeProject(key, $index)">删除</el-button>
                     </template>
                   </el-table-column>
                 </el-table>
@@ -216,11 +263,61 @@
         <el-button type="primary" @click="confirmField">确定</el-button>
       </template>
     </el-dialog>
+    <!-- 添加项目弹窗 -->
+    <el-dialog v-model="projectDialogVisible" title="添加项目引用" width="480px">
+      <el-form :model="newProject" label-width="90px">
+        <el-form-item label="项目编码">
+          <el-input v-model="newProject.projectCode" placeholder="如 PROJ_A（EPS 中的项目编码）" />
+        </el-form-item>
+        <el-form-item label="项目名">
+          <el-input v-model="newProject.name" placeholder="如 智能排产系统研发" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="projectDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="confirmAddProject">添加</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 实体编辑弹窗 -->
+    <el-dialog v-model="entitiesDialogVisible" :title="`实体种子编辑：${entitiesProjectName}`" width="720px">
+      <el-form :model="newEntity" label-width="90px" class="mb-3">
+        <el-form-item label="实体类型">
+          <el-input v-model="newEntity.entityType" placeholder="如 requirement / task" />
+        </el-form-item>
+      </el-form>
+      <el-button type="primary" size="small" @click="addEntityRow">添加实体</el-button>
+      <el-table :data="currentEntities" size="small" border class="mt-2" max-height="400">
+        <el-table-column label="标题" width="160">
+          <template #default="{ row }">
+            <el-input v-model="row.title" size="small" placeholder="实体标题" />
+          </template>
+        </el-table-column>
+        <el-table-column label="状态" width="120">
+          <template #default="{ row }">
+            <el-input v-model="row.status" size="small" placeholder="如 published" />
+          </template>
+        </el-table-column>
+        <el-table-column label="其它字段(JSON)" min-width="220">
+          <template #default="{ row }">
+            <el-input v-model="row.__attrs" size="small" placeholder='如 {"priority":"P0"}' />
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="80">
+          <template #default="{ row, $index }">
+            <el-button link type="danger" size="small" @click="removeEntityRow($index)">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <template #footer>
+        <el-button @click="entitiesDialogVisible = false">关闭</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getPackage, getPackageSeedStruct, updatePackageSeedStruct, publishPackage } from '@/api/pmocker/config'
@@ -248,6 +345,14 @@ const moduleIcons = {
   deliverable: 'lucide:package', scope: 'lucide:list-tree', cost: 'lucide:wallet', team: 'lucide:users'
 }
 const dataTypes = ['string', 'text', 'int', 'decimal', 'date', 'datetime', 'bool', 'enum', 'ref', 'json', 'user']
+const tagTypes = ['info', 'warning', 'success', 'danger', '']
+
+// 模块状态值列表（流转 from/to 下拉用）
+const stateValues = (key) => {
+  const mod = seed.value.modules[key]
+  if (!mod || !mod.states) return []
+  return mod.states.map(s => s.status).filter(Boolean)
+}
 
 const moduleName = (key) => seed.value.modules[key]?.name || moduleNames[key] || key
 const moduleIcon = (key) => moduleIcons[key] || 'lucide:box'
@@ -370,6 +475,94 @@ const addTransition = (key) => {
 const removeTransition = (key, idx) => {
   seed.value.modules[key].transitions.splice(idx, 1)
 }
+
+// 项目引用
+const projectDialogVisible = ref(false)
+const newProject = ref({ projectCode: '', name: '' })
+let projectModuleKey = ''
+
+const openAddProject = (key) => {
+  projectModuleKey = key
+  newProject.value = { projectCode: '', name: '' }
+  projectDialogVisible.value = true
+}
+const confirmAddProject = () => {
+  if (!newProject.value.projectCode) { ElMessage.warning('项目编码不能为空'); return }
+  seed.value.modules[projectModuleKey].projects.push({
+    projectCode: newProject.value.projectCode,
+    name: newProject.value.name,
+    type: 'project',
+    entities: {}
+  })
+  projectDialogVisible.value = false
+  ElMessage.success('项目已添加')
+}
+const removeProject = (key, idx) => {
+  seed.value.modules[key].projects.splice(idx, 1)
+  ElMessage.success('项目已删除')
+}
+
+// 实体编辑
+const entitiesDialogVisible = ref(false)
+const entitiesProjectName = ref('')
+const newEntity = ref({ entityType: '' })
+let entitiesModuleKey = ''
+let entitiesProject = null
+const currentEntities = ref([])
+
+const openEntities = (key, project) => {
+  entitiesModuleKey = key
+  entitiesProject = project
+  entitiesProjectName.value = `${project.name || project.projectCode}`
+  newEntity.value = { entityType: '' }
+  // 加载所有实体类型的数据（JSON 行）
+  const rows = []
+  const entities = project.entities || {}
+  for (const [et, arr] of Object.entries(entities)) {
+    for (const e of arr || []) {
+      const row = { ...e, __et: et, __attrs: JSON.stringify(stripEntityMeta(e)) }
+      delete row.__attrs_orig
+      rows.push(row)
+    }
+  }
+  currentEntities.value = rows
+  entitiesDialogVisible.value = true
+}
+
+const stripEntityMeta = (e) => {
+  const copy = { ...e }
+  delete copy.title
+  delete copy.status
+  return copy
+}
+
+const addEntityRow = () => {
+  if (!newEntity.value.entityType) { ElMessage.warning('请先填写实体类型'); return }
+  currentEntities.value.push({ title: '', status: 'draft', __et: newEntity.value.entityType, __attrs: '{}' })
+}
+
+const removeEntityRow = (idx) => {
+  currentEntities.value.splice(idx, 1)
+}
+
+// 关闭实体弹窗时回写
+const entityDialogClose = () => {
+  const entities = {}
+  for (const row of currentEntities.value) {
+    if (!row.__et) continue
+    const et = row.__et
+    if (!entities[et]) entities[et] = []
+    const e = { title: row.title, status: row.status || 'draft' }
+    try {
+      const attrs = JSON.parse(row.__attrs || '{}')
+      Object.assign(e, attrs)
+    } catch { /* 忽略 JSON 错误 */ }
+    entities[et].push(e)
+  }
+  if (entitiesProject) entitiesProject.entities = entities
+}
+
+watch(entitiesDialogVisible, (v) => { if (!v) entityDialogClose() })
 
 const goBack = () => router.push({ name: 'pmockerConfigPackageList' })
 const statusLabel = (s) => ({ draft: '草稿', reviewing: '评审中', published: '已发布', archived: '已归档' }[s] || s)
