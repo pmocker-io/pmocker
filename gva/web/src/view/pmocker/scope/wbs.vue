@@ -334,7 +334,7 @@ onMounted(() => {
 .raci-legend {
   margin-left: 12px;
   font-size: 12px;
-  color: #666;
+  color: var(--el-text-color-regular);
 }
 .raci-legend .el-tag {
   margin: 0 4px 0 8px;
@@ -355,7 +355,7 @@ onMounted(() => {
   gap: 2px;
 }
 .raci-empty {
-  color: #ccc;
+  color: var(--el-text-color-placeholder);
 }
 .raci-edit-btns {
   display: flex;
@@ -375,6 +375,6 @@ onMounted(() => {
 }
 .raci-role-code {
   font-size: 11px;
-  color: #999;
+  color: var(--el-text-color-secondary);
 }
 </style>

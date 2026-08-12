@@ -1,7 +1,7 @@
 <template>
   <div class="close-page">
     <el-page-header content="结项报告" @back="$router.back()" />
-    <el-select v-model="projectId" placeholder="选择项目" filterable style="margin: 12px 200px 12px 0" @change="onProjectChange">
+    <el-select v-model="projectId" placeholder="选择项目" filterable class="mt-3 mb-3 mr-[200px]" @change="onProjectChange">
       <el-option v-for="p in projects" :key="p.id" :label="p.name" :value="p.id" />
     </el-select>
     <el-button type="danger" :disabled="!report || report.archivedAt" @click="doArchive">执行归档</el-button>
@@ -166,6 +166,6 @@ onMounted(async () => {
 
 <style scoped>
 .close-page { padding: 16px; }
-.red { color: #F56C6C; }
-.green { color: #67C23A; }
+.red { color: var(--el-color-danger); }
+.green { color: var(--el-color-success); }
 </style>

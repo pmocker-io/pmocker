@@ -97,7 +97,7 @@ const loadData = async () => {
 
 const priorityLabel = (p) => ({ 0: 'P0 紧急', 1: 'P1 高', 2: 'P2 中', 3: 'P3 低' }[p] || 'P2 中')
 const priorityTag = (p) => ({ 0: 'danger', 1: 'warning', 2: 'info', 3: 'info' }[p] || 'info')
-const healthColor = (h) => ({ green: '#67C23A', yellow: '#E6A23C', red: '#F56C6C' }[h] || '#67C23A')
+const healthColor = (h) => ({ green: 'var(--el-color-success)', yellow: 'var(--el-color-warning)', red: 'var(--el-color-danger)' }[h] || 'var(--el-color-success)')
 
 onMounted(() => { loadData() })
 </script>
@@ -109,12 +109,12 @@ onMounted(() => { loadData() })
 .card-head { display: flex; align-items: center; }
 .proj-name { font-weight: bold; margin-left: 8px; }
 .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
-.dot.green { background: #67C23A; }
-.dot.yellow { background: #E6A23C; }
-.dot.red { background: #F56C6C; }
+.dot.green { background: var(--el-color-success); }
+.dot.yellow { background: var(--el-color-warning); }
+.dot.red { background: var(--el-color-danger); }
 .card-row { font-size: 13px; margin: 4px 0; }
-.red { color: #F56C6C; }
-.green { color: #67C23A; }
+.red { color: var(--el-color-danger); }
+.green { color: var(--el-color-success); }
 .toolbar-bar {
   display: flex;
   align-items: center;
@@ -122,7 +122,7 @@ onMounted(() => { loadData() })
 }
 .status-label {
   font-size: 13px;
-  color: #606266;
+  color: var(--el-text-color-secondary);
   white-space: nowrap;
 }
 </style>

@@ -1,7 +1,7 @@
 <template>
   <div class="dashboard-page">
     <el-page-header content="项目仪表盘" @back="$router.back()" />
-    <el-select v-model="projectId" placeholder="选择项目" filterable style="margin: 12px 200px 12px 0" @change="onProjectChange">
+    <el-select v-model="projectId" placeholder="选择项目" filterable class="mt-3 mb-3 mr-[200px]" @change="onProjectChange">
       <el-option v-for="p in projects" :key="p.id" :label="p.name" :value="p.id" />
     </el-select>
     <el-button type="primary" @click="genSnapshot">生成月报快照</el-button>

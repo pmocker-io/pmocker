@@ -116,7 +116,7 @@ onMounted(() => { loadTree() })
   display: inline-flex;
   align-items: center;
   padding: 8px 16px;
-  background: #f5f7fa;
+  background: var(--el-fill-color-light);
   border-radius: 4px;
   margin-bottom: 12px;
 }
@@ -126,7 +126,7 @@ onMounted(() => { loadTree() })
 }
 .label {
   font-size: 14px;
-  color: #606266;
+  color: var(--el-text-color-secondary);
   margin-right: 8px;
   white-space: nowrap;
 }

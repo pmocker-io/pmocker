@@ -180,16 +180,16 @@ onMounted(() => {
 
 <style scoped>
 :deep(.diff-row-changed td) {
-  background-color: #fff3cd !important;
+  background-color: var(--el-color-warning-light-9) !important;
 }
 :deep(.diff-row-added td) {
-  background-color: #d4edda !important;
+  background-color: var(--el-color-success-light-9) !important;
 }
 :deep(.diff-row-removed td) {
-  background-color: #f8d7da !important;
+  background-color: var(--el-color-danger-light-9) !important;
 }
 .diff-empty {
-  color: #c0c4cc;
+  color: var(--el-text-color-placeholder);
   font-style: italic;
 }
 .mb-3 {

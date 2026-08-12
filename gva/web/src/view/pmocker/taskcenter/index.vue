@@ -142,6 +142,6 @@ onMounted(() => { loadStats(); preloadCounts(); loadTasks() })
 .tab-title {
   font-size: 14px;
   font-weight: 500;
-  color: #303133;
+  color: var(--el-text-color-primary);
 }
 </style>

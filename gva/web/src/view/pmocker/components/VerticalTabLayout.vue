@@ -55,14 +55,14 @@ const onTabClick = (name) => {
 .vtab-layout {
   display: flex;
   min-height: 500px;
-  border: 1px solid #e4e7ed;
+  border: 1px solid var(--el-border-color-lighter);
   border-radius: 4px;
   overflow: hidden;
 }
 .vtab-tabs {
   flex-shrink: 0;
-  background: #fafafa;
-  border-right: 1px solid #e4e7ed;
+  background: var(--el-fill-color-light);
+  border-right: 1px solid var(--el-border-color-lighter);
 }
 .vtab-item {
   display: flex;
@@ -72,8 +72,8 @@ const onTabClick = (name) => {
   height: 44px;
   line-height: 44px;
   cursor: pointer;
-  border-bottom: 1px solid #f0f0f0;
-  color: #606266;
+  border-bottom: 1px solid var(--el-fill-color-light);
+  color: var(--el-text-color-secondary);
   transition: all 0.2s;
   user-select: none;
 }
@@ -83,12 +83,12 @@ const onTabClick = (name) => {
 }
 .vtab-item.active {
   background: var(--el-color-primary);
-  color: #fff;
+  color: var(--el-color-white);
   font-weight: 500;
 }
 .vtab-item.active:hover {
   background: var(--el-color-primary);
-  color: #fff;
+  color: var(--el-color-white);
 }
 .vtab-label {
   flex: 1;
@@ -105,14 +105,14 @@ const onTabClick = (name) => {
   text-align: center;
   font-size: 11px;
   border-radius: 9px;
-  background: #f0f0f0;
-  color: #909399;
+  background: var(--el-fill-color-light);
+  color: var(--el-text-color-secondary);
   margin-left: 8px;
   flex-shrink: 0;
 }
 .vtab-item.active .vtab-badge {
   background: rgba(255, 255, 255, 0.3);
-  color: #fff;
+  color: var(--el-color-white);
 }
 .vtab-content {
   flex: 1;
@@ -123,7 +123,7 @@ const onTabClick = (name) => {
 .vtab-toolbar {
   padding: 12px;
   border-bottom: 1px solid #ebeef5;
-  background: #fff;
+  background: var(--el-color-white);
 }
 .vtab-body {
   flex: 1;

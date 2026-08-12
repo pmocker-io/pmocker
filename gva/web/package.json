@@ -10,7 +10,8 @@
     "preview": "vite preview --host 0.0.0.0 --mode development",
     "fix-memory-limit": "cross-env LIMIT=4096 increase-memory-limit",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "check:pmocker-style": "node scripts/check-pmocker-style.mjs"
   },
   "type": "module",
   "dependencies": {

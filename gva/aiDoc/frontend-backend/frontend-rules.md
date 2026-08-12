@@ -29,6 +29,10 @@
     `get` 返回变换后的值、`set` 里写回 `modelValue.value`。
   - 需要在写回前做防抖 / 拦截 / 类型还原（如取色器防抖、Select 原值映射）：仍用 `defineModel` 的 ref，
     在回调里 `modelValue.value = ...`，不要退回 `emit`。
+  - 可变对象透传（子组件直接改对象内部字段，如 DynamicForm 的 `v-model="form"` 深对象）：
+    `const model = defineModel({ type: Object, default: () => ({}) })`，模板/逻辑里直接读改 `model.value.xxx`，
+    **不要** `props.modelValue.xxx`（Vue 3.4+ defineModel 返回的就是可写 modelValue ref）。
+    参考实现：`web/src/view/pmocker/components/DynamicForm.vue`、`TimeEntryDialog.vue`。
   - 多个 v-model 用具名 `defineModel('xxx', { ... })`。
 - 对外契约不变：`defineModel` 仍等价声明 `modelValue` prop 并 emit `update:modelValue`，
   调用方 `v-model` / `:model-value + @update:model-value` 都照常工作。
@@ -47,6 +51,12 @@
   - 避免手写 `color: #xxxxxx` 等硬编码颜色
   - 避免手写 `font-size: xxpx` 等硬编码字号
 - 避免内联样式
+- **内联样式的合理例外**（gva 原生与 pmocker 现状均如此，审查时勿误判为违规）：
+  - ECharts 图表容器高度：`style="height: 220px"`（图表必须给固定高度容器，UnoCSS `h-[220px]` 亦可但非强制）
+  - 动态绑定 `:style`（对象/变量）：树缩进 `{ paddingLeft: (row._level || 0) * 18 + 'px' }`、
+    组件宽度 `{ width: tabWidth + 'px' }`、Element Plus 组件 `:body-style` 等
+  - 组件级微调：`margin-left: auto` 这类单值间距（等价原子类为 `ml-auto`，可换可不换）
+- 纯静态、可静态化的内联（`width: 100%`、`margin-top: 16px`、`color:#xxx` 等）**必须**换 UnoCSS 原子类 / 语义 token
 - 主题相关能力优先通过 CSS 变量控制
 - 反例：用 `<div class="scenario-bar">` + scoped `.scenario-bar { display: flex; gap: 8px; align-items: center }`；正例：直接 `<div class="flex items-center gap-2">`
 

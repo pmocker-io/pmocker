@@ -51,6 +51,9 @@
 - 2026-08-09：修复状态/流转/项目种子 tab 不可编辑（改为行内可编辑）+ 项目种子与 EPS 对齐（项目名由 EPS 唯一真源）
 - 2026-08-12：修复 EPS 编辑报错（后端 find 端点 + 前端 json tag 对齐）+ EAV nil 值污染（setAttr 跳过 nil）
 - 2026-08-12：**v1.0 遗留清理完成**——README M13 描述更新、需求文档 r6、清理 52 个重复组织节点 + 修复 id=99 title、全量回归通过
+- 2026-08-12：**前端风格统一 gva**（提交 7fe4e4a9）——pmocker 全部页面硬编码颜色→语义 token、DynamicForm/TimeEntryDialog 改 defineModel、静态内联 style→UnoCSS 原子类；浏览器实测无回归
+- 2026-08-12：**配置包边界单测补齐**（提交 93a5ade6）——发布/回滚 9 个边界用例（空包/坏YAML/archived/引用缺失EPS/跨包回滚/损坏快照）全通过
+- 2026-08-12：**SQLite 并发写防护**（提交 7efd8cbc）——`config/gorm_sqlite.go` DSN 追加 `_pragma=busy_timeout(5000)&journal_mode(WAL)`，消除实例重启时 SQLITE_BUSY + journal 残留；实例验证 WAL 生效无回归
 
 ## 后续待办
 
