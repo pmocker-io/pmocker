@@ -10,7 +10,7 @@
         </el-form-item>
       </el-form>
     </el-card>
-    <el-row :gutter="12" style="margin-top: 12px">
+    <el-row :gutter="12" class="mt-3">
       <el-col :span="8">
         <el-card shadow="never" header="SPI 进度绩效">
           <div ref="spiRef" style="height: 240px" />
@@ -27,7 +27,7 @@
         </el-card>
       </el-col>
     </el-row>
-    <el-card v-if="alerts.length" shadow="never" style="margin-top: 12px" header="预警列表">
+    <el-card v-if="alerts.length" shadow="never" class="mt-3" header="预警列表">
       <el-table :data="alerts" size="small" border>
         <el-table-column prop="type" label="类型" width="120" />
         <el-table-column prop="severity" label="级别" width="100">

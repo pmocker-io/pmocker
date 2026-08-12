@@ -30,7 +30,7 @@
         </el-table-column>
       </el-table>
     </el-card>
-    <el-card v-if="diffs.length" shadow="never" style="margin-top: 12px" header="基线对比差异">
+    <el-card v-if="diffs.length" shadow="never" class="mt-3" header="基线对比差异">
       <el-table :data="diffs" size="small" border>
         <el-table-column prop="entityTitle" label="实体" width="160" />
         <el-table-column prop="entityType" label="类型" width="100" />

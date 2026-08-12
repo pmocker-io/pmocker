@@ -6,7 +6,7 @@
     </el-select>
     <el-button type="danger" :disabled="!report || report.archivedAt" @click="doArchive">执行归档</el-button>
 
-    <el-descriptions v-if="report" :column="3" border title="项目基本信息" style="margin-top: 16px">
+    <el-descriptions v-if="report" :column="3" border title="项目基本信息" class="mt-4">
       <el-descriptions-item label="项目名称">{{ report.projectName }}</el-descriptions-item>
       <el-descriptions-item label="开始日期">{{ report.startDate }}</el-descriptions-item>
       <el-descriptions-item label="结束日期">{{ report.endDate }}</el-descriptions-item>
@@ -16,7 +16,7 @@
       <el-descriptions-item label="归档时间" v-if="report.archivedAt">{{ report.archivedAt }}</el-descriptions-item>
     </el-descriptions>
 
-    <el-row :gutter="12" style="margin-top: 16px" v-if="report">
+    <el-row :gutter="12" class="mt-4" v-if="report">
       <el-col :span="8">
         <el-card shadow="hover">
           <template #header>任务统计</template>
@@ -52,7 +52,7 @@
       </el-col>
     </el-row>
 
-    <el-row :gutter="12" style="margin-top: 12px" v-if="report">
+    <el-row :gutter="12" class="mt-3" v-if="report">
       <el-col :span="8">
         <el-card shadow="hover">
           <template #header>需求统计</template>
@@ -85,7 +85,7 @@
       </el-col>
     </el-row>
 
-    <el-card shadow="hover" style="margin-top: 12px" v-if="report">
+    <el-card shadow="hover" class="mt-3" v-if="report">
       <template #header>成本统计</template>
       <el-descriptions :column="3" border>
         <el-descriptions-item label="预算">{{ (report.costStat?.budget || 0).toFixed(2) }}</el-descriptions-item>

@@ -12,7 +12,7 @@
             filterable
             clearable
             placeholder="请选择用户"
-            style="width: 100%"
+            class="w-full"
             @change="onUserFieldChange(field.field_key, $event)"
           >
             <el-option
@@ -27,7 +27,7 @@
             v-else-if="field.data_type === 'enum'"
             v-model="attrs[field.field_key]"
             clearable
-            style="width: 100%"
+            class="w-full"
           >
             <el-option
               v-for="opt in parseOptions(field.options_json)"
@@ -47,7 +47,7 @@
             v-model="attrs[field.field_key]"
             type="date"
             value-format="YYYY-MM-DD"
-            style="width: 100%"
+            class="w-full"
           />
           <!-- 日期时间字段 -->
           <el-date-picker
@@ -55,7 +55,7 @@
             v-model="attrs[field.field_key]"
             type="datetime"
             value-format="YYYY-MM-DD HH:mm:ss"
-            style="width: 100%"
+            class="w-full"
           />
           <!-- 数字字段 -->
           <el-input-number
@@ -63,7 +63,7 @@
             v-model="attrs[field.field_key]"
             :precision="field.data_type === 'decimal' ? 2 : 0"
             controls-position="right"
-            style="width: 100%"
+            class="w-full"
           />
           <!-- 多行文本 -->
           <el-input
@@ -93,7 +93,7 @@
                 filterable
                 clearable
                 placeholder="请选择用户"
-                style="width: 100%"
+                class="w-full"
                 @change="onUserFieldChange(field.field_key, $event)"
               >
                 <el-option
@@ -107,7 +107,7 @@
                 v-else-if="field.data_type === 'enum'"
                 v-model="attrs[field.field_key]"
                 clearable
-                style="width: 100%"
+                class="w-full"
               >
                 <el-option
                   v-for="opt in parseOptions(field.options_json)"
@@ -125,21 +125,21 @@
                 v-model="attrs[field.field_key]"
                 type="date"
                 value-format="YYYY-MM-DD"
-                style="width: 100%"
+                class="w-full"
               />
               <el-date-picker
                 v-else-if="field.data_type === 'datetime'"
                 v-model="attrs[field.field_key]"
                 type="datetime"
                 value-format="YYYY-MM-DD HH:mm:ss"
-                style="width: 100%"
+                class="w-full"
               />
               <el-input-number
                 v-else-if="['int', 'decimal'].includes(field.data_type)"
                 v-model="attrs[field.field_key]"
                 :precision="field.data_type === 'decimal' ? 2 : 0"
                 controls-position="right"
-                style="width: 100%"
+                class="w-full"
               />
               <el-input
                 v-else-if="['text', 'json'].includes(field.data_type)"
@@ -166,20 +166,20 @@ import { getCoreFieldKeys, isUserField } from './coreFields'
 import { getUserList } from '@/api/user'
 
 const props = defineProps({
-  entityType: { type: String, required: true },
-  modelValue: { type: Object, default: () => ({}) }
+  entityType: { type: String, required: true }
 })
+const model = defineModel({ type: Object, default: () => ({}) })
 
 const loading = ref(false)
 const allFields = ref([])
 const userList = ref([])
 
-// attrs 直接引用 modelValue.attrs，利用 Vue 3 reactive 深层响应式
+// attrs 直接引用 model.attrs，利用 Vue 3 reactive 深层响应式
 const attrs = computed(() => {
-  if (!props.modelValue.attrs) {
-    props.modelValue.attrs = {}
+  if (!model.value.attrs) {
+    model.value.attrs = {}
   }
-  return props.modelValue.attrs
+  return model.value.attrs
 })
 
 // 核心字段列表

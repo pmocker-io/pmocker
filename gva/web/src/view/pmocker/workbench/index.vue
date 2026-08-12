@@ -2,7 +2,7 @@
   <div class="workbench">
     <el-page-header content="项目工作台" />
 
-    <div style="margin-top: 16px">
+    <div class="mt-4">
       <VerticalTabLayout
         :active-tab="activeTab"
         :tabs="tabs"
@@ -22,21 +22,21 @@
         </template>
 
         <el-row :gutter="12">
-          <el-col v-for="card in cards" :key="card.projectId" :span="8" style="margin-bottom: 12px">
+          <el-col v-for="card in cards" :key="card.projectId" :span="8" class="mb-3">
             <el-card shadow="hover" :body-style="{ padding: '16px' }" class="proj-card" @click="enterProject(card)">
               <div class="card-head">
                 <span class="dot" :class="card.health" />
                 <span class="proj-name">{{ card.projectName }}</span>
                 <el-tag size="small" :type="priorityTag(card.priority)" style="margin-left: auto">{{ priorityLabel(card.priority) }}</el-tag>
               </div>
-              <el-progress :percentage="Math.round(card.progress)" :color="healthColor(card.health)" style="margin: 8px 0" />
+              <el-progress :percentage="Math.round(card.progress)" :color="healthColor(card.health)" class="my-2" />
               <div class="card-row">
                 <span>成本偏差：</span>
                 <b :class="card.costVariance > 0 ? 'red' : 'green'">{{ card.costVariance > 0 ? '+' : '' }}{{ (card.costVariance || 0).toFixed(2) }}</b>
               </div>
               <div class="card-row">
                 <span>风险数：</span><b>{{ card.riskCount }}</b>
-                <span style="margin-left: 16px">负责人：</span><b>{{ card.leaderName }}</b>
+                <span class="ml-4">负责人：</span><b>{{ card.leaderName }}</b>
               </div>
             </el-card>
           </el-col>

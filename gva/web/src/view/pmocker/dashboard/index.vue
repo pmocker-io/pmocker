@@ -6,14 +6,14 @@
     </el-select>
     <el-button type="primary" @click="genSnapshot">生成月报快照</el-button>
 
-    <el-row :gutter="16" style="margin-top: 12px">
+    <el-row :gutter="16" class="mt-3">
       <el-col :span="6">
         <el-card shadow="hover">
           <template #header>项目进度</template>
           <div ref="progressChart" style="height: 220px" />
-          <p style="text-align:center; margin: 8px 0 0">
+          <p class="text-center mt-2">
             <el-tag :type="priorityTag(dash.priority)">{{ priorityLabel(dash.priority) }}</el-tag>
-            <el-tag :type="healthTag(dash.health)" style="margin-left: 8px">{{ healthLabel(dash.health) }}</el-tag>
+            <el-tag :type="healthTag(dash.health)" class="ml-2">{{ healthLabel(dash.health) }}</el-tag>
           </p>
         </el-card>
       </el-col>
@@ -31,7 +31,7 @@
       </el-col>
     </el-row>
 
-    <el-row :gutter="16" style="margin-top: 16px">
+    <el-row :gutter="16" class="mt-4">
       <el-col :span="12">
         <el-card shadow="hover">
           <template #header>风险矩阵</template>
@@ -55,11 +55,11 @@
       </el-col>
     </el-row>
 
-    <el-card shadow="hover" style="margin-top: 16px">
+    <el-card shadow="hover" class="mt-4">
       <template #header>里程碑</template>
       <el-timeline>
         <el-timeline-item v-for="m in dash.milestones" :key="m.id" :timestamp="m.date" :type="m.status === 'done' ? 'success' : 'primary'">
-          {{ m.title }} <el-tag size="small" style="margin-left: 8px">{{ m.status }}</el-tag>
+          {{ m.title }} <el-tag size="small" class="ml-2">{{ m.status }}</el-tag>
         </el-timeline-item>
       </el-timeline>
     </el-card>

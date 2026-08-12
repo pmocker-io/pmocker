@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="gva-table-box">
-      <div ref="chartRef" style="width: 100%; height: 500px" />
+      <div ref="chartRef" class="w-full h-[500px]" />
       <div class="mt-4">
         <el-table :data="riskList" border>
           <el-table-column label="风险" prop="title" min-width="200" />

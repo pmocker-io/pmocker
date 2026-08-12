@@ -14,8 +14,8 @@
         <svg-icon icon="lucide:link" /> 添加
       </el-button>
     </el-space>
-    <el-divider content-position="left" style="margin: 10px 0">已有关联</el-divider>
-    <el-table :data="relations" size="small" border style="width: 100%">
+    <el-divider content-position="left" class="my-2.5">已有关联</el-divider>
+    <el-table :data="relations" size="small" border class="w-full">
       <el-table-column prop="relationType" label="类型" width="110" />
       <el-table-column prop="srcId" label="源ID" width="70" />
       <el-table-column prop="dstId" label="目标ID" width="90" />

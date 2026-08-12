@@ -20,7 +20,7 @@
         </el-form-item>
         <el-form-item label="状态">
           <el-tag :type="statusTag(pkg.status)" size="small">{{ statusLabel(pkg.status) }}</el-tag>
-          <el-tag size="small" type="info" style="margin-left: 8px">v{{ pkg.version }}</el-tag>
+          <el-tag size="small" type="info" class="ml-2">v{{ pkg.version }}</el-tag>
         </el-form-item>
       </el-form>
     </el-card>
@@ -121,7 +121,7 @@
                   </el-table-column>
                   <el-table-column label="标签类型" width="130">
                     <template #default="{ row }">
-                      <el-select v-model="row.tagType" size="small" style="width: 100%">
+                      <el-select v-model="row.tagType" size="small" class="w-full">
                         <el-option v-for="t in tagTypes" :key="t" :label="t || '默认'" :value="t" />
                       </el-select>
                     </template>
@@ -143,14 +143,14 @@
                 <el-table :data="seed.modules[key].transitions || []" size="small" border>
                   <el-table-column label="源状态" width="140">
                     <template #default="{ row }">
-                      <el-select v-model="row.from" size="small" filterable allow-create style="width: 100%">
+                      <el-select v-model="row.from" size="small" filterable allow-create class="w-full">
                         <el-option v-for="s in stateValues(key)" :key="s" :label="s" :value="s" />
                       </el-select>
                     </template>
                   </el-table-column>
                   <el-table-column label="目标状态" width="140">
                     <template #default="{ row }">
-                      <el-select v-model="row.to" size="small" filterable allow-create style="width: 100%">
+                      <el-select v-model="row.to" size="small" filterable allow-create class="w-full">
                         <el-option v-for="s in stateValues(key)" :key="s" :label="s" :value="s" />
                       </el-select>
                     </template>
@@ -218,7 +218,7 @@
     <el-dialog v-model="addModuleVisible" title="添加模块" width="480px">
       <el-form :model="newModule" label-width="90px">
         <el-form-item label="模块编码">
-          <el-select v-model="newModule.key" filterable allow-create placeholder="选择或输入模块编码" style="width: 100%">
+          <el-select v-model="newModule.key" filterable allow-create placeholder="选择或输入模块编码" class="w-full">
             <el-option v-for="m in availableModules" :key="m.key" :label="m.label" :value="m.key" />
           </el-select>
         </el-form-item>
@@ -245,12 +245,12 @@
           <el-input v-model="fieldForm.label" placeholder="如 优先级" />
         </el-form-item>
         <el-form-item label="数据类型">
-          <el-select v-model="fieldForm.dataType" style="width: 100%">
+          <el-select v-model="fieldForm.dataType" class="w-full">
             <el-option v-for="t in dataTypes" :key="t" :label="t" :value="t" />
           </el-select>
         </el-form-item>
         <el-form-item label="选项" v-if="fieldForm.dataType === 'enum'">
-          <el-select v-model="fieldForm.options" multiple filterable allow-create default-first-option placeholder="输入选项后回车" style="width: 100%">
+          <el-select v-model="fieldForm.options" multiple filterable allow-create default-first-option placeholder="输入选项后回车" class="w-full">
             <el-option v-for="o in fieldForm.options" :key="o" :label="o" :value="o" />
           </el-select>
         </el-form-item>

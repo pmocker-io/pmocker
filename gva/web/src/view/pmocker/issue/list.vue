@@ -88,10 +88,10 @@
 
     <!-- 分配对话框（批量分配） -->
     <el-dialog v-model="assignDialogVisible" title="分配负责人" width="400px">
-      <p style="margin-bottom: 12px;">将为选中的 {{ assignTargetIds.length }} 条问题分配负责人</p>
+      <p class="mb-3">将为选中的 {{ assignTargetIds.length }} 条问题分配负责人</p>
       <el-form label-width="80px">
         <el-form-item label="负责人">
-          <el-select v-model="assignUserId" filterable clearable placeholder="请选择用户" style="width: 100%">
+          <el-select v-model="assignUserId" filterable clearable placeholder="请选择用户" class="w-full">
             <el-option
               v-for="u in userList"
               :key="u.ID"

@@ -5,7 +5,7 @@
       :closable="false"
       show-icon
       title="组织与权限由系统管理模块统一维护，PMocker 配置页提供快捷入口，点击卡片跳转到对应管理页面。"
-      style="margin-bottom: 12px"
+      class="mb-3"
     />
     <el-row :gutter="12">
       <el-col v-for="entry in entries" :key="entry.path" :span="6">

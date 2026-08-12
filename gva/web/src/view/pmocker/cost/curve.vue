@@ -10,7 +10,7 @@
       </el-form>
     </div>
     <div class="gva-table-box">
-      <div v-if="chartData" ref="chartRef" style="width: 100%; height: 500px" />
+      <div v-if="chartData" ref="chartRef" class="w-full h-[500px]" />
       <el-empty v-else description="点击上方按钮生成S曲线" />
     </div>
   </div>

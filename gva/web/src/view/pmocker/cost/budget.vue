@@ -40,11 +40,11 @@
       </el-table>
     </div>
 
-    <el-card shadow="never" style="margin-top: 16px">
+    <el-card shadow="never" class="mt-4">
       <template #header>
-        <div style="display: flex; align-items: center; justify-content: space-between">
+        <div class="flex items-center justify-between">
           <span>成员成本分摊（基于团队投入度核算）</span>
-          <span style="font-size: 12px; color: #909399">
+          <span class="text-xs text-muted-foreground">
             月度合计：¥{{ formatNum(memberCostTotal) }}　|　公式：时薪 × 投入度% × {{ MONTHLY_HOURS }}h/月
           </span>
         </div>

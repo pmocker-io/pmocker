@@ -2,14 +2,14 @@
   <div class="task-center">
     <el-page-header content="个人任务中心" />
 
-    <el-row :gutter="12" style="margin-top: 12px">
+    <el-row :gutter="12" class="mt-3">
       <el-col :span="6"><el-card shadow="hover"><div class="stat"><span>任务总数</span><b>{{ stats.total }}</b></div></el-card></el-col>
-      <el-col :span="6"><el-card shadow="hover"><div class="stat"><span>完成率</span><b style="color:#67C23A">{{ (stats.doneRate || 0).toFixed(1) }}%</b></div></el-card></el-col>
-      <el-col :span="6"><el-card shadow="hover"><div class="stat"><span>逾期数</span><b style="color:#F56C6C">{{ stats.overdueCount }}</b></div></el-card></el-col>
-      <el-col :span="6"><el-card shadow="hover"><div class="stat"><span>进行中</span><b style="color:#409EFF">{{ stats.doingCount }}</b></div></el-card></el-col>
+      <el-col :span="6"><el-card shadow="hover"><div class="stat"><span>完成率</span><b class="text-success">{{ (stats.doneRate || 0).toFixed(1) }}%</b></div></el-card></el-col>
+      <el-col :span="6"><el-card shadow="hover"><div class="stat"><span>逾期数</span><b class="text-error">{{ stats.overdueCount }}</b></div></el-card></el-col>
+      <el-col :span="6"><el-card shadow="hover"><div class="stat"><span>进行中</span><b class="text-primary">{{ stats.doingCount }}</b></div></el-card></el-col>
     </el-row>
 
-    <div style="margin-top: 16px">
+    <div class="mt-4">
       <VerticalTabLayout
         v-model:activeTab="activeTab"
         :tabs="tabs"

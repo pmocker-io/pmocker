@@ -10,7 +10,7 @@
       </el-form>
     </div>
     <div class="gva-table-box">
-      <div v-if="cpmResult" ref="chartRef" style="width: 100%; height: 500px" />
+      <div v-if="cpmResult" ref="chartRef" class="w-full h-[500px]" />
       <el-empty v-else description="点击上方按钮执行 CPM 分析" />
     </div>
     <div v-if="cpmResult" class="gva-table-box mt-4">
