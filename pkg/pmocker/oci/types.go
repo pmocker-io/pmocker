@@ -52,6 +52,8 @@ const (
 	LayerTypeSchema   LayerType = "schema"
 	LayerTypeTheme    LayerType = "theme"
 	LayerTypeAssets   LayerType = "assets"
+	// LayerTypeData 实例数据层：commit/export 时打包的数据卷快照（sqlite + dist + uploads）
+	LayerTypeData LayerType = "data"
 )
 
 // DigestPrefix SHA256 摘要前缀

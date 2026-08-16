@@ -72,3 +72,53 @@ func TestBuildImage(t *testing.T) {
 		t.Error("config.json not found")
 	}
 }
+
+// TestBuildImageWithDataLayer 构建含 data 层（实例快照）的镜像并回读验证
+func TestBuildImageWithDataLayer(t *testing.T) {
+	tmpDir := t.TempDir()
+	outPath := filepath.Join(tmpDir, "withdata.pmi")
+
+	cfg := NewConfig("TestMethod", "2.0.0", []string{"requirement"})
+
+	schemaFiles := map[string][]byte{
+		"requirement.yaml": []byte("entity_type: requirement\nfields: []"),
+	}
+	_, schemaTar, _ := CreateLayerFromFiles(schemaFiles, LayerTypeSchema)
+	schemaLayer := NewLayerData(schemaTar, LayerTypeSchema)
+
+	// data 层：模拟实例数据卷（system.db + dist）
+	dataFiles := map[string][]byte{
+		"system.db":  []byte("fake sqlite bytes"),
+		"dist/index.html": []byte("<html>pms</html>"),
+	}
+	_, dataTar, _ := CreateLayerFromFiles(dataFiles, LayerTypeData)
+	dataLayer := NewLayerData(dataTar, LayerTypeData)
+
+	if err := BuildImage(outPath, cfg, []LayerData{schemaLayer, dataLayer}); err != nil {
+		t.Fatalf("BuildImage: %v", err)
+	}
+
+	// 回读验证
+	r, err := OpenImage(outPath)
+	if err != nil {
+		t.Fatalf("OpenImage: %v", err)
+	}
+
+	m := r.Manifest()
+	if len(m.Layers) != 2 {
+		t.Fatalf("layers = %d, want 2", len(m.Layers))
+	}
+	// data 层应可提取
+	data, err := r.ExtractLayerByType(LayerTypeData)
+	if err != nil {
+		t.Fatalf("ExtractLayerByType(data): %v", err)
+	}
+	files, err := r.ExtractLayerFiles(LayerTypeData)
+	if err != nil {
+		t.Fatalf("ExtractLayerFiles(data): %v", err)
+	}
+	if _, ok := files["system.db"]; !ok {
+		t.Error("data 层缺少 system.db")
+	}
+	_ = data
+}
