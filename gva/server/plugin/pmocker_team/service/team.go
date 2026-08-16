@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	eavtypes "github.com/pmocker-io/pmocker/pkg/pmocker/eav"
 	pmservice "github.com/flipped-aurora/gin-vue-admin/server/service/pmocker"
+	eavtypes "github.com/pmocker-io/pmocker/pkg/pmocker/eav"
 )
 
 type Service struct{}
@@ -84,4 +84,49 @@ func (s *Service) Transition(ctx context.Context, entityType string, id uint, st
 	}
 	e.Status = status
 	return pmservice.ServiceGroupApp.UpdateEntity(ctx, *e)
+}
+
+// ratingDefaultScore 评级 → 默认评分（0-100），用于评分节点未手动打分时的兜底
+var ratingDefaultScore = map[string]float64{
+	"excellent":         90,
+	"good":              80,
+	"satisfactory":      70,
+	"needs_improvement": 60,
+	"unsatisfactory":    50,
+}
+
+// ScoreCalcHandler 工作流 auto 节点处理器：绩效评估自动评分
+// handler 名：pmocker.team.score_calc
+// 逻辑：若 score 未填，则按 rating 推断默认分回写；rating 也未填则保留原值不报错，流程照常推进。
+func ScoreCalcHandler(ctx context.Context, entityID uint) error {
+	e, err := pmservice.ServiceGroupApp.GetEntity(ctx, entityID)
+	if err != nil {
+		return fmt.Errorf("get performance_review entity %d: %w", entityID, err)
+	}
+	if e.EntityType != EntityTypePerformanceReview {
+		return fmt.Errorf("entity %d is %q, expect %s", entityID, e.EntityType, EntityTypePerformanceReview)
+	}
+	if e.Attrs == nil {
+		e.Attrs = map[string]interface{}{}
+	}
+	// 已人工评分则不动（EAV 存整数值时读回 int64，小数为 float64）
+	if score, ok := e.Attrs["score"]; ok {
+		if v, ok := score.(float64); ok && v > 0 {
+			return nil
+		}
+		if v, ok := score.(int64); ok && v > 0 {
+			return nil
+		}
+		if v, ok := score.(int); ok && v > 0 {
+			return nil
+		}
+	}
+	// 按评级推断默认分
+	if rating, ok := e.Attrs["rating"].(string); ok {
+		if def, ok := ratingDefaultScore[rating]; ok {
+			e.Attrs["score"] = def
+			return pmservice.ServiceGroupApp.UpdateEntity(ctx, *e)
+		}
+	}
+	return nil
 }
