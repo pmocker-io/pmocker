@@ -13,7 +13,7 @@ import (
 
 var exportCmd = &cobra.Command{
 	Use:   "export <name|id> -o <file.pmi>",
-	Short: "导出 PMSystem 实例为 .pmi 文件",
+	Short: "导出 PMSystem 实例为 .pmi 文件（含实例当前数据）",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		output, _ := cmd.Flags().GetString("output")
@@ -35,18 +35,23 @@ var exportCmd = &cobra.Command{
 			}
 		}
 
-		imgDir, _ := image.DefaultStoreDir()
-		pmiPath := filepath.Join(imgDir, strings.ReplaceAll(inst.ImageDigest, ":", "_"), "image.pmi")
-		if _, err := os.Stat(pmiPath); os.IsNotExist(err) {
-			return fmt.Errorf("image file not found: %s", pmiPath)
+		vols, err := instance.InitDefaultVolumes()
+		if err != nil {
+			return err
+		}
+		volPath := vols.Path(inst.VolumeID)
+		if _, err := os.Stat(volPath); os.IsNotExist(err) {
+			return fmt.Errorf("instance volume not found: %s", volPath)
 		}
 
-		data, err := os.ReadFile(pmiPath)
-		if err != nil {
-			return fmt.Errorf("read image: %w", err)
+		imgDir, _ := image.DefaultStoreDir()
+		origPath := filepath.Join(imgDir, strings.ReplaceAll(inst.ImageDigest, ":", "_"), "image.pmi")
+		if _, err := os.Stat(origPath); os.IsNotExist(err) {
+			return fmt.Errorf("original image not found: %s", origPath)
 		}
-		if err := os.WriteFile(output, data, 0644); err != nil {
-			return fmt.Errorf("write output: %w", err)
+
+		if err := instance.BuildCommitImage(origPath, volPath, output); err != nil {
+			return fmt.Errorf("build export image: %w", err)
 		}
 
 		fmt.Printf("已导出到: %s\n", output)

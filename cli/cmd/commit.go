@@ -13,10 +13,11 @@ import (
 
 var commitCmd = &cobra.Command{
 	Use:   "commit <name|id> -t <新镜像名:tag>",
-	Short: "从 PMSystem 实例导出新镜像",
+	Short: "从 PMSystem 实例导出新镜像（含实例当前数据）",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		target, _ := cmd.Flags().GetString("tag")
+		message, _ := cmd.Flags().GetString("message")
 		if target == "" {
 			return fmt.Errorf("--tag (-t) is required")
 		}
@@ -35,24 +36,44 @@ var commitCmd = &cobra.Command{
 			}
 		}
 
-		imgDir, _ := image.DefaultStoreDir()
-		imgStore := image.NewStore(imgDir)
-
-		name, tag := parseImageRef(target)
-		origPath := filepath.Join(imgDir, strings.ReplaceAll(inst.ImageDigest, ":", "_"), "image.pmi")
-		if _, err := os.Stat(origPath); os.IsNotExist(err) {
-			return fmt.Errorf("original image file not found: %s", origPath)
+		vols, err := instance.InitDefaultVolumes()
+		if err != nil {
+			return err
+		}
+		volPath := vols.Path(inst.VolumeID)
+		if _, err := os.Stat(volPath); os.IsNotExist(err) {
+			return fmt.Errorf("instance volume not found: %s", volPath)
 		}
 
-		info, err := imgStore.AddImage(origPath, name, tag)
+		// 定位原镜像
+		imgDir, _ := image.DefaultStoreDir()
+		origPath := filepath.Join(imgDir, strings.ReplaceAll(inst.ImageDigest, ":", "_"), "image.pmi")
+		if _, err := os.Stat(origPath); os.IsNotExist(err) {
+			return fmt.Errorf("original image not found: %s", origPath)
+		}
+
+		// 构建新镜像（原层 + 实例 data 层）
+		outPath := filepath.Join(os.TempDir(), "pmocker-commit-"+inst.ID+".pmi")
+		defer os.Remove(outPath)
+		if err := instance.BuildCommitImage(origPath, volPath, outPath); err != nil {
+			return fmt.Errorf("build commit image: %w", err)
+		}
+
+		// 注册到镜像库
+		name, tag := parseImageRef(target)
+		imgStore := image.NewStore(imgDir)
+		info, err := imgStore.AddImage(outPath, name, tag)
 		if err != nil {
-			return fmt.Errorf("commit image: %w", err)
+			return fmt.Errorf("add image: %w", err)
 		}
 
 		fmt.Printf("已提交新镜像:\n")
 		fmt.Printf("  名称:   %s\n", name)
 		fmt.Printf("  标签:   %s\n", tag)
 		fmt.Printf("  Digest: %s\n", info.Digest)
+		if message != "" {
+			fmt.Printf("  说明:   %s\n", message)
+		}
 		return nil
 	},
 }
