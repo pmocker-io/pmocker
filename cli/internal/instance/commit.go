@@ -2,6 +2,7 @@ package instance
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/pmocker-io/pmocker/pkg/pmocker/oci"
 )
@@ -16,6 +17,9 @@ func BuildCommitImage(origPMIPath, volumePath, outPath string) error {
 		return fmt.Errorf("open original image: %w", err)
 	}
 	cfg := reader.Config()
+
+	// 标记为数据快照镜像（时间戳保证 config digest 唯一，避免与源镜像冲突）
+	cfg.Version = cfg.Version + "-data-" + time.Now().Format("20060102T150405")
 
 	// 提取原镜像各层（保留非 data 层）
 	var layers []oci.LayerData
