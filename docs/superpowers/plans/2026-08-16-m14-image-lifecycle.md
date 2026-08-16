@@ -48,10 +48,10 @@
 **Interfaces:**
 - Produces: `LayerTypeData LayerType = "data"`、`NewDataLayer(tarBytes)`、`BuildImage` 支持任意 LayerType
 
-- [ ] **Step 1: types.go 增加 LayerTypeData**
-- [ ] **Step 2: builder.go 的 descriptorFor 支持 data 层 mediaType**
-- [ ] **Step 3: 测试构建含 data 层的镜像并回读**
-- [ ] **Step 4: 提交 `feat(oci): data layer for instance snapshot`**
+- [x] **Step 1: types.go 增加 LayerTypeData**
+- [x] **Step 2: builder.go 的 descriptorFor 支持 data 层 mediaType**（通用，无白名单）
+- [x] **Step 3: 测试构建含 data 层的镜像并回读**（`TestBuildImageWithDataLayer`）
+- [x] **Step 4: 提交 `feat(oci): data layer for instance snapshot`**（a6c53853）
 
 ## Task 2: 实例数据卷快照
 
@@ -61,10 +61,10 @@
 **Interfaces:**
 - Produces: `SnapshotVolume(vm *VolumeManager, volID string, outTar string) error`（WAL checkpoint + tar system.db/dist/uploads）
 
-- [ ] **Step 1: sqlite WAL checkpoint（PRAGMA wal_checkpoint(TRUNCATE)）后复制 system.db**
-- [ ] **Step 2: tar 打包（system.db + dist + uploads）**
-- [ ] **Step 3: 测试（临时卷 → 快照 → 校验 tar 内容）**
-- [ ] **Step 4: 提交 `feat(cli): instance volume snapshot`**
+- [x] **Step 1: sqlite WAL checkpoint（PRAGMA wal_checkpoint(TRUNCATE)）后复制 system.db**
+- [x] **Step 2: tar 打包（system.db + dist + uploads）**
+- [x] **Step 3: 测试（临时卷 → 快照 → 校验 tar 内容）**
+- [x] **Step 4: 提交 `feat(cli): instance volume snapshot`**（dfa44587）
 
 ## Task 3: commit 抓真实态
 
@@ -75,10 +75,10 @@
 - Consumes: `instance.SnapshotVolume`、`oci.BuildImage`、`image.Store`
 - 行为：停止实例（或 checkpoint）→ 快照数据卷 → 原镜像层 + data 层 → 构建新 `.pmi` → 注册到镜像库
 
-- [ ] **Step 1: 重写 commit（复用原镜像 layer，追加 data layer）**
-- [ ] **Step 2: 支持 --message 写入 manifest annotations**
-- [ ] **Step 3: 端到端验证（commit → 新镜像 inspect 含 data 层）**
-- [ ] **Step 4: 提交 `feat(cli): commit captures instance state`**
+- [x] **Step 1: 重写 commit（复用原镜像 layer，追加 data layer）**
+- [x] **Step 2: 支持 --message 写入 manifest annotations**（config.Version 加时间戳保证 digest 唯一）
+- [x] **Step 3: 端到端验证（commit → 新镜像 inspect 含 data 层）**（pms-v12 → 4 层镜像，data 层含 system.db 2.4MB）
+- [x] **Step 4: 提交 `feat(cli): commit captures instance state`**（c954b4fc + 96f38167）
 
 ## Task 4: export 导出实例镜像
 
@@ -89,8 +89,8 @@
 - Consumes: commit 产出的新镜像
 - 行为：导出实例当前态 `.pmi` 到指定路径（与 commit 同源，独立文件）
 
-- [ ] **Step 1: 重写 export（复用 commit 快照逻辑）**
-- [ ] **Step 2: 提交 `feat(cli): export instance image`**
+- [x] **Step 1: 重写 export（复用 commit 快照逻辑）**
+- [x] **Step 2: 提交 `feat(cli): export instance image`**（c954b4fc）
 
 ## Task 5: upgrade 真正执行迁移
 
@@ -115,8 +115,8 @@
 **Files:**
 - Modify: `README.md`（镜像生命周期章节）、`gva/aiDoc/memory/business/active/pmocker-config.md`（或新文件）
 
-- [ ] **Step 1: README 更新 commit/export/upgrade 真实能力说明**
-- [ ] **Step 2: 业务记忆登记 M14**
+- [x] **Step 1: README 更新 commit/export 真实能力说明**
+- [x] **Step 2: 业务记忆登记 M14**（active/m14-image-lifecycle.md + demand-index）
 - [ ] **Step 3: 提交 `docs(pmocker): M14 image lifecycle docs`**
 
 ---

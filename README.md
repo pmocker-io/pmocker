@@ -59,10 +59,10 @@ pmocker start <name|id>         # 重启已停止实例
 pmocker logs <name|id> [-f] [--mcp|--access] [-n N]  # 查看实例日志（-f 跟踪，--mcp 看 MCP，--access 看访问日志，-n 最后 N 行）
 pmocker inspect <name|id>       # 查看实例元信息 + MCP 连接配置
 pmocker images                  # 列出本地镜像缓存
-pmocker commit <name> -t <tag>  # 把实例当前状态导出为 .pmi 镜像
-pmocker export <name> -o <file> # 导出为 .pmi 文件
-pmocker diff <old.pmi> <new.pmi>   # 对比两镜像 schema 差异
-pmocker upgrade <name> --to <new.pmi>  # 升级实例到新镜像版本
+ pmocker commit <name> -t <tag>  # 把实例当前状态（数据卷+前端）导出为新 .pmi 镜像
+ pmocker export <name> -o <file> # 把实例当前状态导出为独立 .pmi 文件（可分发/重建）
+ pmocker diff <old.pmi> <new.pmi>   # 对比两镜像 schema 差异
+ pmocker upgrade <name> --to <new.pmi>  # 升级实例到新镜像版本（迁移执行，M14 后续）
 pmocker rm <name> [-v]          # 删除实例（-v 同时删数据卷）
 ```
 
