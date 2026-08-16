@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/pmocker"
@@ -25,7 +26,11 @@ func (s *ExportService) Export(ctx context.Context, destDir string) error {
 
 	// 2. 聚合每个配置包的所有模块到 schema（实体类型/字段/状态/流转）
 	schemas := make([]map[string]interface{}, 0)
-	allSeeds := make([]string, 0, len(pkgs))
+	type seedEntry struct {
+		Code     string `yaml:"code" json:"code"`
+		SeedYAML string `yaml:"seed_yaml" json:"seedYaml"`
+	}
+	allSeeds := make([]seedEntry, 0, len(pkgs))
 	for _, pkg := range pkgs {
 		if pkg.SeedYAML == "" {
 			continue
@@ -34,7 +39,7 @@ func (s *ExportService) Export(ctx context.Context, destDir string) error {
 		if err != nil {
 			return err
 		}
-		allSeeds = append(allSeeds, pkg.SeedYAML)
+		allSeeds = append(allSeeds, seedEntry{Code: pkg.Code, SeedYAML: strings.TrimSpace(pkg.SeedYAML)})
 		// 每个模块生成一个 schema 段
 		for mod, ms := range seed.Modules {
 			schemas = append(schemas, map[string]interface{}{
